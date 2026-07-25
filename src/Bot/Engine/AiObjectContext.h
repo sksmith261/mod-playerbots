@@ -40,26 +40,35 @@ public:
     virtual std::set<std::string> GetSiblingStrategy(std::string const name);
     virtual Trigger* GetTrigger(std::string const name);
     virtual Action* GetAction(std::string const name);
-    virtual UntypedValue* GetUntypedValue(std::string const name);
+    virtual UntypedValue* GetUntypedValue(std::string const& name);
 
     template <class T>
-    Value<T>* GetValue(std::string const name)
+    Value<T>* GetValue(std::string const& name)
     {
         return dynamic_cast<Value<T>*>(GetUntypedValue(name));
     }
 
     template <class T>
-    Value<T>* GetValue(std::string const name, std::string const param)
+    Value<T>* GetValue(std::string const& name, std::string const& param)
     {
-        return GetValue<T>((std::string(name) + "::" + param));
+        // Build the "name::param" key in one buffer. The previous form
+        // (std::string(name) + "::" + param) made a copy of name and then two more
+        // temporaries for the concatenations; reserving up front keeps it to one
+        // allocation, which matters because this is the generic accessor behind
+        // every qualified value lookup in the AI.
+        std::string key;
+        key.reserve(name.size() + 2 + param.size());
+        key.append(name).append("::").append(param);
+        return GetValue<T>(key);
     }
 
     template <class T>
-    Value<T>* GetValue(std::string const name, int32 param)
+    Value<T>* GetValue(std::string const& name, int32 param)
     {
-        std::ostringstream out;
-        out << param;
-        return GetValue<T>(name, out.str());
+        // Was std::ostringstream, which constructs and destroys a locale-aware stream
+        // (and its heap buffer) on every call purely to render one integer.
+        // std::to_string does the same job without the stream machinery.
+        return GetValue<T>(name, std::to_string(param));
     }
 
     std::set<std::string> GetValues();
