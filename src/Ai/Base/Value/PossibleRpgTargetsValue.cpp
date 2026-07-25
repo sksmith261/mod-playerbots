@@ -49,6 +49,14 @@ PossibleRpgTargetsValue::PossibleRpgTargetsValue(PlayerbotAI* botAI, float range
 
 void PossibleRpgTargetsValue::FindUnits(std::list<Unit*>& targets)
 {
+    // NearestUnitsValue::Calculate calls FindUnits once and then AcceptUnit for every
+    // candidate, so this is the right place to resolve anything that is constant across
+    // the scan. The travel target cannot change midway through a single Calculate.
+    cachedTravelTargetEntry = 0;
+    if (TravelTarget* travelTarget = context->GetValue<TravelTarget*>("travel target")->Get())
+        if (travelTarget->getDestination())
+            cachedTravelTargetEntry = static_cast<uint32>(travelTarget->getDestination()->getEntry());
+
     Acore::AnyUnitInObjectRangeCheck u_check(bot, range);
     Acore::UnitListSearcher<Acore::AnyUnitInObjectRangeCheck> searcher(bot, targets, u_check);
     Cell::VisitObjects(bot, searcher, range);
@@ -74,9 +82,11 @@ bool PossibleRpgTargetsValue::AcceptUnit(Unit* unit)
             return true;
     }
 
-    TravelTarget* travelTarget = context->GetValue<TravelTarget*>("travel target")->Get();
-    if (travelTarget && travelTarget->getDestination() &&
-        static_cast<uint32>(travelTarget->getDestination()->getEntry()) == unit->GetEntry())
+    // This used to do a string-keyed context lookup ("travel target") plus two virtual
+    // calls for every candidate unit in range. With RpgDistance set high the scan can
+    // return a large set in a city, so the loop-invariant part now resolves once per
+    // scan in FindUnits and this is just an integer compare.
+    if (cachedTravelTargetEntry && cachedTravelTargetEntry == unit->GetEntry())
         return true;
 
     if (urand(1, 100) < 25 && unit->IsFriendlyTo(bot))

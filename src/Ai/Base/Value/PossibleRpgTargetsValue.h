@@ -24,6 +24,12 @@ public:
 protected:
     void FindUnits(std::list<Unit*>& targets) override;
     bool AcceptUnit(Unit* unit) override;
+
+private:
+    // Resolved once per scan in FindUnits, then read by AcceptUnit. See the comment in
+    // PossibleRpgTargetsValue::AcceptUnit for why this is cached rather than looked up
+    // per candidate unit.
+    uint32 cachedTravelTargetEntry = 0;
 };
 
 class PossibleNewRpgTargetsValue : public NearestUnitsValue
