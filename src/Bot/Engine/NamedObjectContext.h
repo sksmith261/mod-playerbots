@@ -97,10 +97,15 @@ public:
 
     virtual T* create(std::string name, PlayerbotAI* botAI) override
     {
-        if (created.find(name) == created.end())
-            return created[name] = NamedObjectFactory<T>::create(name, botAI);
+        // The cache-hit path used to hash and probe `created` twice — once for find()
+        // and again for operator[]. Reusing the iterator makes it one lookup. This is
+        // the steady-state path for every named object in the AI, so the second probe
+        // was pure overhead on effectively every access.
+        auto it = created.find(name);
+        if (it != created.end())
+            return it->second;
 
-        return created[name];
+        return created[name] = NamedObjectFactory<T>::create(name, botAI);
     }
 
     void Clear()
