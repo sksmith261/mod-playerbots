@@ -21,7 +21,7 @@ bool InventoryChangeFailureAction::Execute(Event event)
         messages[EQUIP_ERR_CANT_EQUIP_LEVEL_I] = "My level is too low";
         messages[EQUIP_ERR_CANT_EQUIP_SKILL] = "My skill level is too low";
         messages[EQUIP_ERR_ITEM_DOESNT_GO_TO_SLOT] = "Invalid slot";
-        messages[EQUIP_ERR_BAG_FULL] = "My bags are full";
+        messages[EQUIP_ERR_BAG_FULL] = "";
         messages[EQUIP_ERR_NONEMPTY_BAG_OVER_OTHER_BAG] = "This bag is not empty";
         messages[EQUIP_ERR_CANT_TRADE_EQUIP_BAGS] = "Cannot trade equipped bags";
         messages[EQUIP_ERR_ONLY_AMMO_CAN_GO_HERE] = "Invalid slot (only ammo is required)";
@@ -67,8 +67,8 @@ bool InventoryChangeFailureAction::Execute(Event event)
         messages[EQUIP_ERR_UNIQUE_CANT_BE_WRAPPED] = messages[EQUIP_ERR_STACKABLE_CANT_BE_WRAPPED];
         messages[EQUIP_ERR_BAGS_CANT_BE_WRAPPED] = messages[EQUIP_ERR_STACKABLE_CANT_BE_WRAPPED];
         messages[EQUIP_ERR_ALREADY_LOOTED] = "Already looted";
-        messages[EQUIP_ERR_INVENTORY_FULL] = "My inventory is full";
-        messages[EQUIP_ERR_BANK_FULL] = "My bank is full";
+        messages[EQUIP_ERR_INVENTORY_FULL] = "";
+        messages[EQUIP_ERR_BANK_FULL] = "";
         messages[EQUIP_ERR_ITEM_IS_CURRENTLY_SOLD_OUT] = "Item item is sold out";
         messages[EQUIP_ERR_BAG_FULL3] = messages[EQUIP_ERR_BANK_FULL];
         messages[EQUIP_ERR_ITEM_NOT_FOUND2] = messages[EQUIP_ERR_ITEM_NOT_FOUND];
