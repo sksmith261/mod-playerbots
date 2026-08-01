@@ -7,6 +7,8 @@
 #ifndef PLAYERBOTS_PLAYERBOTMGR_H
 #define PLAYERBOTS_PLAYERBOTMGR_H
 
+#include <shared_mutex>
+
 #include "ObjectGuid.h"
 #include "Player.h"
 #include "PlayerbotAIBase.h"
@@ -121,6 +123,17 @@ private:
     PlayerbotsMgr(PlayerbotsMgr&&) = delete;
     PlayerbotsMgr& operator=(PlayerbotsMgr&&) = delete;
 
+    /// Guards both maps below.
+    ///
+    /// These are looked up once per player per tick from OnPlayerAfterUpdate, which runs
+    /// on a map thread. With MapUpdate.Threads > 1 several map threads read concurrently
+    /// while logins and logouts insert and erase, so an unsynchronised std::unordered_map
+    /// is a data race: a rehash on insert invalidates the buckets a reader is walking.
+    ///
+    /// shared_mutex rather than mutex because the read path is the hot one — reads happen
+    /// every tick per player, writes only on login and logout — and readers must not
+    /// serialise against each other or the lock would undo the parallelism it protects.
+    mutable std::shared_mutex _registryMutex;
     std::unordered_map<ObjectGuid, PlayerbotAIBase*> _playerbotsAIMap;
     std::unordered_map<ObjectGuid, PlayerbotAIBase*> _playerbotsMgrMap;
 };

@@ -1746,18 +1746,28 @@ void PlayerbotsMgr::AddPlayerbotData(Player* player, bool isBotAI)
 
     if (!isBotAI)
     {
-        std::unordered_map<ObjectGuid, PlayerbotAIBase*>::iterator itr = _playerbotsMgrMap.find(player->GetGUID());
-        if (itr != _playerbotsMgrMap.end())
+        PlayerbotMgr* playerbotMgr = nullptr;
         {
-            _playerbotsMgrMap.erase(itr);
-        }
-        PlayerbotMgr* playerbotMgr = new PlayerbotMgr(player);
-        ASSERT(_playerbotsMgrMap.emplace(player->GetGUID(), playerbotMgr).second);
+            std::unique_lock<std::shared_mutex> lock(_registryMutex);
 
+            std::unordered_map<ObjectGuid, PlayerbotAIBase*>::iterator itr = _playerbotsMgrMap.find(player->GetGUID());
+            if (itr != _playerbotsMgrMap.end())
+            {
+                _playerbotsMgrMap.erase(itr);
+            }
+            playerbotMgr = new PlayerbotMgr(player);
+            ASSERT(_playerbotsMgrMap.emplace(player->GetGUID(), playerbotMgr).second);
+        }
+
+        // Deliberately outside the lock. OnPlayerLogin reaches back into this registry
+        // through GET_PLAYERBOT_AI, and shared_mutex is not recursive, so calling it
+        // while holding the write lock self-deadlocks.
         playerbotMgr->OnPlayerLogin(player);
     }
     else
     {
+        std::unique_lock<std::shared_mutex> lock(_registryMutex);
+
         std::unordered_map<ObjectGuid, PlayerbotAIBase*>::iterator itr = _playerbotsAIMap.find(player->GetGUID());
         if (itr != _playerbotsAIMap.end())
         {
@@ -1770,6 +1780,8 @@ void PlayerbotsMgr::AddPlayerbotData(Player* player, bool isBotAI)
 
 void PlayerbotsMgr::RemovePlayerBotData(ObjectGuid const& guid, bool is_AI)
 {
+    std::unique_lock<std::shared_mutex> lock(_registryMutex);
+
     if (is_AI)
     {
         std::unordered_map<ObjectGuid, PlayerbotAIBase*>::iterator itr = _playerbotsAIMap.find(guid);
@@ -1798,6 +1810,8 @@ PlayerbotAI* PlayerbotsMgr::GetPlayerbotAI(Player* player)
     // {
     //     return nullptr;
     // }
+    std::shared_lock<std::shared_mutex> lock(_registryMutex);
+
     auto itr = _playerbotsAIMap.find(player->GetGUID());
     if (itr != _playerbotsAIMap.end())
     {
@@ -1814,6 +1828,8 @@ PlayerbotMgr* PlayerbotsMgr::GetPlayerbotMgr(Player* player)
     {
         return nullptr;
     }
+    std::shared_lock<std::shared_mutex> lock(_registryMutex);
+
     auto itr = _playerbotsMgrMap.find(player->GetGUID());
     if (itr != _playerbotsMgrMap.end())
     {
