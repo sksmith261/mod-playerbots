@@ -67,6 +67,7 @@ private:
 
 std::unordered_set<ObjectGuid> BotInitGuard::botsBeingInitialized;
 std::unordered_map<ObjectGuid, uint32> PlayerbotHolder::botLoading;
+std::mutex PlayerbotHolder::s_botLoadingMutex;
 
 PlayerbotHolder::PlayerbotHolder() : PlayerbotAIBase(false) {}
 class PlayerbotLoginQueryHolder : public LoginQueryHolder
@@ -84,8 +85,14 @@ public:
 
 void PlayerbotHolder::AddPlayerBot(ObjectGuid playerGuid, uint32 masterAccountId)
 {
-    if (botLoading.find(playerGuid) != botLoading.end())
-        return;
+    // Cheap early-out only. The authoritative check-and-reserve happens below, under the
+    // same lock as the insert -- testing here and inserting later would let two threads
+    // both pass this test for the same guid.
+    {
+        std::lock_guard<std::mutex> lock(s_botLoadingMutex);
+        if (botLoading.find(playerGuid) != botLoading.end())
+            return;
+    }
 
     // has bot already been added?
     Player* bot = ObjectAccessor::FindConnectedPlayer(playerGuid);
@@ -124,10 +131,13 @@ void PlayerbotHolder::AddPlayerBot(ObjectGuid playerGuid, uint32 masterAccountId
             return;
         }
         uint32 loadingForMaster = 0;
-        for (auto const& [guid, acctId] : botLoading)
         {
-            if (acctId == masterAccountId)
-                ++loadingForMaster;
+            std::lock_guard<std::mutex> lock(s_botLoadingMutex);
+            for (auto const& [guid, acctId] : botLoading)
+            {
+                if (acctId == masterAccountId)
+                    ++loadingForMaster;
+            }
         }
         uint32 count = mgr->GetPlayerbotsCount() + loadingForMaster;
         if (count >= uint32(PlayerbotAIConfig::instance().maxAddedBots))
@@ -152,7 +162,13 @@ void PlayerbotHolder::AddPlayerBot(ObjectGuid playerGuid, uint32 masterAccountId
         return;
     }
 
-    botLoading.emplace(playerGuid, masterAccountId);
+    // Check and reserve atomically: if another thread got here first for this guid, back
+    // out rather than queueing a second login for the same bot.
+    {
+        std::lock_guard<std::mutex> lock(s_botLoadingMutex);
+        if (!botLoading.emplace(playerGuid, masterAccountId).second)
+            return;
+    }
 
     // Always login in with world session to avoid race condition
     sWorld->AddQueryHolderCallback(CharacterDatabase.DelayQueryHolder(holder))
@@ -179,7 +195,10 @@ void PlayerbotHolder::AddPlayerBot(ObjectGuid playerGuid, uint32 masterAccountId
                             return;
                         }
 
-                        PlayerbotHolder::botLoading.erase(holder.GetGuid());
+                        {
+                            std::lock_guard<std::mutex> lock(PlayerbotHolder::s_botLoadingMutex);
+                            PlayerbotHolder::botLoading.erase(holder.GetGuid());
+                        }
 
                         return;
                     }
@@ -214,7 +233,10 @@ void PlayerbotHolder::HandlePlayerBotLoginCallback(PlayerbotLoginQueryHolder con
         LOG_DEBUG("mod-playerbots", "Bot player could not be loaded for account ID: {}", botAccountId);
         botSession->LogoutPlayer(true);
         delete botSession;
-        PlayerbotHolder::botLoading.erase(holder.GetGuid());
+        {
+            std::lock_guard<std::mutex> lock(PlayerbotHolder::s_botLoadingMutex);
+            PlayerbotHolder::botLoading.erase(holder.GetGuid());
+        }
 
         return;
     }
@@ -234,12 +256,16 @@ void PlayerbotHolder::HandlePlayerBotLoginCallback(PlayerbotLoginQueryHolder con
     auto op = std::make_unique<OnBotLoginOperation>(bot->GetGUID(), masterAccountId);
     PlayerbotWorldThreadProcessor::instance().QueueOperation(std::move(op));
 
-    PlayerbotHolder::botLoading.erase(holder.GetGuid());
+    {
+        std::lock_guard<std::mutex> lock(PlayerbotHolder::s_botLoadingMutex);
+        PlayerbotHolder::botLoading.erase(holder.GetGuid());
+    }
 }
 
 void PlayerbotHolder::UpdateSessions()
 {
-    for (PlayerBotMap::const_iterator itr = GetPlayerBotsBegin(); itr != GetPlayerBotsEnd(); ++itr)
+    PlayerBotMap const botsSnapshot = GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator itr = botsSnapshot.begin(); itr != botsSnapshot.end(); ++itr)
     {
         Player* const bot = itr->second;
         if (bot->IsBeingTeleported())
@@ -277,20 +303,7 @@ void PlayerbotHolder::HandleBotPackets(WorldSession* session)
 
 void PlayerbotHolder::LogoutAllBots()
 {
-    /*
-    while (true)
-    {
-        PlayerBotMap::const_iterator itr = GetPlayerBotsBegin();
-        if (itr == GetPlayerBotsEnd())
-            break;
-
-        Player* bot= itr->second;
-        if (!GET_PLAYERBOT_AI(bot)->IsRealPlayer())
-            LogoutPlayerBot(bot->GetGUID());
-    }
-    */
-
-    PlayerBotMap bots = playerBots;
+    PlayerBotMap bots = GetPlayerBotsSnapshot();
     for (auto& itr : bots)
     {
         Player* bot = itr.second;
@@ -311,7 +324,8 @@ void PlayerbotMgr::CancelLogout()
     if (!master)
         return;
 
-    for (PlayerBotMap::const_iterator it = GetPlayerBotsBegin(); it != GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const botsSnapshot = GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = botsSnapshot.begin(); it != botsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot);
@@ -327,8 +341,8 @@ void PlayerbotMgr::CancelLogout()
         }
     }
 
-    for (PlayerBotMap::const_iterator it = sRandomPlayerbotMgr.GetPlayerBotsBegin();
-         it != sRandomPlayerbotMgr.GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const randomBotsSnapshot = sRandomPlayerbotMgr.GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = randomBotsSnapshot.begin(); it != randomBotsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot);
@@ -449,32 +463,60 @@ void PlayerbotHolder::DisablePlayerBot(ObjectGuid guid)
 
 void PlayerbotHolder::RemoveFromPlayerbotsMap(ObjectGuid guid)
 {
+    std::unique_lock<std::shared_mutex> lock(m_botsMutex);
     playerBots.erase(guid);
 }
 
 Player* PlayerbotHolder::GetPlayerBot(ObjectGuid playerGuid) const
 {
+    std::shared_lock<std::shared_mutex> lock(m_botsMutex);
     PlayerBotMap::const_iterator it = playerBots.find(playerGuid);
-    return (it == playerBots.end()) ? 0 : it->second;
+    return (it == playerBots.end()) ? nullptr : it->second;
 }
 
 Player* PlayerbotHolder::GetPlayerBot(ObjectGuid::LowType lowGuid) const
 {
     ObjectGuid playerGuid = ObjectGuid::Create<HighGuid::Player>(lowGuid);
+    std::shared_lock<std::shared_mutex> lock(m_botsMutex);
     PlayerBotMap::const_iterator it = playerBots.find(playerGuid);
-    return (it == playerBots.end()) ? 0 : it->second;
+    return (it == playerBots.end()) ? nullptr : it->second;
+}
+
+PlayerBotMap PlayerbotHolder::GetPlayerBotsSnapshot() const
+{
+    std::shared_lock<std::shared_mutex> lock(m_botsMutex);
+    return playerBots;
+}
+
+uint32 PlayerbotHolder::GetPlayerbotsCount() const
+{
+    std::shared_lock<std::shared_mutex> lock(m_botsMutex);
+    return static_cast<uint32>(playerBots.size());
 }
 
 void PlayerbotHolder::OnBotLogin(Player* const bot)
 {
-    // Prevent duplicate login
-    if (playerBots.find(bot->GetGUID()) != playerBots.end())
+    // Prevent duplicate login.
+    //
+    // The check and the insert are deliberately not one atomic step. Single-flight per
+    // guid is already enforced upstream by the botLoading reservation in AddPlayerBot, so
+    // there is no second thread to lose this race to -- and claiming the slot up front
+    // would publish the bot in playerBots before AddPlayerbotData has created its AI,
+    // handing other threads a Player whose GET_PLAYERBOT_AI is still null.
     {
-        return;
+        std::shared_lock<std::shared_mutex> lock(m_botsMutex);
+        if (playerBots.find(bot->GetGUID()) != playerBots.end())
+        {
+            return;
+        }
     }
 
     PlayerbotsMgr::instance().AddPlayerbotData(bot, true);
-    playerBots[bot->GetGUID()] = bot;
+
+    {
+        std::unique_lock<std::shared_mutex> lock(m_botsMutex);
+        playerBots[bot->GetGUID()] = bot;
+    }
 
     OnBotLoginInternal(bot);
 
@@ -1173,8 +1215,11 @@ std::vector<std::string> PlayerbotHolder::HandlePlayerbotCommand(char const* arg
             // If the user requested a specific gender, skip any character that doesn't match.
             if (gender != -1 && GetOfflinePlayerGender(guid) != gender)
                 continue;
-            if (botLoading.find(guid) != botLoading.end())
-                continue;
+            {
+                std::lock_guard<std::mutex> lock(s_botLoadingMutex);
+                if (botLoading.find(guid) != botLoading.end())
+                    continue;
+            }
             if (ObjectAccessor::FindConnectedPlayer(guid))
                 continue;
             uint32 guildId = sCharacterCache->GetCharacterGuildIdByGuid(guid);
@@ -1238,7 +1283,8 @@ std::vector<std::string> PlayerbotHolder::HandlePlayerbotCommand(char const* arg
 
     if (charnameStr == "!" && master && master->GetSession()->GetSecurity() > SEC_GAMEMASTER)
     {
-        for (PlayerBotMap::const_iterator i = GetPlayerBotsBegin(); i != GetPlayerBotsEnd(); ++i)
+        PlayerBotMap const botsSnapshot = GetPlayerBotsSnapshot();
+        for (PlayerBotMap::const_iterator i = botsSnapshot.begin(); i != botsSnapshot.end(); ++i)
         {
             if (Player* bot = i->second)
                 if (bot->IsInWorld())
@@ -1379,7 +1425,8 @@ std::string const PlayerbotHolder::ListBots(Player* master)
     std::vector<std::string> names;
     std::map<std::string, std::string> classes;
 
-    for (PlayerBotMap::const_iterator it = GetPlayerBotsBegin(); it != GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const botsSnapshot = GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = botsSnapshot.begin(); it != botsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         std::string const name = bot->GetName();
@@ -1473,7 +1520,8 @@ std::string const PlayerbotHolder::LookupBots(Player*)
 uint32 PlayerbotHolder::GetPlayerbotsCountByClass(uint32 cls)
 {
     uint32 count = 0;
-    for (PlayerBotMap::const_iterator it = GetPlayerBotsBegin(); it != GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const botsSnapshot = GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = botsSnapshot.begin(); it != botsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         if (bot && bot->IsInWorld() && bot->getClass() == cls)
@@ -1516,7 +1564,8 @@ void PlayerbotMgr::HandleCommand(uint32 type, std::string const text)
         return;
     }
 
-    for (PlayerBotMap::const_iterator it = GetPlayerBotsBegin(); it != GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const botsSnapshot = GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = botsSnapshot.begin(); it != botsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot);
@@ -1524,8 +1573,8 @@ void PlayerbotMgr::HandleCommand(uint32 type, std::string const text)
             botAI->HandleCommand(type, text, master);
     }
 
-    for (PlayerBotMap::const_iterator it = sRandomPlayerbotMgr.GetPlayerBotsBegin();
-         it != sRandomPlayerbotMgr.GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const randomBotsSnapshot = sRandomPlayerbotMgr.GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = randomBotsSnapshot.begin(); it != randomBotsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot);
@@ -1536,7 +1585,8 @@ void PlayerbotMgr::HandleCommand(uint32 type, std::string const text)
 
 void PlayerbotMgr::HandleMasterIncomingPacket(WorldPacket const& packet)
 {
-    for (PlayerBotMap::const_iterator it = GetPlayerBotsBegin(); it != GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const botsSnapshot = GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = botsSnapshot.begin(); it != botsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         if (!bot)
@@ -1546,8 +1596,8 @@ void PlayerbotMgr::HandleMasterIncomingPacket(WorldPacket const& packet)
             botAI->HandleMasterIncomingPacket(packet);
     }
 
-    for (PlayerBotMap::const_iterator it = sRandomPlayerbotMgr.GetPlayerBotsBegin();
-         it != sRandomPlayerbotMgr.GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const randomBotsSnapshot = sRandomPlayerbotMgr.GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = randomBotsSnapshot.begin(); it != randomBotsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot);
@@ -1592,7 +1642,8 @@ void PlayerbotMgr::HandleMasterIncomingPacket(WorldPacket const& packet)
 
 void PlayerbotMgr::HandleMasterOutgoingPacket(WorldPacket const& packet)
 {
-    for (PlayerBotMap::const_iterator it = GetPlayerBotsBegin(); it != GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const botsSnapshot = GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = botsSnapshot.begin(); it != botsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot);
@@ -1600,8 +1651,8 @@ void PlayerbotMgr::HandleMasterOutgoingPacket(WorldPacket const& packet)
             botAI->HandleMasterOutgoingPacket(packet);
     }
 
-    for (PlayerBotMap::const_iterator it = sRandomPlayerbotMgr.GetPlayerBotsBegin();
-         it != sRandomPlayerbotMgr.GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const randomBotsSnapshot = sRandomPlayerbotMgr.GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = randomBotsSnapshot.begin(); it != randomBotsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot);
@@ -1612,14 +1663,15 @@ void PlayerbotMgr::HandleMasterOutgoingPacket(WorldPacket const& packet)
 
 void PlayerbotMgr::SaveToDB()
 {
-    for (PlayerBotMap::const_iterator it = GetPlayerBotsBegin(); it != GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const botsSnapshot = GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = botsSnapshot.begin(); it != botsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         bot->SaveToDB(false, false);
     }
 
-    for (PlayerBotMap::const_iterator it = sRandomPlayerbotMgr.GetPlayerBotsBegin();
-         it != sRandomPlayerbotMgr.GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const randomBotsSnapshot = sRandomPlayerbotMgr.GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = randomBotsSnapshot.begin(); it != randomBotsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         if (GET_PLAYERBOT_AI(bot) && GET_PLAYERBOT_AI(bot)->GetMaster() == GetMaster())

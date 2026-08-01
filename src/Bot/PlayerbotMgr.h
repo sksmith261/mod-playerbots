@@ -7,6 +7,7 @@
 #ifndef PLAYERBOTS_PLAYERBOTMGR_H
 #define PLAYERBOTS_PLAYERBOTMGR_H
 
+#include <mutex>
 #include <shared_mutex>
 
 #include "ObjectGuid.h"
@@ -36,8 +37,18 @@ public:
     void RemoveFromPlayerbotsMap(ObjectGuid guid);
     Player* GetPlayerBot(ObjectGuid guid) const;
     Player* GetPlayerBot(ObjectGuid::LowType lowGuid) const;
-    PlayerBotMap::const_iterator GetPlayerBotsBegin() const { return playerBots.begin(); }
-    PlayerBotMap::const_iterator GetPlayerBotsEnd() const { return playerBots.end(); }
+
+    /// Returns a copy of the bot map taken under the lock.
+    ///
+    /// This replaces the begin/end iterator pair that used to be exposed here. Handing
+    /// out raw iterators cannot be made thread-safe: the caller walks the container long
+    /// after the accessor returned, so a bot logging out on another map thread erases the
+    /// node the caller is standing on. Every caller iterated them unguarded, which is why
+    /// locking the accessors alone would not have closed the race.
+    ///
+    /// Copying is affordable because the map holds pointers, and iteration happens on
+    /// command paths and logout, not per tick.
+    PlayerBotMap GetPlayerBotsSnapshot() const;
 
     void UpdateAIInternal([[maybe_unused]] uint32 elapsed, [[maybe_unused]] bool minimal = false) override{};
     void UpdateSessions();
@@ -53,13 +64,19 @@ public:
     uint32 GetAccountId(ObjectGuid guid);
     std::string const ListBots(Player* master);
     std::string const LookupBots(Player* master);
-    uint32 GetPlayerbotsCount() { return playerBots.size(); }
+    uint32 GetPlayerbotsCount() const;
     uint32 GetPlayerbotsCountByClass(uint32 cls);
 
 protected:
     virtual void OnBotLoginInternal(Player* const bot) = 0;
 
+    /// Guards playerBots. Reads dominate, so shared_mutex rather than mutex.
+    mutable std::shared_mutex m_botsMutex;
     PlayerBotMap playerBots;
+
+    /// botLoading is static -- shared by every holder -- so it needs a lock with the same
+    /// storage duration rather than the per-instance one above.
+    static std::mutex s_botLoadingMutex;
     static std::unordered_map<ObjectGuid, uint32> botLoading;
 };
 

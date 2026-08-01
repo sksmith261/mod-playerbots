@@ -2488,7 +2488,8 @@ bool RandomPlayerbotMgr::HandlePlayerbotConsoleCommand(ChatHandler* /*handler*/,
 
 void RandomPlayerbotMgr::HandleCommand(uint32 type, std::string const text, Player* fromPlayer, std::string channelName)
 {
-    for (PlayerBotMap::const_iterator it = GetPlayerBotsBegin(); it != GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const botsSnapshot = GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = botsSnapshot.begin(); it != botsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         if (!bot)
@@ -2512,7 +2513,8 @@ void RandomPlayerbotMgr::OnPlayerLogout(Player* player)
 {
     DisablePlayerBot(player->GetGUID());
 
-    for (PlayerBotMap::const_iterator it = GetPlayerBotsBegin(); it != GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const botsSnapshot = GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = botsSnapshot.begin(); it != botsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot);
@@ -2565,7 +2567,8 @@ void RandomPlayerbotMgr::OnPlayerLogin(Player* player)
 {
     uint32 botsNearby = 0;
 
-    for (PlayerBotMap::const_iterator it = GetPlayerBotsBegin(); it != GetPlayerBotsEnd(); ++it)
+    PlayerBotMap const botsSnapshot = GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator it = botsSnapshot.begin(); it != botsSnapshot.end(); ++it)
     {
         Player* const bot = it->second;
         if (player == bot /* || GET_PLAYERBOT_AI(player)*/)  // TEST

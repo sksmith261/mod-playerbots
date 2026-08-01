@@ -480,7 +480,8 @@ float Formation::GetFollowAngle()
         PlayerbotMgr* masterBotMgr = GET_PLAYERBOT_MGR(master);
         if (masterBotMgr && !GET_PLAYERBOT_AI(master))
         {
-            for (auto it = masterBotMgr->GetPlayerBotsBegin(); it != masterBotMgr->GetPlayerBotsEnd(); ++it)
+            PlayerBotMap const botsSnapshot = masterBotMgr->GetPlayerBotsSnapshot();
+            for (auto it = botsSnapshot.begin(); it != botsSnapshot.end(); ++it)
             {
                 if (it->second == bot)
                 {

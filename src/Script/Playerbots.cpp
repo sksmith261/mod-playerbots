@@ -236,7 +236,8 @@ public:
         if (playerbotMgr == nullptr)
             return true;
 
-        for (PlayerBotMap::const_iterator it = playerbotMgr->GetPlayerBotsBegin(); it != playerbotMgr->GetPlayerBotsEnd(); ++it)
+        PlayerBotMap const botsSnapshot = playerbotMgr->GetPlayerBotsSnapshot();
+        for (PlayerBotMap::const_iterator it = botsSnapshot.begin(); it != botsSnapshot.end(); ++it)
         {
             Player* const bot = it->second;
 
