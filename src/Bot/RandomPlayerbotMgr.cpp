@@ -312,7 +312,7 @@ void RandomPlayerbotMgr::UpdateAIInternal(uint32 /*elapsed*/, bool /*minimal*/)
     GetBots();
     std::list<uint32> availableBots = currentBots;
     uint32 availableBotCount = availableBots.size();
-    uint32 onlineBotCount = playerBots.size();
+    uint32 onlineBotCount = GetPlayerbotsCount();
 
     uint32 onlineBotFocus = 75;
     if (onlineBotCount < (uint32)(sPlayerbotAIConfig.minRandomBots * 90 / 100))
@@ -428,7 +428,7 @@ void RandomPlayerbotMgr::UpdateAIInternal(uint32 /*elapsed*/, bool /*minimal*/)
                 break;
         }
 
-        if (loginBots && botLoading.empty())
+        if (loginBots && GetBotLoadingCount() == 0)
         {
             loginBots += updateBots;
             loginBots = std::min(loginBots, maxNewBots);
@@ -1012,7 +1012,8 @@ void RandomPlayerbotMgr::CheckBgQueue()
     }
 
     // Process player bots
-    for (auto& [guid, bot] : playerBots)
+    PlayerBotMap const botsSnapshot = GetPlayerBotsSnapshot();
+    for (auto const& [guid, bot] : botsSnapshot)
     {
         if (!bot || !bot->InBattlegroundQueue() || !bot->IsInWorld() || !IsRandomBot(bot))
             continue;
@@ -1113,7 +1114,7 @@ void RandomPlayerbotMgr::CheckBgQueue()
     }
 
     // If enabled, wait for all bots to have logged in before queueing for Arena's / BG's
-    if (sPlayerbotAIConfig.randomBotAutoJoinBG && playerBots.size() >= GetMaxAllowedBotCount())
+    if (sPlayerbotAIConfig.randomBotAutoJoinBG && GetPlayerbotsCount() >= GetMaxAllowedBotCount())
     {
         uint32 randomBotAutoJoinArenaBracket = sPlayerbotAIConfig.randomBotAutoJoinArenaBracket;
         uint32 randomBotAutoJoinBGRatedArena2v2Count = sPlayerbotAIConfig.randomBotAutoJoinBGRatedArena2v2Count;
@@ -2101,17 +2102,17 @@ void RandomPlayerbotMgr::Refresh(Player* bot)
 
 bool RandomPlayerbotMgr::IsRandomBot(Player* bot)
 {
-    if (bot && GET_PLAYERBOT_AI(bot))
-    {
-        if (GET_PLAYERBOT_AI(bot)->IsRealPlayer())
-            return false;
-    }
-    if (bot)
-    {
-        return IsRandomBot(bot->GetGUID().GetCounter());
-    }
+    if (!bot)
+        return false;
 
-    return false;
+    // Read the flag cached at login instead of scanning currentBots. Same answer: the flag
+    // is set from the guid overload below, at a point where the roster is stable, and
+    // membership cannot change while the bot is in world.
+    if (PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot))
+        return !botAI->IsRealPlayer() && botAI->IsRandomBot();
+
+    // No AI attached yet -- fall back to the roster lookup, as before.
+    return IsRandomBot(bot->GetGUID().GetCounter());
 }
 
 bool RandomPlayerbotMgr::IsRandomBot(ObjectGuid::LowType bot)
@@ -2537,10 +2538,10 @@ void RandomPlayerbotMgr::OnBotLoginInternal(Player* const bot)
 {
     if (_isBotLogging)
     {
-        LOG_INFO("playerbots", "{}/{} Bot {} logged in", playerBots.size(),
+        LOG_INFO("playerbots", "{}/{} Bot {} logged in", GetPlayerbotsCount(),
                  sRandomPlayerbotMgr.GetMaxAllowedBotCount(), bot->GetName().c_str());
 
-        if (playerBots.size() == sRandomPlayerbotMgr.GetMaxAllowedBotCount())
+        if (GetPlayerbotsCount() == sRandomPlayerbotMgr.GetMaxAllowedBotCount())
         {
             _isBotLogging = false;
         }
@@ -2675,7 +2676,7 @@ Player* RandomPlayerbotMgr::GetRandomPlayer()
 void RandomPlayerbotMgr::PrintStats()
 {
     printStatsTimer = time(nullptr);
-    LOG_INFO("playerbots", "Random Bots Stats: {} online", playerBots.size());
+    LOG_INFO("playerbots", "Random Bots Stats: {} online", GetPlayerbotsCount());
 
     std::map<uint8, uint32> alliance, horde;
     for (uint32 i = 0; i < 10; ++i)
@@ -2724,7 +2725,8 @@ void RandomPlayerbotMgr::PrintStats()
     // static NewRpgStatistic rpgStasticTotal;
     std::unordered_map<uint32, int> zoneCount;
     uint8 maxBotLevel = 0;
-    for (PlayerBotMap::iterator i = playerBots.begin(); i != playerBots.end(); ++i)
+    PlayerBotMap const statsSnapshot = GetPlayerBotsSnapshot();
+    for (PlayerBotMap::const_iterator i = statsSnapshot.begin(); i != statsSnapshot.end(); ++i)
     {
         Player* bot = i->second;
         if (IsAlliance(bot->getRace()))

@@ -67,8 +67,18 @@ public:
     uint32 GetPlayerbotsCount() const;
     uint32 GetPlayerbotsCountByClass(uint32 cls);
 
+    /// Number of bot logins currently in flight, read under the lock.
+    static uint32 GetBotLoadingCount();
+
 protected:
     virtual void OnBotLoginInternal(Player* const bot) = 0;
+
+private:
+    // Private rather than protected on purpose. While these were reachable by derived
+    // classes, RandomPlayerbotMgr read playerBots directly at eight sites -- including two
+    // unguarded iterations and a GetAllBots() that copied it without the lock. Keeping the
+    // state private forces every access through the accessors above, so the locking cannot
+    // be bypassed by accident.
 
     /// Guards playerBots. Reads dominate, so shared_mutex rather than mutex.
     mutable std::shared_mutex m_botsMutex;

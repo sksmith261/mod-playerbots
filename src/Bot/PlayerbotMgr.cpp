@@ -494,6 +494,12 @@ uint32 PlayerbotHolder::GetPlayerbotsCount() const
     return static_cast<uint32>(playerBots.size());
 }
 
+uint32 PlayerbotHolder::GetBotLoadingCount()
+{
+    std::lock_guard<std::mutex> lock(s_botLoadingMutex);
+    return static_cast<uint32>(botLoading.size());
+}
+
 void PlayerbotHolder::OnBotLogin(Player* const bot)
 {
     // Prevent duplicate login.
@@ -512,6 +518,12 @@ void PlayerbotHolder::OnBotLogin(Player* const bot)
     }
 
     PlayerbotsMgr::instance().AddPlayerbotData(bot, true);
+
+    // Evaluate the random-bot predicate once, here, where we are on the world thread and
+    // the roster is stable, and cache it on the AI. Answering it per call meant scanning
+    // RandomPlayerbotMgr's currentBots list from 66 sites in the AI on map threads.
+    if (PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot))
+        botAI->SetRandomBot(sRandomPlayerbotMgr.IsRandomBot(bot->GetGUID().GetCounter()));
 
     {
         std::unique_lock<std::shared_mutex> lock(m_botsMutex);

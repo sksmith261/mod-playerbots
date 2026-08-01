@@ -539,6 +539,17 @@ public:
 
     // Checks if the bot is really a player. Players always have themselves as master.
     bool IsRealPlayer() { return master ? (master == bot) : false; }
+
+    // Whether this bot belongs to the random-bot roster. Cached at login.
+    //
+    // RandomPlayerbotMgr::IsRandomBot used to answer this by linear-scanning currentBots --
+    // a std::list holding one entry per bot in the world -- from 66 call sites across the
+    // AI. The answer is a property of this bot and is fixed for its session: membership is
+    // added before login and removed at logout, and every removal site is immediately
+    // followed by a logout. So it is evaluated once and read from here.
+    bool IsRandomBot() const { return _isRandomBot; }
+    void SetRandomBot(bool state) { _isRandomBot = state; }
+
     // Bot has a master that is a player.
     bool HasRealPlayerMaster();
     // Bot has a master that is activly playing.
@@ -629,6 +640,7 @@ private:
                !player->IsBeingTeleported();
     }
 protected:
+    bool _isRandomBot = false;
     Player* bot;
     Player* master;
     uint32 accountId;
