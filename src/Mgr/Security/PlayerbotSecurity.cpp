@@ -9,6 +9,7 @@
 #include "LFGMgr.h"
 #include "PlayerbotAIConfig.h"
 #include "Playerbots.h"
+#include "World.h"
 
 PlayerbotSecurity::PlayerbotSecurity(Player* const bot) : bot(bot)
 {
@@ -40,7 +41,24 @@ PlayerbotSecurityLevel PlayerbotSecurity::LevelFor(Player* from, DenyReason* rea
         return PLAYERBOT_SECURITY_DENY_ALL;
     }
 
-    if (botAI->IsOpposing(from))
+    // Faction only disqualifies outright where the core still separates the factions.
+    // AllowTwoSide.Interaction.Group is what lets a mixed party exist at all -- it is the
+    // switch the core's own invite gate reads (GroupHandler.cpp), and the switch that makes
+    // opposite-faction group members targetable by spoofing their faction template to the
+    // client (Unit::BuildValuesUpdate). Denying here regardless of it made the bots the one
+    // component that ignored the server's decision: the core accepted a cross-faction invite
+    // and the bot then declined it itself, and .summon was refused for a bot the summon spell
+    // would have allowed, since the core checks only same-group membership, never team.
+    //
+    // GuildInviteAction::PlayerIsValid already defers to the guild equivalent of this option;
+    // this is the same deference for groups.
+    //
+    // Note this is not a blanket allow: it drops faction as an automatic disqualifier so the
+    // checks below -- shared group, master, random-account rules -- decide as they do for a
+    // same-faction player, rather than being short-circuited before they run.
+    bool const crossFactionAllowed = sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_GROUP);
+
+    if (!crossFactionAllowed && botAI->IsOpposing(from))
     {
         if (reason)
             *reason = PLAYERBOT_DENY_OPPOSING;
@@ -51,7 +69,7 @@ PlayerbotSecurityLevel PlayerbotSecurity::LevelFor(Player* from, DenyReason* rea
     if (sPlayerbotAIConfig.IsInRandomAccountList(account))
     {
         // (duplicate check in case of faction change)
-        if (botAI->IsOpposing(from))
+        if (!crossFactionAllowed && botAI->IsOpposing(from))
         {
             if (reason)
                 *reason = PLAYERBOT_DENY_OPPOSING;
