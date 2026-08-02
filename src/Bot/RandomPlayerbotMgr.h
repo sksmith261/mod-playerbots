@@ -7,6 +7,8 @@
 #ifndef PLAYERBOTS_RANDOMPLAYERBOTMGR_H
 #define PLAYERBOTS_RANDOMPLAYERBOTMGR_H
 
+#include <mutex>
+
 #include "NewRpgInfo.h"
 #include "ObjectGuid.h"
 #include "PlayerbotMgr.h"
@@ -42,6 +44,29 @@ struct BattlegroundInfo
     // Players (Battleground)
     uint32 bgHordePlayerCount = 0;
     uint32 bgAlliancePlayerCount = 0;
+};
+
+/// Locked view over the battleground counter table.
+///
+/// Obtained from RandomPlayerbotMgr::LockBattlegroundData(). The lock is held for as long
+/// as the accessor lives, so a whole read-decide-write sequence is one critical section.
+/// Indexes exactly like the raw table did, so call sites only change which object they
+/// subscript.
+class BattlegroundDataAccessor
+{
+public:
+    using Table = std::map<uint32, std::map<uint32, BattlegroundInfo>>;
+
+    BattlegroundDataAccessor(std::mutex& mutex, Table& table) : _lock(mutex), _table(table) {}
+
+    std::map<uint32, BattlegroundInfo>& operator[](uint32 queueType) { return _table[queueType]; }
+
+    Table::iterator begin() { return _table.begin(); }
+    Table::iterator end() { return _table.end(); }
+
+private:
+    std::unique_lock<std::mutex> _lock;
+    Table& _table;
 };
 
 class ChatHandler;
@@ -146,14 +171,31 @@ public:
     ObjectGuid GetBattleMasterGUID(Player* bot, BattlegroundTypeId bgTypeId);
     CreatureData const* GetCreatureDataByEntry(uint32 entry);
     void LoadBattleMastersCache();
-    std::map<uint32, std::map<uint32, BattlegroundInfo>> BattlegroundData;
+
+    /// Scoped, locked access to the battleground counters.
+    ///
+    /// Bot AI reads several counters from one bracket, decides whether it has room, then
+    /// increments one of them. Holding this accessor keeps that sequence atomic. Per-field
+    /// std::atomic would make every access well-defined and still let two bots on different
+    /// map threads both observe room and both queue, overshooting the bracket.
+    ///
+    /// Never call anything that takes this lock again while holding one -- the mutex is not
+    /// recursive. Helpers that run under an existing lock take the accessor as a parameter
+    /// instead; see LogBattlegroundInfo.
+    BattlegroundDataAccessor LockBattlegroundData()
+    {
+        return BattlegroundDataAccessor(_battlegroundDataMutex, BattlegroundData);
+    }
+
     std::map<uint32, std::map<uint32, std::map<TeamId, uint32>>> VisualBots;
     std::map<uint32, std::map<uint32, std::map<uint32, uint32>>> Supporters;
     std::map<TeamId, std::vector<uint32>> LfgDungeons;
     void CheckBgQueue();
     void CheckLfgQueue();
     void CheckPlayers();
-    void LogBattlegroundInfo();
+    /// Takes the accessor rather than locking itself: CheckBgQueue calls this as its last
+    /// step while already holding the lock, and the mutex is not recursive.
+    void LogBattlegroundInfo(BattlegroundDataAccessor& bgData);
 
     std::map<TeamId, std::map<BattlegroundTypeId, std::vector<uint32>>> getBattleMastersCache()
     {
@@ -177,6 +219,12 @@ protected:
     void OnBotLoginInternal(Player* const bot) override;
 
 private:
+    /// Reachable only through LockBattlegroundData(). Was public, and bot AI subscripted it
+    /// directly at 37 sites on map threads while CheckBgQueue rebuilt it on the world
+    /// thread.
+    std::map<uint32, std::map<uint32, BattlegroundInfo>> BattlegroundData;
+    mutable std::mutex _battlegroundDataMutex;
+
     RandomPlayerbotMgr() : PlayerbotHolder(), processTicks(0)
     {
         this->playersLevel = sPlayerbotAIConfig.randombotStartingLevel;
