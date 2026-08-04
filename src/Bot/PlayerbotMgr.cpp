@@ -505,16 +505,20 @@ void PlayerbotHolder::OnBotLogin(Player* const bot)
                 }
             }
 
-            // Don't disband alt groups when master goes away
-            // Controlled by config
-            if (sPlayerbotAIConfig.KeepAltsInGroup())
+            // A group containing any real player's character is worth keeping, even when that
+            // player is offline. This is what lets a dungeon party survive a server restart:
+            // the core restores the group from the DB before the bots log in, but master is
+            // in-memory-only state and is always null here after a restart, so the master
+            // check above can never save the group. The account test is the only
+            // restart-durable signal, and it must not be gated behind KeepAltsInGroup —
+            // leaving the group here is what cascades into Group::Disband, which deletes
+            // every member's temporary dungeon bind (including the offline player's) and
+            // with it the instance itself.
+            uint32 account = sCharacterCache->GetCharacterAccountIdByGuid(member);
+            if (!sPlayerbotAIConfig.IsInRandomAccountList(account))
             {
-                uint32 account = sCharacterCache->GetCharacterAccountIdByGuid(member);
-                if (!sPlayerbotAIConfig.IsInRandomAccountList(account))
-                {
-                    groupValid = true;
-                    break;
-                }
+                groupValid = true;
+                break;
             }
         }
 

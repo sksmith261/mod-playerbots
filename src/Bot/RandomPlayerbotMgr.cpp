@@ -14,6 +14,8 @@
 #include <ctime>
 #include <iomanip>
 #include <random>
+#include <unordered_map>
+#include <utility>
 
 #include "AiFactory.h"
 #include "Battleground.h"
@@ -636,10 +638,90 @@ bool RandomPlayerbotMgr::IsAccountType(uint32 accountId, uint8 accountType)
 // reached after Phase 2, the function goes back to log-in Alliance bots and reach maxAllowedBotCount. This is done
 // because not every account is guaranteed 5A/5H bots, so the true ratio might be skewed by few percentages. Finally,
 // Phase 4 is reached if and only if the value of RandomBotAccountCount is lower than it should.
+// One-shot startup sweep: re-login every random bot that sits in a persisted group together
+// with a real player's character. Init() wipes the previous roster ('add' events) and
+// AddRandomBots() re-picks bots at random, so without this the specific bots holding a
+// player's dungeon party together are online again only by coincidence. The group itself
+// survives the restart (see OnBotLogin), but a party of offline bots is no use to the
+// player who logs back in expecting to continue their run.
+//
+// Bots restored here go through the exact same 'add' event + currentBots path as
+// AddRandomBots' tryLoginBot, so the normal ProcessBot machinery performs the actual login
+// and every existing guard (grouped bots exempt from randomize/teleport/logout) applies.
+// Death Knights are NOT skipped here even when DisableDeathKnightLogin is set: the bot is
+// already a member of a real group, and stranding it offline breaks the very party this
+// sweep exists to restore.
+uint32 RandomPlayerbotMgr::AddGroupedBots()
+{
+    QueryResult result = CharacterDatabase.Query(
+        "SELECT gm.guid, gm.memberGuid, c.account FROM group_member gm "
+        "JOIN characters c ON c.guid = gm.memberGuid");
+    if (!result)
+        return 0;
+
+    std::unordered_map<uint32, std::vector<std::pair<uint32, uint32>>> membersByGroup;
+    do
+    {
+        Field* fields = result->Fetch();
+        membersByGroup[fields[0].Get<uint32>()].emplace_back(
+            fields[1].Get<uint32>(), fields[2].Get<uint32>());
+    } while (result->NextRow());
+
+    uint32 added = 0;
+    for (auto const& [groupGuid, members] : membersByGroup)
+    {
+        bool hasRealMember = false;
+        for (auto const& [memberGuid, account] : members)
+        {
+            if (!sPlayerbotAIConfig.IsInRandomAccountList(account))
+            {
+                hasRealMember = true;
+                break;
+            }
+        }
+        if (!hasRealMember)
+            continue;
+
+        for (auto const& [memberGuid, account] : members)
+        {
+            if (!sPlayerbotAIConfig.IsInRandomAccountList(account))
+                continue;
+
+            ObjectGuid guid = ObjectGuid::Create<HighGuid::Player>(memberGuid);
+            if (GetEventValue(memberGuid, "add") || GetEventValue(memberGuid, "logout") ||
+                GetPlayerBot(guid) ||
+                std::find(currentBots.begin(), currentBots.end(), memberGuid) != currentBots.end())
+                continue;
+
+            uint32 add_time = sPlayerbotAIConfig.enablePeriodicOnlineOffline
+                                ? urand(sPlayerbotAIConfig.minRandomBotInWorldTime,
+                                        sPlayerbotAIConfig.maxRandomBotInWorldTime)
+                                : sPlayerbotAIConfig.permanentlyInWorldTime;
+
+            SetEventValue(memberGuid, "add", 1, add_time);
+            SetEventValue(memberGuid, "logout", 0, 0);
+            currentBots.push_back(memberGuid);
+            ++added;
+        }
+    }
+
+    if (added)
+        LOG_INFO("playerbots", "Restoring {} bot(s) grouped with real players from before the restart.", added);
+
+    return added;
+}
+
 uint32 RandomPlayerbotMgr::AddRandomBots()
 {
     uint32 maxAllowedBotCount = GetEventValue(0, "bot_count");
     static time_t missingBotsTimer = 0;
+
+    static bool groupedBotsRestored = false;
+    if (!groupedBotsRestored)
+    {
+        groupedBotsRestored = true;
+        AddGroupedBots();
+    }
 
     if (currentBots.size() < maxAllowedBotCount)
     {
