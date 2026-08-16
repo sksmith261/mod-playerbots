@@ -6,8 +6,13 @@
 
 #include "SeeSpellAction.h"
 
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+
 #include "Event.h"
 #include "Formations.h"
+#include "Group.h"
 #include "Playerbots.h"
 #include "RTSCValues.h"
 #include "RtscAction.h"
@@ -141,8 +146,122 @@ bool SeeSpellAction::Execute(Event event)
 
         return true;
     }
+    else if (nextAction.rfind("spread", 0) == 0 || nextAction == "stack" || nextAction == "goto")
+    {
+        // Deliberately no value reset: the armed set must stay stable while
+        // bots drain the click packet on different ticks, and it lets the
+        // master re-click to re-form the ring. "follow"/"stay"/"rtsc reset"
+        // disarm it.
+        return MoveToClickFormation(spellPosition, nextAction);
+    }
 
     return false;
+}
+
+bool SeeSpellAction::MoveToClickFormation(WorldPosition& center, std::string const& armed)
+{
+    std::string const token = armed.substr(0, armed.find(' '));
+    float const gap = token == "spread" && armed.size() > 7 ? atof(armed.substr(7).c_str()) : 0.0f;
+
+    Player* master = botAI->GetMaster();
+    Group* group = bot->GetGroup();
+    if (!master || !group)
+        return false;
+
+    // Self-qualification: same rules every bot applies to every member below,
+    // so slot assignments never collide.
+    if (bot->GetMapId() != center.GetMapId() || !bot->IsAlive() || bot->GetVehicle() || bot->IsInFlight())
+        return false;
+
+    // Roster: group-iteration order is the same shared list for every bot, and
+    // the armed value persists across the click, so each bot independently
+    // computes an identical assignment (same idea as MountDrakeAction).
+    uint32 n = 0;
+    int32 myRank = -1;
+    for (GroupReference* ref = group->GetFirstMember(); ref; ref = ref->next())
+    {
+        Player* member = ref->GetSource();
+        if (!member || !member->IsInWorld())
+            continue;
+
+        PlayerbotAI* memberAI = GET_PLAYERBOT_AI(member);
+        if (!memberAI || memberAI->GetMaster() != master)
+            continue;
+
+        if (member->GetMapId() != center.GetMapId())
+            continue;
+
+        if (!member->IsAlive() || member->GetVehicle() || member->IsInFlight())
+            continue;
+
+        std::string const memberArmed =
+            memberAI->GetAiObjectContext()->GetValue<std::string>("RTSC next spell action")->Get();
+        if (memberArmed.substr(0, memberArmed.find(' ')) != token)
+            continue;
+
+        if (member == bot)
+            myRank = n;
+
+        ++n;
+    }
+
+    if (myRank < 0 || !n)
+        return false;
+
+    float radius;
+    if (token == "spread")
+        radius = n == 1 ? std::max(2.0f, gap) : std::max({2.0f, gap / 2.0f, n * gap / (2.0f * static_cast<float>(M_PI))});
+    else if (token == "stack")
+        radius = n == 1 ? 0.0f : 1.5f;
+    else  // goto
+        radius = n == 1 ? 0.0f : 3.0f;
+
+    // Full 360-degree ring, anchored on the master->click direction so slots
+    // are stable between re-clicks from the same spot.
+    float const base = atan2(center.GetPositionY() - master->GetPositionY(), center.GetPositionX() - master->GetPositionX());
+    float const angle = base + 2.0f * static_cast<float>(M_PI) * myRank / n;
+
+    float x = center.GetPositionX() + cos(angle) * radius;
+    float y = center.GetPositionY() + sin(angle) * radius;
+    float z = center.GetPositionZ();
+
+    Map* map = bot->GetMap();
+    if (!map->CheckCollisionAndGetValidCoords(bot, center.GetPositionX(), center.GetPositionY(), center.GetPositionZ(), x, y, z))
+    {
+        x = center.GetPositionX() + cos(angle) * radius;
+        y = center.GetPositionY() + sin(angle) * radius;
+        z = center.GetPositionZ();
+        bot->UpdateAllowedPositionZ(x, y, z);
+    }
+
+    // Hold the slot: stay anchor at the destination, stay strategy on. +stay
+    // removes follow automatically (exclusive movement strategy group).
+    // Mirrors StayChatShortcutAction minus botAI->Reset(), which would clear
+    // values mid-click.
+    PositionMap& posMap = AI_VALUE(PositionMap&, "position");
+    PositionInfo pos = posMap["stay"];
+    pos.Set(x, y, z, center.GetMapId());
+    posMap["stay"] = pos;
+    pos = posMap["return"];
+    pos.Set(x, y, z, center.GetMapId());
+    posMap["return"] = pos;
+    botAI->ChangeStrategy("+stay,-passive,-move from group", BOT_STATE_NON_COMBAT);
+    botAI->ChangeStrategy("+stay,-follow,-passive,-move from group", BOT_STATE_COMBAT);
+
+    // One marker pin at the center, not one per bot.
+    if (!myRank)
+    {
+        if (Creature* wpCreature = bot->SummonCreature(15631, center.GetPositionX(), center.GetPositionY(), center.GetPositionZ(), 0.0f,
+                                                       TEMPSUMMON_TIMED_DESPAWN, 2000.0f))
+            wpCreature->SetObjectScale(0.5f);
+    }
+
+    bool const moved = MoveTo(center.GetMapId(), x, y, z, false, false, false, /*exact_waypoint*/ true,
+                              MovementPriority::MOVEMENT_COMBAT);
+    if (!moved)
+        botAI->TellError("I cannot reach that spot");
+
+    return moved;
 }
 
 bool SeeSpellAction::SelectSpell(WorldPosition& spellPosition)

@@ -55,6 +55,13 @@ bool FollowChatShortcutAction::Execute(Event /*event*/)
     botAI->ChangeStrategy("-stay,-follow,-passive,-grind,-move from group", BOT_STATE_COMBAT);
     botAI->GetAiObjectContext()->GetValue<GuidVector>("prioritized targets")->Reset();
 
+    // Disarm a pending spread/stack/goto so the master's next unrelated RTSC
+    // click doesn't re-form the old ring. Leaves the stock "rtsc move"/"save"
+    // workflows untouched.
+    std::string const armed = AI_VALUE(std::string, "RTSC next spell action");
+    if (armed.rfind("spread", 0) == 0 || armed == "stack" || armed == "goto")
+        RESET_AI_VALUE(std::string, "RTSC next spell action");
+
     PositionMap& posMap = context->GetValue<PositionMap&>("position")->Get();
     PositionInfo pos = posMap["return"];
     pos.Reset();
@@ -128,6 +135,11 @@ bool StayChatShortcutAction::Execute(Event /*event*/)
 
     SetReturnPosition(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ());
     SetStayPosition(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ());
+
+    // Disarm a pending spread/stack/goto (see FollowChatShortcutAction).
+    std::string const armed = AI_VALUE(std::string, "RTSC next spell action");
+    if (armed.rfind("spread", 0) == 0 || armed == "stack" || armed == "goto")
+        RESET_AI_VALUE(std::string, "RTSC next spell action");
 
     botAI->TellMaster(PlayerbotTextMgr::instance().GetBotTextOrDefault(
         "staying", "Staying", {}));

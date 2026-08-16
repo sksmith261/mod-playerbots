@@ -139,6 +139,9 @@ public:
         creators["guild remove"] = &ChatTriggerContext::guild_remove;
         creators["guild leave"] = &ChatTriggerContext::guild_leave;
         creators["rtsc"] = &ChatTriggerContext::rtsc;
+        creators["spread"] = &ChatTriggerContext::spread;
+        creators["stack"] = &ChatTriggerContext::stack;
+        creators["goto"] = &ChatTriggerContext::go_to;
         creators["drink"] = &ChatTriggerContext::drink;
         creators["dps"] = &ChatTriggerContext::dps;
         creators["disperse"] = &ChatTriggerContext::disperse;
@@ -270,6 +273,9 @@ private:
     static Trigger* guild_remove(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "guild remove"); }
     static Trigger* guild_leave(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "guild leave"); }
     static Trigger* rtsc(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "rtsc"); }
+    static Trigger* spread(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "spread"); }
+    static Trigger* stack(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "stack"); }
+    static Trigger* go_to(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "goto"); }
     static Trigger* drink(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "drink"); }
     static Trigger* dps(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "dps"); }
     static Trigger* disperse(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "disperse"); }

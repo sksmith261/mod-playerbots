@@ -27,6 +27,10 @@ public:
     virtual bool MoveToSpell(WorldPosition& spellPosition, bool inFormation = true);
     void SetFormationOffset(WorldPosition& spellPosition);
 
+    // spread/stack/goto: place this bot on its slot of a ring centered on the
+    // clicked point. armed is the full armed command, e.g. "spread 5.00".
+    bool MoveToClickFormation(WorldPosition& center, std::string const& armed);
+
 private:
     Creature* CreateWps(Player* wpOwner, float x, float y, float z, float o, uint32 entry, Creature* lastWp,
                         bool important = false);

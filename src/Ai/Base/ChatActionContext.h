@@ -55,6 +55,7 @@
 #include "RewardAction.h"
 #include "RtiAction.h"
 #include "RtscAction.h"
+#include "ClickCommandActions.h"
 #include "SaveManaAction.h"
 #include "SellAction.h"
 #include "SendMailAction.h"
@@ -195,6 +196,9 @@ public:
         creators["guild remove"] = &ChatActionContext::guild_remove;
         creators["guild leave"] = &ChatActionContext::guild_leave;
         creators["rtsc"] = &ChatActionContext::rtsc;
+        creators["spread"] = &ChatActionContext::spread;
+        creators["stack"] = &ChatActionContext::stack;
+        creators["goto"] = &ChatActionContext::go_to;
         creators["bwl chat shortcut"] = &ChatActionContext::bwl_chat_shortcut;
         creators["naxx chat shortcut"] = &ChatActionContext::naxx_chat_shortcut;
         creators["tell estimated dps"] = &ChatActionContext::tell_estimated_dps;
@@ -314,6 +318,9 @@ private:
     static Action* guild_remove(PlayerbotAI* botAI) { return new GuildRemoveAction(botAI); }
     static Action* guild_leave(PlayerbotAI* botAI) { return new GuildLeaveAction(botAI); }
     static Action* rtsc(PlayerbotAI* botAI) { return new RTSCAction(botAI); }
+    static Action* spread(PlayerbotAI* botAI) { return new SpreadCommandAction(botAI); }
+    static Action* stack(PlayerbotAI* botAI) { return new StackCommandAction(botAI); }
+    static Action* go_to(PlayerbotAI* botAI) { return new GotoCommandAction(botAI); }
     static Action* naxx_chat_shortcut(PlayerbotAI* ai) { return new NaxxChatShortcutAction(ai); }
     static Action* bwl_chat_shortcut(PlayerbotAI* ai) { return new BwlChatShortcutAction(ai); }
     static Action* tell_estimated_dps(PlayerbotAI* ai) { return new TellEstimatedDpsAction(ai); }
