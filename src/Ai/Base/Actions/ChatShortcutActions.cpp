@@ -60,8 +60,11 @@ bool FollowChatShortcutAction::Execute(Event /*event*/)
     // workflows untouched.
     std::string const armed = AI_VALUE(std::string, "RTSC next spell action");
     std::string const armedToken = armed.substr(0, armed.find_first_of(" |"));
-    if (armedToken == "spread" || armedToken == "stack" || armedToken == "goto")
+    if (armedToken == "spread" || armedToken == "stack" || armedToken == "goto" ||
+        armedToken == "line" || armedToken == "sweep" || armedToken == "path")
         RESET_AI_VALUE(std::string, "RTSC next spell action");
+    if (!AI_VALUE(std::string, "click path").empty())
+        RESET_AI_VALUE(std::string, "click path");
 
     PositionMap& posMap = context->GetValue<PositionMap&>("position")->Get();
     PositionInfo pos = posMap["return"];
@@ -140,8 +143,11 @@ bool StayChatShortcutAction::Execute(Event /*event*/)
     // Disarm a pending spread/stack/goto (see FollowChatShortcutAction).
     std::string const armed = AI_VALUE(std::string, "RTSC next spell action");
     std::string const armedToken = armed.substr(0, armed.find_first_of(" |"));
-    if (armedToken == "spread" || armedToken == "stack" || armedToken == "goto")
+    if (armedToken == "spread" || armedToken == "stack" || armedToken == "goto" ||
+        armedToken == "line" || armedToken == "sweep" || armedToken == "path")
         RESET_AI_VALUE(std::string, "RTSC next spell action");
+    if (!AI_VALUE(std::string, "click path").empty())
+        RESET_AI_VALUE(std::string, "click path");
 
     botAI->TellMaster(PlayerbotTextMgr::instance().GetBotTextOrDefault(
         "staying", "Staying", {}));

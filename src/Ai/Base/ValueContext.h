@@ -310,6 +310,7 @@ public:
         creators["RTSC selected"] = &ValueContext::RTSC_selected;
         creators["RTSC next spell action"] = &ValueContext::RTSC_next_spell_action;
         creators["RTSC saved location"] = &ValueContext::RTSC_saved_location;
+        creators["click path"] = &ValueContext::click_path;
 
         creators["has area debuff"] = &ValueContext::has_area_debuff;
 
@@ -567,6 +568,7 @@ private:
     static UntypedValue* RTSC_selected(PlayerbotAI* botAI) { return new RTSCSelectedValue(botAI); }
     static UntypedValue* RTSC_next_spell_action(PlayerbotAI* botAI) { return new RTSCNextSpellActionValue(botAI); }
     static UntypedValue* RTSC_saved_location(PlayerbotAI* botAI) { return new RTSCSavedLocationValue(botAI); }
+    static UntypedValue* click_path(PlayerbotAI* botAI) { return new ClickPathValue(botAI); }
 
     static UntypedValue* has_area_debuff(PlayerbotAI* botAI) { return new HasAreaDebuffValue(botAI); }
 

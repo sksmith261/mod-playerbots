@@ -147,6 +147,52 @@ bool SeeSpellAction::Execute(Event event)
 
         return true;
     }
+    else if (nextAction == "path")
+    {
+        // Recording mode is multi-click by design: every click appends a
+        // waypoint and the command stays armed until "path go"/"path clear".
+        std::string path = AI_VALUE(std::string, "click path");
+        if (path.rfind("rec", 0) != 0)
+            path = "rec";
+
+        char wpBuf[96];
+        snprintf(wpBuf, sizeof(wpBuf), ";%.2f,%.2f,%.2f", spellPosition.GetPositionX(),
+                 spellPosition.GetPositionY(), spellPosition.GetPositionZ());
+        SET_AI_VALUE(std::string, "click path", path + wpBuf);
+
+        // One marker per click, not one per bot: only the first armed group
+        // bot (in shared iteration order) pins it.
+        bool firstArmed = true;
+        if (Group* group = bot->GetGroup())
+        {
+            for (GroupReference* ref = group->GetFirstMember(); ref; ref = ref->next())
+            {
+                Player* member = ref->GetSource();
+                if (member == bot)
+                    break;  // reached myself with no earlier armed bot found
+
+                if (!member)
+                    continue;
+
+                PlayerbotAI* memberAI = GET_PLAYERBOT_AI(member);
+                if (memberAI && memberAI->GetMaster() == master &&
+                    memberAI->GetAiObjectContext()->GetValue<std::string>("RTSC next spell action")->Get() == "path")
+                {
+                    firstArmed = false;
+                    break;
+                }
+            }
+        }
+
+        if (firstArmed)
+        {
+            if (Creature* wpCreature = bot->SummonCreature(15631, spellPosition.GetPositionX(), spellPosition.GetPositionY(),
+                                                           spellPosition.GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 5000.0f))
+                wpCreature->SetObjectScale(0.5f);
+        }
+
+        return true;
+    }
     else if (IsClickCommand(nextAction))
     {
         // One-shot per arm: a click marks the command spent (tagged with the
@@ -173,13 +219,16 @@ std::string SeeSpellAction::ClickToken(std::string const& armed)
 bool SeeSpellAction::IsClickCommand(std::string const& armed)
 {
     std::string const token = ClickToken(armed);
-    return token == "spread" || token == "stack" || token == "goto";
+    return token == "spread" || token == "stack" || token == "goto" || token == "line" || token == "sweep";
 }
 
 bool SeeSpellAction::MoveToClickFormation(WorldPosition& center, std::string const& armed)
 {
     std::string const token = ClickToken(armed);
-    float const gap = token == "spread" && armed.size() > 7 ? atof(armed.substr(7).c_str()) : 0.0f;
+    float gap = 3.0f;
+    size_t const space = armed.find(' ');
+    if (space != std::string::npos)
+        gap = atof(armed.substr(space + 1).c_str());
 
     // Identifies this click for spent-marking; every bot formats the same
     // packet coordinates identically, so the key is consistent bot-to-bot.
@@ -246,40 +295,71 @@ bool SeeSpellAction::MoveToClickFormation(WorldPosition& center, std::string con
         radius = n == 1 ? std::max(2.0f, gap) : std::max({2.0f, gap / 2.0f, n * gap / (2.0f * static_cast<float>(M_PI))});
     else if (token == "stack")
         radius = n == 1 ? 0.0f : 1.5f;
-    else  // goto
+    else  // goto / sweep / line (line uses gap directly, not radius)
         radius = n == 1 ? 0.0f : 3.0f;
 
-    // Full 360-degree ring, anchored on the master->click direction so slots
-    // are stable between re-clicks from the same spot.
+    // Anchored on the master->click direction so slots are stable between
+    // clicks from the same spot.
     float const base = atan2(center.GetPositionY() - master->GetPositionY(), center.GetPositionX() - master->GetPositionX());
-    float const angle = base + 2.0f * static_cast<float>(M_PI) * myRank / n;
 
-    float x = center.GetPositionX() + cos(angle) * radius;
-    float y = center.GetPositionY() + sin(angle) * radius;
+    float x, y;
     float z = center.GetPositionZ();
+    if (token == "line")
+    {
+        // A line through the click, perpendicular to the approach direction,
+        // centered on the click with gap yards between adjacent slots.
+        float const perp = base + static_cast<float>(M_PI) / 2.0f;
+        float const offset = gap * (myRank - (n - 1) / 2.0f);
+        x = center.GetPositionX() + cos(perp) * offset;
+        y = center.GetPositionY() + sin(perp) * offset;
+    }
+    else
+    {
+        // Full 360-degree ring.
+        float const angle = base + 2.0f * static_cast<float>(M_PI) * myRank / n;
+        x = center.GetPositionX() + cos(angle) * radius;
+        y = center.GetPositionY() + sin(angle) * radius;
+    }
+
+    float const desiredX = x;
+    float const desiredY = y;
 
     Map* map = bot->GetMap();
     if (!map->CheckCollisionAndGetValidCoords(bot, center.GetPositionX(), center.GetPositionY(), center.GetPositionZ(), x, y, z))
     {
-        x = center.GetPositionX() + cos(angle) * radius;
-        y = center.GetPositionY() + sin(angle) * radius;
+        x = desiredX;
+        y = desiredY;
         z = center.GetPositionZ();
         bot->UpdateAllowedPositionZ(x, y, z);
     }
 
-    // Hold the slot: stay anchor at the destination, stay strategy on. +stay
-    // removes follow automatically (exclusive movement strategy group).
-    // Mirrors StayChatShortcutAction minus botAI->Reset(), which would clear
-    // values mid-click.
     PositionMap& posMap = AI_VALUE(PositionMap&, "position");
-    PositionInfo pos = posMap["stay"];
-    pos.Set(x, y, z, center.GetMapId());
-    posMap["stay"] = pos;
-    pos = posMap["return"];
-    pos.Set(x, y, z, center.GetMapId());
-    posMap["return"] = pos;
-    botAI->ChangeStrategy("+stay,-passive,-move from group", BOT_STATE_NON_COMBAT);
-    botAI->ChangeStrategy("+stay,-follow,-passive,-move from group", BOT_STATE_COMBAT);
+    if (token == "sweep")
+    {
+        // Guard the slot instead of staying on it: the guard strategy holds
+        // the area but lets the bot chase and engage freely, and grind makes
+        // it proactively clear hostiles around the point.
+        PositionInfo pos = posMap["guard"];
+        pos.Set(x, y, z, center.GetMapId());
+        posMap["guard"] = pos;
+        botAI->ChangeStrategy("+guard,+grind,-passive,-move from group", BOT_STATE_NON_COMBAT);
+        botAI->ChangeStrategy("+guard,-follow,-passive,-move from group", BOT_STATE_COMBAT);
+    }
+    else
+    {
+        // Hold the slot: stay anchor at the destination, stay strategy on.
+        // +stay removes follow automatically (exclusive movement strategy
+        // group). Mirrors StayChatShortcutAction minus botAI->Reset(), which
+        // would clear values mid-click.
+        PositionInfo pos = posMap["stay"];
+        pos.Set(x, y, z, center.GetMapId());
+        posMap["stay"] = pos;
+        pos = posMap["return"];
+        pos.Set(x, y, z, center.GetMapId());
+        posMap["return"] = pos;
+        botAI->ChangeStrategy("+stay,-passive,-move from group", BOT_STATE_NON_COMBAT);
+        botAI->ChangeStrategy("+stay,-follow,-passive,-move from group", BOT_STATE_COMBAT);
+    }
 
     // One marker pin at the center, not one per bot.
     if (!myRank)

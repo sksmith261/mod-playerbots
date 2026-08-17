@@ -26,6 +26,10 @@ void ChatCommandHandlerStrategy::InitTriggers(std::vector<TriggerNode*>& trigger
 {
     PassThroughStrategy::InitTriggers(triggers);
 
+    // Not a chat command: periodic trigger that walks recorded click paths.
+    // Lives here because this strategy is in every bot's default set.
+    triggers.push_back(new TriggerNode("click path next", { NextAction("click path next", 10.0f) }));
+
     // Keep single action triggers on one line, and multi-action triggers on multiple lines.
     triggers.push_back(new TriggerNode("rep", { NextAction("reputation", relevance) }));
     triggers.push_back(new TriggerNode("pvp stats", { NextAction("tell pvp stats", relevance) }));
@@ -164,6 +168,9 @@ ChatCommandHandlerStrategy::ChatCommandHandlerStrategy(PlayerbotAI* botAI) : Pas
     supported.push_back("spread");
     supported.push_back("stack");
     supported.push_back("goto");
+    supported.push_back("line");
+    supported.push_back("sweep");
+    supported.push_back("path");
     supported.push_back("drink");
     supported.push_back("calc");
     supported.push_back("roll");

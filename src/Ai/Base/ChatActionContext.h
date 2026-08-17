@@ -199,6 +199,10 @@ public:
         creators["spread"] = &ChatActionContext::spread;
         creators["stack"] = &ChatActionContext::stack;
         creators["goto"] = &ChatActionContext::go_to;
+        creators["line"] = &ChatActionContext::line_form;
+        creators["sweep"] = &ChatActionContext::sweep;
+        creators["path"] = &ChatActionContext::path;
+        creators["click path next"] = &ChatActionContext::click_path_next;
         creators["bwl chat shortcut"] = &ChatActionContext::bwl_chat_shortcut;
         creators["naxx chat shortcut"] = &ChatActionContext::naxx_chat_shortcut;
         creators["tell estimated dps"] = &ChatActionContext::tell_estimated_dps;
@@ -321,6 +325,10 @@ private:
     static Action* spread(PlayerbotAI* botAI) { return new SpreadCommandAction(botAI); }
     static Action* stack(PlayerbotAI* botAI) { return new StackCommandAction(botAI); }
     static Action* go_to(PlayerbotAI* botAI) { return new GotoCommandAction(botAI); }
+    static Action* line_form(PlayerbotAI* botAI) { return new LineCommandAction(botAI); }
+    static Action* sweep(PlayerbotAI* botAI) { return new SweepCommandAction(botAI); }
+    static Action* path(PlayerbotAI* botAI) { return new PathCommandAction(botAI); }
+    static Action* click_path_next(PlayerbotAI* botAI) { return new ClickPathNextAction(botAI); }
     static Action* naxx_chat_shortcut(PlayerbotAI* ai) { return new NaxxChatShortcutAction(ai); }
     static Action* bwl_chat_shortcut(PlayerbotAI* ai) { return new BwlChatShortcutAction(ai); }
     static Action* tell_estimated_dps(PlayerbotAI* ai) { return new TellEstimatedDpsAction(ai); }

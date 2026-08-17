@@ -49,4 +49,13 @@ public:
     bool Load(std::string const text) override;
 };
 
+// Serialized waypoint queue for the ground-click "path" command.
+// "" (idle) | "rec;x,y,z;..." (recording) | "go,<idx>;x,y,z;..." (walking)
+class ClickPathValue : public ManualSetValue<std::string>
+{
+public:
+    ClickPathValue(PlayerbotAI* botAI, std::string const defaultvalue = "", std::string const name = "click path")
+        : ManualSetValue(botAI, defaultvalue, name){};
+};
+
 #endif

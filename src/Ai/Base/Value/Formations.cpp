@@ -470,9 +470,11 @@ float Formation::GetFollowAngle()
 
                 left = !left;  // Alternate for the next tank
             }
-
-            total++;
         }
+
+        // The divisor must equal the number of slots actually handed out, or
+        // the arc is compressed and the last slot is never used.
+        total = roster.empty() ? 1 : roster.size();
     }
     else if (master)
     {
@@ -480,15 +482,18 @@ float Formation::GetFollowAngle()
         PlayerbotMgr* masterBotMgr = GET_PLAYERBOT_MGR(master);
         if (masterBotMgr && !GET_PLAYERBOT_AI(master))
         {
+            // Count the whole list: breaking at the bot made index == total for
+            // every bot, which put all of a master's bots on the same angle.
+            uint32 position = 1;
             for (auto it = masterBotMgr->GetPlayerBotsBegin(); it != masterBotMgr->GetPlayerBotsEnd(); ++it)
             {
                 if (it->second == bot)
-                {
-                    index = total;  // Found bot in master's list, set the index
-                    break;
-                }
-                ++total;
+                    index = position;
+
+                ++position;
             }
+
+            total = position > 1 ? position - 1 : 1;
         }
     }
 
@@ -497,6 +502,12 @@ float Formation::GetFollowAngle()
     if (it != roster.end())
     {
         index = std::distance(roster.begin(), it) + 1;  // Find bot's index in the roster
+    }
+    else if (group)
+    {
+        // Not in the roster (e.g. dead mid-recompute): a stable pseudo-random
+        // slot beats stacking every such bot on slot 1.
+        index = 1 + (bot->GetGUID().GetCounter() % total);
     }
 
     // Return

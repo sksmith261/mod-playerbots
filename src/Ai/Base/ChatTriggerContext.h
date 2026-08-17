@@ -8,6 +8,7 @@
 #define PLAYERBOTS_CHATTRIGGERCONTEXT_H
 
 #include "ChatCommandTrigger.h"
+#include "ClickCommandActions.h"
 #include "NamedObjectContext.h"
 
 class PlayerbotAI;
@@ -142,6 +143,10 @@ public:
         creators["spread"] = &ChatTriggerContext::spread;
         creators["stack"] = &ChatTriggerContext::stack;
         creators["goto"] = &ChatTriggerContext::go_to;
+        creators["line"] = &ChatTriggerContext::line;
+        creators["sweep"] = &ChatTriggerContext::sweep;
+        creators["path"] = &ChatTriggerContext::path;
+        creators["click path next"] = &ChatTriggerContext::click_path_next;
         creators["drink"] = &ChatTriggerContext::drink;
         creators["dps"] = &ChatTriggerContext::dps;
         creators["disperse"] = &ChatTriggerContext::disperse;
@@ -276,6 +281,10 @@ private:
     static Trigger* spread(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "spread"); }
     static Trigger* stack(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "stack"); }
     static Trigger* go_to(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "goto"); }
+    static Trigger* line(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "line"); }
+    static Trigger* sweep(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "sweep"); }
+    static Trigger* path(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "path"); }
+    static Trigger* click_path_next(PlayerbotAI* botAI) { return new ClickPathNextTrigger(botAI); }
     static Trigger* drink(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "drink"); }
     static Trigger* dps(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "dps"); }
     static Trigger* disperse(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "disperse"); }
