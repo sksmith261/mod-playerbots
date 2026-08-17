@@ -28,8 +28,11 @@ public:
     void SetFormationOffset(WorldPosition& spellPosition);
 
     // spread/stack/goto: place this bot on its slot of a ring centered on the
-    // clicked point. armed is the full armed command, e.g. "spread 5.00".
+    // clicked point. armed is the full armed command, e.g. "spread 5.00";
+    // once used it is tagged "spread 5.00|<x>,<y>" (spent on that click).
     bool MoveToClickFormation(WorldPosition& center, std::string const& armed);
+    static std::string ClickToken(std::string const& armed);
+    static bool IsClickCommand(std::string const& armed);
 
 private:
     Creature* CreateWps(Player* wpOwner, float x, float y, float z, float o, uint32 entry, Creature* lastWp,

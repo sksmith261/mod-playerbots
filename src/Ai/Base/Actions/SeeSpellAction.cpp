@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 
 #include "Event.h"
@@ -146,22 +147,45 @@ bool SeeSpellAction::Execute(Event event)
 
         return true;
     }
-    else if (nextAction.rfind("spread", 0) == 0 || nextAction == "stack" || nextAction == "goto")
+    else if (IsClickCommand(nextAction))
     {
-        // Deliberately no value reset: the armed set must stay stable while
-        // bots drain the click packet on different ticks, and it lets the
-        // master re-click to re-form the ring. "follow"/"stay"/"rtsc reset"
-        // disarm it.
+        // One-shot per arm: a click marks the command spent (tagged with the
+        // click position) instead of resetting it, so bots that drain this
+        // click's packet on later ticks still count this bot in their slot
+        // math, while any future click ignores it. Re-forming on a new spot
+        // means issuing the command again — otherwise a raid armed by an
+        // earlier unscoped command would move again on every later click
+        // (e.g. one meant only for "@group2 goto").
+        if (nextAction.find('|') != std::string::npos)
+            return false;  // spent on an earlier click
+
         return MoveToClickFormation(spellPosition, nextAction);
     }
 
     return false;
 }
 
+std::string SeeSpellAction::ClickToken(std::string const& armed)
+{
+    return armed.substr(0, armed.find_first_of(" |"));
+}
+
+bool SeeSpellAction::IsClickCommand(std::string const& armed)
+{
+    std::string const token = ClickToken(armed);
+    return token == "spread" || token == "stack" || token == "goto";
+}
+
 bool SeeSpellAction::MoveToClickFormation(WorldPosition& center, std::string const& armed)
 {
-    std::string const token = armed.substr(0, armed.find(' '));
+    std::string const token = ClickToken(armed);
     float const gap = token == "spread" && armed.size() > 7 ? atof(armed.substr(7).c_str()) : 0.0f;
+
+    // Identifies this click for spent-marking; every bot formats the same
+    // packet coordinates identically, so the key is consistent bot-to-bot.
+    char clickKeyBuf[64];
+    snprintf(clickKeyBuf, sizeof(clickKeyBuf), "%.1f,%.1f", center.GetPositionX(), center.GetPositionY());
+    std::string const clickKey(clickKeyBuf);
 
     Player* master = botAI->GetMaster();
     Group* group = bot->GetGroup();
@@ -196,7 +220,13 @@ bool SeeSpellAction::MoveToClickFormation(WorldPosition& center, std::string con
 
         std::string const memberArmed =
             memberAI->GetAiObjectContext()->GetValue<std::string>("RTSC next spell action")->Get();
-        if (memberArmed.substr(0, memberArmed.find(' ')) != token)
+        if (ClickToken(memberArmed) != token)
+            continue;
+
+        // Members spent on THIS click still count (they acted on it a tick
+        // or two ago); members spent on a different click are older waves.
+        size_t const memberPipe = memberArmed.find('|');
+        if (memberPipe != std::string::npos && memberArmed.substr(memberPipe + 1) != clickKey)
             continue;
 
         if (member == bot)
@@ -207,6 +237,9 @@ bool SeeSpellAction::MoveToClickFormation(WorldPosition& center, std::string con
 
     if (myRank < 0 || !n)
         return false;
+
+    // Mark spent before moving: from here on this bot has acted on this click.
+    SET_AI_VALUE(std::string, "RTSC next spell action", armed + "|" + clickKey);
 
     float radius;
     if (token == "spread")

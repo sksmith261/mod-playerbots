@@ -59,7 +59,8 @@ bool FollowChatShortcutAction::Execute(Event /*event*/)
     // click doesn't re-form the old ring. Leaves the stock "rtsc move"/"save"
     // workflows untouched.
     std::string const armed = AI_VALUE(std::string, "RTSC next spell action");
-    if (armed.rfind("spread", 0) == 0 || armed == "stack" || armed == "goto")
+    std::string const armedToken = armed.substr(0, armed.find_first_of(" |"));
+    if (armedToken == "spread" || armedToken == "stack" || armedToken == "goto")
         RESET_AI_VALUE(std::string, "RTSC next spell action");
 
     PositionMap& posMap = context->GetValue<PositionMap&>("position")->Get();
@@ -138,7 +139,8 @@ bool StayChatShortcutAction::Execute(Event /*event*/)
 
     // Disarm a pending spread/stack/goto (see FollowChatShortcutAction).
     std::string const armed = AI_VALUE(std::string, "RTSC next spell action");
-    if (armed.rfind("spread", 0) == 0 || armed == "stack" || armed == "goto")
+    std::string const armedToken = armed.substr(0, armed.find_first_of(" |"));
+    if (armedToken == "spread" || armedToken == "stack" || armedToken == "goto")
         RESET_AI_VALUE(std::string, "RTSC next spell action");
 
     botAI->TellMaster(PlayerbotTextMgr::instance().GetBotTextOrDefault(
