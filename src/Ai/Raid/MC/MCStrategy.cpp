@@ -113,6 +113,12 @@ void RaidMcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     triggers.push_back(
         new TriggerNode("mc ragnaros fire resistance",
                         { NextAction("mc ragnaros fire resistance", ACTION_RAID) }));
+    // Submerge phase: focus the Sons of Flame down one at a time so they die
+    // before the 90s emerge timer. AoE stays allowed here — it's the one MC
+    // fight where it helps.
+    triggers.push_back(
+        new TriggerNode("mc ragnaros sons",
+                        { NextAction("mc ragnaros sons mark", ACTION_RAID) }));
 
     // Trash
     triggers.push_back(

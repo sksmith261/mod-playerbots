@@ -22,6 +22,7 @@ public:
         creators["mc gehennas mark"] = &RaidMcActionContext::gehennas_mark;
         creators["mc sulfuron mark"] = &RaidMcActionContext::sulfuron_mark;
         creators["mc majordomo mark"] = &RaidMcActionContext::majordomo_mark;
+        creators["mc ragnaros sons mark"] = &RaidMcActionContext::ragnaros_sons_mark;
         creators["mc move from baron geddon"] = &RaidMcActionContext::move_from_baron_geddon;
         creators["mc shazzrah move away"] = &RaidMcActionContext::shazzrah_move_away;
         creators["mc sulfuron harbinger fire resistance"] = &RaidMcActionContext::sulfuron_harbinger_fire_resistance;
@@ -62,6 +63,7 @@ private:
     static Action* gehennas_mark(PlayerbotAI* botAI) { return new McKillOrderMarkAction(botAI, "mc gehennas mark", "gehennas", { MoltenCoreHelpers::NPC_FLAMEWAKER }); }
     static Action* sulfuron_mark(PlayerbotAI* botAI) { return new McKillOrderMarkAction(botAI, "mc sulfuron mark", "sulfuron harbinger", { MoltenCoreHelpers::NPC_FLAMEWAKER_PRIEST }); }
     static Action* majordomo_mark(PlayerbotAI* botAI) { return new McKillOrderMarkAction(botAI, "mc majordomo mark", "majordomo executus", { MoltenCoreHelpers::NPC_FLAMEWAKER_HEALER, MoltenCoreHelpers::NPC_FLAMEWAKER_ELITE }, /*avoidReflections*/ true); }
+    static Action* ragnaros_sons_mark(PlayerbotAI* botAI) { return new McKillOrderMarkAction(botAI, "mc ragnaros sons mark", "", { MoltenCoreHelpers::NPC_SON_OF_FLAME }); }
     static Action* garr_banish(PlayerbotAI* botAI) { return new McGarrBanishAction(botAI); }
     static Action* garr_mark(PlayerbotAI* botAI) { return new McGarrMarkAction(botAI); }
     static Action* shazzrah_purge(PlayerbotAI* botAI) { return new McShazzrahPurgeAction(botAI); }

@@ -141,7 +141,9 @@ public:
 // Adds-first kill order via the skull mark: tiers of add entries die in
 // order (most-damaged first within a tier, sticky so the mark doesn't flap),
 // then the boss. With avoidReflections, prefers — and switches to — targets
-// not carrying Majordomo's reflection shields.
+// not carrying Majordomo's reflection shields. An empty bossName runs
+// without a boss gate or boss fallback (Ragnaros' Sons phase, where the
+// submerged boss is stealthed and unfindable).
 class McKillOrderMarkAction : public Action
 {
 public:

@@ -92,6 +92,23 @@ bool McShazzrahRangedTrigger::IsActive()
     return AI_VALUE2(Unit*, "find target", "shazzrah") && PlayerbotAI::IsRanged(bot);
 }
 
+bool McRagnarosSonsTrigger::IsActive()
+{
+    if (!PlayerbotAI::IsMainTank(bot))
+        return false;
+
+    // No boss gate: the submerged Ragnaros is stealthed and pacified, so he
+    // is unfindable exactly when this needs to run.
+    for (auto const& target : AI_VALUE(GuidVector, "possible targets no los"))
+    {
+        Unit* unit = botAI->GetUnit(target);
+        if (unit && unit->IsAlive() && unit->GetEntry() == NPC_SON_OF_FLAME)
+            return true;
+    }
+
+    return false;
+}
+
 bool McShazzrahPurgeTrigger::IsActive()
 {
     bool const canStrip = (bot->getClass() == CLASS_SHAMAN && bot->HasSpell(SPELL_PURGE_R1)) ||

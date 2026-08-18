@@ -24,6 +24,9 @@ enum MoltenCoreNPCs
     NPC_FLAMEWAKER_HEALER = 11663,
     NPC_FLAMEWAKER_ELITE = 11664,
 
+    // Ragnaros (submerge phase)
+    NPC_SON_OF_FLAME = 12143,
+
     // Golemagg
     NPC_CORE_RAGER = 11672,
 

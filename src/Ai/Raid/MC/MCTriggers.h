@@ -87,6 +87,15 @@ public:
     bool IsActive() override;
 };
 
+// Ragnaros has submerged and Sons of Flame are up; the main tank drives the
+// kill-order mark across them.
+class McRagnarosSonsTrigger : public Trigger
+{
+public:
+    McRagnarosSonsTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc ragnaros sons") {}
+    bool IsActive() override;
+};
+
 class McShazzrahPurgeTrigger : public Trigger
 {
 public:

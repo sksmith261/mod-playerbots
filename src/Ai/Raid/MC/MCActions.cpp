@@ -389,9 +389,13 @@ bool McMoveFromGroundEffectAction::Execute(Event /*event*/)
 
 Unit* McKillOrderMarkAction::GetTarget()
 {
-    Unit* boss = AI_VALUE2(Unit*, "find target", bossName);
-    if (!boss)
-        return nullptr;
+    Unit* boss = nullptr;
+    if (!bossName.empty())
+    {
+        boss = AI_VALUE2(Unit*, "find target", bossName);
+        if (!boss)
+            return nullptr;
+    }
 
     Group* group = bot->GetGroup();
     if (!group)
@@ -441,7 +445,7 @@ Unit* McKillOrderMarkAction::GetTarget()
     }
 
     // All add tiers cleared: skull the boss.
-    if (currentSkullGuid.IsEmpty() || currentSkullGuid != boss->GetGUID())
+    if (boss && (currentSkullGuid.IsEmpty() || currentSkullGuid != boss->GetGUID()))
         return boss;
 
     return nullptr;
