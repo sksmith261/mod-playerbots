@@ -105,8 +105,7 @@ void RaidMcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 
 void RaidMcStrategy::InitMultipliers(std::vector<Multiplier*>& multipliers)
 {
-    multipliers.push_back(new LucifronDispelMultiplier(botAI));
-    multipliers.push_back(new ShazzrahDispelMultiplier(botAI));
+    multipliers.push_back(new McDispelUrgencyMultiplier(botAI));
     multipliers.push_back(new GarrDisableDpsAoeMultiplier(botAI));
     multipliers.push_back(new BaronGeddonAbilityMultiplier(botAI));
     multipliers.push_back(new GolemaggMultiplier(botAI));

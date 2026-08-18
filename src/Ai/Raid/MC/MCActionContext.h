@@ -5,6 +5,7 @@
 #include "BossAuraActions.h"
 #include "NamedObjectContext.h"
 #include "MCActions.h"
+#include "MCHelpers.h"
 
 class RaidMcActionContext : public NamedObjectContext<Action>
 {
@@ -52,7 +53,7 @@ private:
     static Action* majordomo_shadow_resistance(PlayerbotAI* botAI) { return new BossShadowResistanceAction(botAI, "majordomo executus"); }
     static Action* ragnaros_fire_resistance(PlayerbotAI* botAI) { return new BossFireResistanceAction(botAI, "ragnaros"); }
     static Action* core_hound_mark(PlayerbotAI* botAI) { return new McCoreHoundMarkAction(botAI); }
-    static Action* lucifron_mark(PlayerbotAI* botAI) { return new McLucifronMarkAction(botAI); }
+    static Action* lucifron_mark(PlayerbotAI* botAI) { return new McKillOrderMarkAction(botAI, "mc lucifron mark", "lucifron", { MoltenCoreHelpers::NPC_FLAMEWAKER_PROTECTOR }); }
     static Action* magmadar_fear_ward(PlayerbotAI* botAI) { return new McMagmadarFearWardAction(botAI); }
     static Action* magmadar_move_from_lava(PlayerbotAI* botAI) { return new McMagmadarMoveFromLavaAction(botAI); }
     static Action* garr_banish(PlayerbotAI* botAI) { return new McGarrBanishAction(botAI); }

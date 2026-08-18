@@ -137,15 +137,23 @@ public:
     bool Execute(Event event) override;
 };
 
-// Skull a living Flamewaker Protector so the raid kills the adds before the
-// boss; once both are dead, skull moves to Lucifron.
-class McLucifronMarkAction : public Action
+// Adds-first kill order via the skull mark: tiers of add entries die in
+// order (most-damaged first within a tier, sticky so the mark doesn't flap),
+// then the boss. With avoidReflections, prefers — and switches to — targets
+// not carrying Majordomo's reflection shields.
+class McKillOrderMarkAction : public Action
 {
 public:
-    McLucifronMarkAction(PlayerbotAI* botAI, std::string const name = "mc lucifron mark")
-        : Action(botAI, name) {};
+    McKillOrderMarkAction(PlayerbotAI* botAI, std::string const name, std::string const bossName,
+                          std::vector<uint32> const addEntries, bool avoidReflections = false)
+        : Action(botAI, name), bossName(bossName), addEntries(addEntries), avoidReflections(avoidReflections) {};
     Unit* GetTarget() override;
     bool Execute(Event event) override;
+
+protected:
+    std::string const bossName;
+    std::vector<uint32> const addEntries;
+    bool const avoidReflections;
 };
 
 #endif

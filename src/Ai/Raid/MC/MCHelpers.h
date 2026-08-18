@@ -33,6 +33,10 @@ enum MoltenCoreSpells
     SPELL_BANISH_R2 = 18647,
     SPELL_SEPARATION_ANXIETY_MINION = 23492,  // banish immunity + 300% damage when dragged from Garr
 
+    // Majordomo Executus (shields rotated onto his adds)
+    SPELL_DOMO_MAGIC_REFLECTION = 20619,
+    SPELL_DOMO_DAMAGE_REFLECTION = 21075,
+
     // Shazzrah
     SPELL_DEADEN_MAGIC = 19714,  // -50% magic taken self-buff; purgeable
     SPELL_PURGE_R1 = 370,

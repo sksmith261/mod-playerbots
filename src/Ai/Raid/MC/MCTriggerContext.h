@@ -38,7 +38,7 @@ public:
 
 private:
     static Trigger* lucifron_shadow_resistance(PlayerbotAI* botAI) { return new BossShadowResistanceTrigger(botAI, "lucifron"); }
-    static Trigger* lucifron_mark(PlayerbotAI* botAI) { return new McLucifronMarkTrigger(botAI); }
+    static Trigger* lucifron_mark(PlayerbotAI* botAI) { return new McKillOrderMarkTrigger(botAI, "mc lucifron mark", "lucifron"); }
     static Trigger* magmadar_frenzy(PlayerbotAI* botAI) { return new McMagmadarFrenzyTrigger(botAI); }
     static Trigger* magmadar_tremor_totem(PlayerbotAI* botAI) { return new McMagmadarTremorTotemTrigger(botAI); }
     static Trigger* magmadar_fear_ward(PlayerbotAI* botAI) { return new McMagmadarFearWardTrigger(botAI); }

@@ -387,9 +387,9 @@ bool McMagmadarMoveFromLavaAction::Execute(Event /*event*/)
     return FleePosition(bot->GetPosition(), 8.0f);
 }
 
-Unit* McLucifronMarkAction::GetTarget()
+Unit* McKillOrderMarkAction::GetTarget()
 {
-    Unit* boss = AI_VALUE2(Unit*, "find target", "lucifron");
+    Unit* boss = AI_VALUE2(Unit*, "find target", bossName);
     if (!boss)
         return nullptr;
 
@@ -400,34 +400,54 @@ Unit* McLucifronMarkAction::GetTarget()
     ObjectGuid currentSkullGuid = group->GetTargetIcon(RtiTargetValue::skullIndex);
     Unit* currentSkullUnit = currentSkullGuid.IsEmpty() ? nullptr : botAI->GetUnit(currentSkullGuid);
 
-    // Adds die first. Keep the current skull if it is already a living
-    // protector so the mark doesn't flap between the two adds.
-    if (currentSkullUnit && currentSkullUnit->IsAlive() && currentSkullUnit->GetEntry() == NPC_FLAMEWAKER_PROTECTOR)
-        return nullptr;
-
-    Unit* protector = nullptr;
-    for (auto const& target : AI_VALUE(GuidVector, "possible targets no los"))
+    for (uint32 entry : addEntries)
     {
-        Unit* unit = botAI->GetUnit(target);
-        if (unit && unit->IsAlive() && unit->GetEntry() == NPC_FLAMEWAKER_PROTECTOR)
+        Unit* best = nullptr;
+        bool bestClean = false;
+        for (auto const& target : AI_VALUE(GuidVector, "possible targets no los"))
         {
-            // Prefer the more damaged protector so an in-progress kill finishes.
-            if (!protector || unit->GetHealth() < protector->GetHealth())
-                protector = unit;
+            Unit* unit = botAI->GetUnit(target);
+            if (!unit || !unit->IsAlive() || unit->GetEntry() != entry)
+                continue;
+
+            // Prefer targets without a reflection shield; the most damaged
+            // otherwise, so an in-progress kill finishes.
+            bool const clean = !avoidReflections || (!unit->HasAura(SPELL_DOMO_MAGIC_REFLECTION) &&
+                                                    !unit->HasAura(SPELL_DOMO_DAMAGE_REFLECTION));
+            if (!best || (clean && !bestClean) ||
+                (clean == bestClean && unit->GetHealth() < best->GetHealth()))
+            {
+                best = unit;
+                bestClean = clean;
+            }
         }
+
+        if (!best)
+            continue;  // tier cleared; next tier
+
+        // Sticky within the active tier so the mark doesn't flap between
+        // equally-valid adds — but with avoidReflections, switch off a target
+        // that picked up a shield while a clean one exists.
+        if (currentSkullUnit && currentSkullUnit->IsAlive() && currentSkullUnit->GetEntry() == entry)
+        {
+            bool const currentClean =
+                !avoidReflections || (!currentSkullUnit->HasAura(SPELL_DOMO_MAGIC_REFLECTION) &&
+                                      !currentSkullUnit->HasAura(SPELL_DOMO_DAMAGE_REFLECTION));
+            if (currentClean || !bestClean)
+                return nullptr;
+        }
+
+        return best;
     }
 
-    if (protector)
-        return protector;
-
-    // Both adds down: skull the boss.
+    // All add tiers cleared: skull the boss.
     if (currentSkullGuid.IsEmpty() || currentSkullGuid != boss->GetGUID())
         return boss;
 
     return nullptr;
 }
 
-bool McLucifronMarkAction::Execute(Event /*event*/)
+bool McKillOrderMarkAction::Execute(Event /*event*/)
 {
     Unit* target = GetTarget();
     if (!target)

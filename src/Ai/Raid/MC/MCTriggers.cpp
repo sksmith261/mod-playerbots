@@ -6,9 +6,9 @@
 
 using namespace MoltenCoreHelpers;
 
-bool McLucifronMarkTrigger::IsActive()
+bool McKillOrderMarkTrigger::IsActive()
 {
-    return PlayerbotAI::IsMainTank(bot) && AI_VALUE2(Unit*, "find target", "lucifron");
+    return PlayerbotAI::IsMainTank(bot) && AI_VALUE2(Unit*, "find target", bossName);
 }
 
 bool McGarrBanishTrigger::IsActive()

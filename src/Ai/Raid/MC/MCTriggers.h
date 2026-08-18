@@ -5,11 +5,17 @@
 #include "Playerbots.h"
 #include "Trigger.h"
 
-class McLucifronMarkTrigger : public Trigger
+// Main tank keeps the skull mark maintained while the named boss is active;
+// which unit gets skulled is the paired McKillOrderMarkAction's decision.
+class McKillOrderMarkTrigger : public Trigger
 {
 public:
-    McLucifronMarkTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc lucifron mark") {}
+    McKillOrderMarkTrigger(PlayerbotAI* botAI, std::string const name, std::string const bossName)
+        : Trigger(botAI, name), bossName(bossName) {}
     bool IsActive() override;
+
+protected:
+    std::string const bossName;
 };
 
 class McGarrBanishTrigger : public Trigger
