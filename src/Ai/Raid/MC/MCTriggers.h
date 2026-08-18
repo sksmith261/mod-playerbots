@@ -53,11 +53,17 @@ public:
     bool IsActive() override;
 };
 
-class McMagmadarLavaBombTrigger : public Trigger
+// Bot is standing in a damaging ground effect (identified by the periodic
+// aura it applies) and should step out.
+class McGroundEffectAuraTrigger : public Trigger
 {
 public:
-    McMagmadarLavaBombTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc magmadar lava bomb") {}
+    McGroundEffectAuraTrigger(PlayerbotAI* botAI, std::string const name, uint32 spellId)
+        : Trigger(botAI, name), spellId(spellId) {}
     bool IsActive() override;
+
+protected:
+    uint32 const spellId;
 };
 
 class McLivingBombDebuffTrigger : public Trigger

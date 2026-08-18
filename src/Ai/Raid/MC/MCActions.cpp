@@ -380,7 +380,7 @@ bool McMagmadarFearWardAction::Execute(Event /*event*/)
     return false;
 }
 
-bool McMagmadarMoveFromLavaAction::Execute(Event /*event*/)
+bool McMoveFromGroundEffectAction::Execute(Event /*event*/)
 {
     // Any direction out of the patch works; FleePosition picks a safe nearby
     // spot away from where the bot is standing.

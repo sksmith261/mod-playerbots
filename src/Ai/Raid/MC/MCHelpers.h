@@ -11,6 +11,9 @@ enum MoltenCoreNPCs
     // Magmadar (any shaman's Tremor Totem)
     NPC_TREMOR_TOTEM = 5913,
 
+    // Gehennas
+    NPC_FLAMEWAKER = 11661,
+
     // Garr
     NPC_FIRESWORN = 12099,
 
@@ -32,6 +35,10 @@ enum MoltenCoreSpells
     SPELL_BANISH_R1 = 710,
     SPELL_BANISH_R2 = 18647,
     SPELL_SEPARATION_ANXIETY_MINION = 23492,  // banish immunity + 300% damage when dragged from Garr
+
+    // Gehennas
+    SPELL_GEHENNAS_CURSE = 19716,  // -75% healing received; decurse target
+    SPELL_RAIN_OF_FIRE = 19717,
 
     // Majordomo Executus (shields rotated onto his adds)
     SPELL_DOMO_MAGIC_REFLECTION = 20619,

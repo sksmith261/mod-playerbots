@@ -18,6 +18,8 @@ public:
         creators["mc garr fire resistance"] = &RaidMcActionContext::garr_fire_resistance;
         creators["mc baron geddon fire resistance"] = &RaidMcActionContext::baron_geddon_fire_resistance;
         creators["mc move from group"] = &RaidMcActionContext::check_should_move_from_group;
+        creators["mc move from ground effect"] = &RaidMcActionContext::move_from_ground_effect;
+        creators["mc gehennas mark"] = &RaidMcActionContext::gehennas_mark;
         creators["mc move from baron geddon"] = &RaidMcActionContext::move_from_baron_geddon;
         creators["mc shazzrah move away"] = &RaidMcActionContext::shazzrah_move_away;
         creators["mc sulfuron harbinger fire resistance"] = &RaidMcActionContext::sulfuron_harbinger_fire_resistance;
@@ -30,7 +32,6 @@ public:
         creators["mc core hound mark"] = &RaidMcActionContext::core_hound_mark;
         creators["mc lucifron mark"] = &RaidMcActionContext::lucifron_mark;
         creators["mc magmadar fear ward"] = &RaidMcActionContext::magmadar_fear_ward;
-        creators["mc magmadar move from lava"] = &RaidMcActionContext::magmadar_move_from_lava;
         creators["mc garr banish"] = &RaidMcActionContext::garr_banish;
         creators["mc garr mark"] = &RaidMcActionContext::garr_mark;
         creators["mc shazzrah purge"] = &RaidMcActionContext::shazzrah_purge;
@@ -55,7 +56,8 @@ private:
     static Action* core_hound_mark(PlayerbotAI* botAI) { return new McCoreHoundMarkAction(botAI); }
     static Action* lucifron_mark(PlayerbotAI* botAI) { return new McKillOrderMarkAction(botAI, "mc lucifron mark", "lucifron", { MoltenCoreHelpers::NPC_FLAMEWAKER_PROTECTOR }); }
     static Action* magmadar_fear_ward(PlayerbotAI* botAI) { return new McMagmadarFearWardAction(botAI); }
-    static Action* magmadar_move_from_lava(PlayerbotAI* botAI) { return new McMagmadarMoveFromLavaAction(botAI); }
+    static Action* move_from_ground_effect(PlayerbotAI* botAI) { return new McMoveFromGroundEffectAction(botAI); }
+    static Action* gehennas_mark(PlayerbotAI* botAI) { return new McKillOrderMarkAction(botAI, "mc gehennas mark", "gehennas", { MoltenCoreHelpers::NPC_FLAMEWAKER }); }
     static Action* garr_banish(PlayerbotAI* botAI) { return new McGarrBanishAction(botAI); }
     static Action* garr_mark(PlayerbotAI* botAI) { return new McGarrMarkAction(botAI); }
     static Action* shazzrah_purge(PlayerbotAI* botAI) { return new McShazzrahPurgeAction(botAI); }

@@ -68,10 +68,10 @@ bool McMagmadarFearWardTrigger::IsActive()
     return false;
 }
 
-bool McMagmadarLavaBombTrigger::IsActive()
+bool McGroundEffectAuraTrigger::IsActive()
 {
-    // No boss check: the fire patch (and its DoT) outlives target switches.
-    return bot->HasAura(SPELL_LAVA_BOMB_DOT);
+    // No boss check: fire patches (and their DoTs) outlive target switches.
+    return bot->HasAura(spellId);
 }
 
 bool McLivingBombDebuffTrigger::IsActive()

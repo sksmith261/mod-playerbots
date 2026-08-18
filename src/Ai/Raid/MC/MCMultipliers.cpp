@@ -38,7 +38,7 @@ float McDispelUrgencyMultiplier::GetValue(Action* action)
     if (PlayerbotAI::IsHeal(bot) || !dynamic_cast<CurePartyMemberAction*>(action))
         return 1.0f;
 
-    static char const* const CURSE_SPAM_BOSSES[] = { "lucifron", "shazzrah" };
+    static char const* const CURSE_SPAM_BOSSES[] = { "lucifron", "shazzrah", "gehennas" };
     for (char const* boss : CURSE_SPAM_BOSSES)
         if (AI_VALUE2(Unit*, "find target", boss))
             return 2.0f;

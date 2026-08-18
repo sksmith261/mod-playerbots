@@ -128,11 +128,12 @@ public:
     bool Execute(Event event) override;
 };
 
-// Step out of a Lava Bomb fire patch.
-class McMagmadarMoveFromLavaAction : public MovementAction
+// Step out of a damaging ground effect (Magmadar lava bombs, Gehennas rain
+// of fire, ...).
+class McMoveFromGroundEffectAction : public MovementAction
 {
 public:
-    McMagmadarMoveFromLavaAction(PlayerbotAI* botAI, std::string const name = "mc magmadar move from lava")
+    McMoveFromGroundEffectAction(PlayerbotAI* botAI, std::string const name = "mc move from ground effect")
         : MovementAction(botAI, name) {};
     bool Execute(Event event) override;
 };
