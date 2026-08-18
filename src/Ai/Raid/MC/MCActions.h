@@ -73,6 +73,25 @@ public:
     bool Execute(Event event) override;
 };
 
+// Priest puts Fear Ward on the main tank so Panic doesn't send Magmadar
+// sprinting through the raid.
+class McMagmadarFearWardAction : public Action
+{
+public:
+    McMagmadarFearWardAction(PlayerbotAI* botAI, std::string const name = "mc magmadar fear ward")
+        : Action(botAI, name) {};
+    bool Execute(Event event) override;
+};
+
+// Step out of a Lava Bomb fire patch.
+class McMagmadarMoveFromLavaAction : public MovementAction
+{
+public:
+    McMagmadarMoveFromLavaAction(PlayerbotAI* botAI, std::string const name = "mc magmadar move from lava")
+        : MovementAction(botAI, name) {};
+    bool Execute(Event event) override;
+};
+
 // Skull a living Flamewaker Protector so the raid kills the adds before the
 // boss; once both are dead, skull moves to Lucifron.
 class McLucifronMarkAction : public Action

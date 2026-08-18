@@ -12,6 +12,34 @@ public:
     bool IsActive() override;
 };
 
+class McMagmadarFrenzyTrigger : public Trigger
+{
+public:
+    McMagmadarFrenzyTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc magmadar frenzy") {}
+    bool IsActive() override;
+};
+
+class McMagmadarTremorTotemTrigger : public Trigger
+{
+public:
+    McMagmadarTremorTotemTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc magmadar tremor totem") {}
+    bool IsActive() override;
+};
+
+class McMagmadarFearWardTrigger : public Trigger
+{
+public:
+    McMagmadarFearWardTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc magmadar fear ward") {}
+    bool IsActive() override;
+};
+
+class McMagmadarLavaBombTrigger : public Trigger
+{
+public:
+    McMagmadarLavaBombTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc magmadar lava bomb") {}
+    bool IsActive() override;
+};
+
 class McLivingBombDebuffTrigger : public Trigger
 {
 public:

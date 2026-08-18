@@ -213,6 +213,34 @@ bool McGolemaggAssistTankAttackCoreRagerAction::Execute(Event event)
     return false;
 }
 
+bool McMagmadarFearWardAction::Execute(Event /*event*/)
+{
+    Group* group = bot->GetGroup();
+    if (!group)
+        return false;
+
+    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        Player* member = itr->GetSource();
+        if (member && member->IsAlive() && botAI->IsMainTank(member))
+        {
+            if (member->HasAura(SPELL_FEAR_WARD))
+                return false;
+
+            return botAI->CastSpell(SPELL_FEAR_WARD, member);
+        }
+    }
+
+    return false;
+}
+
+bool McMagmadarMoveFromLavaAction::Execute(Event /*event*/)
+{
+    // Any direction out of the patch works; FleePosition picks a safe nearby
+    // spot away from where the bot is standing.
+    return FleePosition(bot->GetPosition(), 8.0f);
+}
+
 Unit* McLucifronMarkAction::GetTarget()
 {
     Unit* boss = AI_VALUE2(Unit*, "find target", "lucifron");

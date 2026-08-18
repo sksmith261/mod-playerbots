@@ -28,6 +28,8 @@ public:
         creators["mc ragnaros fire resistance"] = &RaidMcActionContext::ragnaros_fire_resistance;
         creators["mc core hound mark"] = &RaidMcActionContext::core_hound_mark;
         creators["mc lucifron mark"] = &RaidMcActionContext::lucifron_mark;
+        creators["mc magmadar fear ward"] = &RaidMcActionContext::magmadar_fear_ward;
+        creators["mc magmadar move from lava"] = &RaidMcActionContext::magmadar_move_from_lava;
     }
 
 private:
@@ -48,6 +50,8 @@ private:
     static Action* ragnaros_fire_resistance(PlayerbotAI* botAI) { return new BossFireResistanceAction(botAI, "ragnaros"); }
     static Action* core_hound_mark(PlayerbotAI* botAI) { return new McCoreHoundMarkAction(botAI); }
     static Action* lucifron_mark(PlayerbotAI* botAI) { return new McLucifronMarkAction(botAI); }
+    static Action* magmadar_fear_ward(PlayerbotAI* botAI) { return new McMagmadarFearWardAction(botAI); }
+    static Action* magmadar_move_from_lava(PlayerbotAI* botAI) { return new McMagmadarMoveFromLavaAction(botAI); }
 };
 
 #endif

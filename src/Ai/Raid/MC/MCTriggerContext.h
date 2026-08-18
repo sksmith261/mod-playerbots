@@ -27,11 +27,19 @@ public:
         creators["mc ragnaros fire resistance"] = &RaidMcTriggerContext::ragnaros_fire_resistance;
         creators["mc core hound mark"] = &RaidMcTriggerContext::core_hound_mark;
         creators["mc lucifron mark"] = &RaidMcTriggerContext::lucifron_mark;
+        creators["mc magmadar frenzy"] = &RaidMcTriggerContext::magmadar_frenzy;
+        creators["mc magmadar tremor totem"] = &RaidMcTriggerContext::magmadar_tremor_totem;
+        creators["mc magmadar fear ward"] = &RaidMcTriggerContext::magmadar_fear_ward;
+        creators["mc magmadar lava bomb"] = &RaidMcTriggerContext::magmadar_lava_bomb;
     }
 
 private:
     static Trigger* lucifron_shadow_resistance(PlayerbotAI* botAI) { return new BossShadowResistanceTrigger(botAI, "lucifron"); }
     static Trigger* lucifron_mark(PlayerbotAI* botAI) { return new McLucifronMarkTrigger(botAI); }
+    static Trigger* magmadar_frenzy(PlayerbotAI* botAI) { return new McMagmadarFrenzyTrigger(botAI); }
+    static Trigger* magmadar_tremor_totem(PlayerbotAI* botAI) { return new McMagmadarTremorTotemTrigger(botAI); }
+    static Trigger* magmadar_fear_ward(PlayerbotAI* botAI) { return new McMagmadarFearWardTrigger(botAI); }
+    static Trigger* magmadar_lava_bomb(PlayerbotAI* botAI) { return new McMagmadarLavaBombTrigger(botAI); }
     static Trigger* magmadar_fire_resistance(PlayerbotAI* botAI) { return new BossFireResistanceTrigger(botAI, "magmadar"); }
     static Trigger* gehennas_shadow_resistance(PlayerbotAI* botAI) { return new BossShadowResistanceTrigger(botAI, "gehennas"); }
     static Trigger* garr_fire_resistance(PlayerbotAI* botAI) { return new BossFireResistanceTrigger(botAI, "garr"); }

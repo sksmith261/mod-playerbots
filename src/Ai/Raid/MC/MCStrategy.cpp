@@ -14,10 +14,23 @@ void RaidMcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
                         { NextAction("mc lucifron mark", ACTION_RAID) }));
 
     // Magmadar
-    // TODO: Fear ward / tremor totem, or general anti-fear strat development. Same as King Dred (Drak'Tharon) and faction commander (Nexus).
     triggers.push_back(
         new TriggerNode("mc magmadar fire resistance",
                         { NextAction("mc magmadar fire resistance", ACTION_RAID) }));
+    // Hunters keep the generic enrage-tranq at rotation priority; this raises
+    // it to raid priority the moment Frenzy is actually up.
+    triggers.push_back(
+        new TriggerNode("mc magmadar frenzy",
+                        { NextAction("tranquilizing shot", ACTION_RAID) }));
+    triggers.push_back(
+        new TriggerNode("mc magmadar tremor totem",
+                        { NextAction("tremor totem", ACTION_RAID) }));
+    triggers.push_back(
+        new TriggerNode("mc magmadar fear ward",
+                        { NextAction("mc magmadar fear ward", ACTION_RAID) }));
+    triggers.push_back(
+        new TriggerNode("mc magmadar lava bomb",
+                        { NextAction("mc magmadar move from lava", ACTION_RAID) }));
 
     // Gehennas
     triggers.push_back(
