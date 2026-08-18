@@ -26,10 +26,12 @@ public:
         creators["mc majordomo shadow resistance"] = &RaidMcTriggerContext::majordomo_shadow_resistance;
         creators["mc ragnaros fire resistance"] = &RaidMcTriggerContext::ragnaros_fire_resistance;
         creators["mc core hound mark"] = &RaidMcTriggerContext::core_hound_mark;
+        creators["mc lucifron mark"] = &RaidMcTriggerContext::lucifron_mark;
     }
 
 private:
     static Trigger* lucifron_shadow_resistance(PlayerbotAI* botAI) { return new BossShadowResistanceTrigger(botAI, "lucifron"); }
+    static Trigger* lucifron_mark(PlayerbotAI* botAI) { return new McLucifronMarkTrigger(botAI); }
     static Trigger* magmadar_fire_resistance(PlayerbotAI* botAI) { return new BossFireResistanceTrigger(botAI, "magmadar"); }
     static Trigger* gehennas_shadow_resistance(PlayerbotAI* botAI) { return new BossShadowResistanceTrigger(botAI, "gehennas"); }
     static Trigger* garr_fire_resistance(PlayerbotAI* botAI) { return new BossFireResistanceTrigger(botAI, "garr"); }

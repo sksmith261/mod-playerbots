@@ -9,6 +9,9 @@ void RaidMcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     triggers.push_back(
         new TriggerNode("mc lucifron shadow resistance",
                         { NextAction("mc lucifron shadow resistance", ACTION_RAID) }));
+    triggers.push_back(
+        new TriggerNode("mc lucifron mark",
+                        { NextAction("mc lucifron mark", ACTION_RAID) }));
 
     // Magmadar
     // TODO: Fear ward / tremor totem, or general anti-fear strat development. Same as King Dred (Drak'Tharon) and faction commander (Nexus).
@@ -80,6 +83,7 @@ void RaidMcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 
 void RaidMcStrategy::InitMultipliers(std::vector<Multiplier*>& multipliers)
 {
+    multipliers.push_back(new LucifronDispelMultiplier(botAI));
     multipliers.push_back(new GarrDisableDpsAoeMultiplier(botAI));
     multipliers.push_back(new BaronGeddonAbilityMultiplier(botAI));
     multipliers.push_back(new GolemaggMultiplier(botAI));

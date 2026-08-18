@@ -33,6 +33,16 @@ static bool IsDpsBotWithAoeAction(Player* bot, Action* action)
     return false;
 }
 
+float LucifronDispelMultiplier::GetValue(Action* action)
+{
+    if (AI_VALUE2(Unit*, "find target", "lucifron"))
+    {
+        if (!PlayerbotAI::IsHeal(bot) && dynamic_cast<CurePartyMemberAction*>(action))
+            return 2.0f;
+    }
+    return 1.0f;
+}
+
 float GarrDisableDpsAoeMultiplier::GetValue(Action* action)
 {
     if (AI_VALUE2(Unit*, "find target", "garr"))

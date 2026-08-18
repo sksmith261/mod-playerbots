@@ -5,6 +5,9 @@ namespace MoltenCoreHelpers
 {
 enum MoltenCoreNPCs
 {
+    // Lucifron
+    NPC_FLAMEWAKER_PROTECTOR = 12119,
+
     // Golemagg
     NPC_CORE_RAGER = 11672,
 

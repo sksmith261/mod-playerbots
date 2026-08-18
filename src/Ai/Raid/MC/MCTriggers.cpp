@@ -5,6 +5,11 @@
 
 using namespace MoltenCoreHelpers;
 
+bool McLucifronMarkTrigger::IsActive()
+{
+    return PlayerbotAI::IsMainTank(bot) && AI_VALUE2(Unit*, "find target", "lucifron");
+}
+
 bool McLivingBombDebuffTrigger::IsActive()
 {
     // No check for Baron Geddon, because bots may have the bomb even after Geddon died.

@@ -213,6 +213,56 @@ bool McGolemaggAssistTankAttackCoreRagerAction::Execute(Event event)
     return false;
 }
 
+Unit* McLucifronMarkAction::GetTarget()
+{
+    Unit* boss = AI_VALUE2(Unit*, "find target", "lucifron");
+    if (!boss)
+        return nullptr;
+
+    Group* group = bot->GetGroup();
+    if (!group)
+        return nullptr;
+
+    ObjectGuid currentSkullGuid = group->GetTargetIcon(RtiTargetValue::skullIndex);
+    Unit* currentSkullUnit = currentSkullGuid.IsEmpty() ? nullptr : botAI->GetUnit(currentSkullGuid);
+
+    // Adds die first. Keep the current skull if it is already a living
+    // protector so the mark doesn't flap between the two adds.
+    if (currentSkullUnit && currentSkullUnit->IsAlive() && currentSkullUnit->GetEntry() == NPC_FLAMEWAKER_PROTECTOR)
+        return nullptr;
+
+    Unit* protector = nullptr;
+    for (auto const& target : AI_VALUE(GuidVector, "possible targets no los"))
+    {
+        Unit* unit = botAI->GetUnit(target);
+        if (unit && unit->IsAlive() && unit->GetEntry() == NPC_FLAMEWAKER_PROTECTOR)
+        {
+            // Prefer the more damaged protector so an in-progress kill finishes.
+            if (!protector || unit->GetHealth() < protector->GetHealth())
+                protector = unit;
+        }
+    }
+
+    if (protector)
+        return protector;
+
+    // Both adds down: skull the boss.
+    if (currentSkullGuid.IsEmpty() || currentSkullGuid != boss->GetGUID())
+        return boss;
+
+    return nullptr;
+}
+
+bool McLucifronMarkAction::Execute(Event /*event*/)
+{
+    Unit* target = GetTarget();
+    if (!target)
+        return false;
+
+    bot->GetGroup()->SetTargetIcon(RtiTargetValue::skullIndex, bot->GetGUID(), target->GetGUID());
+    return true;
+}
+
 Unit* McCoreHoundMarkAction::GetTarget()
 {
     Unit* highestHealthHound = nullptr;

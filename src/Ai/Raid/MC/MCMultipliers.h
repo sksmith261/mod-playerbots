@@ -3,6 +3,17 @@
 
 #include "Multiplier.h"
 
+// Lucifron spams the whole raid with Impending Doom (magic) and Lucifron's
+// Curse; non-healer dispellers (mages, ret/prot paladins) should treat
+// cleansing as more important than their rotation while he is up. Healers are
+// left alone so they keep triaging heals vs dispels normally.
+class LucifronDispelMultiplier : public Multiplier
+{
+public:
+    LucifronDispelMultiplier(PlayerbotAI* botAI) : Multiplier(botAI, "lucifron dispel multiplier") {}
+    float GetValue(Action* action) override;
+};
+
 class GarrDisableDpsAoeMultiplier : public Multiplier
 {
 public:

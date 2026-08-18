@@ -5,6 +5,13 @@
 #include "Playerbots.h"
 #include "Trigger.h"
 
+class McLucifronMarkTrigger : public Trigger
+{
+public:
+    McLucifronMarkTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc lucifron mark") {}
+    bool IsActive() override;
+};
+
 class McLivingBombDebuffTrigger : public Trigger
 {
 public:

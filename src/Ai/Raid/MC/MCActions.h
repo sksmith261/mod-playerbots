@@ -73,4 +73,15 @@ public:
     bool Execute(Event event) override;
 };
 
+// Skull a living Flamewaker Protector so the raid kills the adds before the
+// boss; once both are dead, skull moves to Lucifron.
+class McLucifronMarkAction : public Action
+{
+public:
+    McLucifronMarkAction(PlayerbotAI* botAI, std::string const name = "mc lucifron mark")
+        : Action(botAI, name) {};
+    Unit* GetTarget() override;
+    bool Execute(Event event) override;
+};
+
 #endif
