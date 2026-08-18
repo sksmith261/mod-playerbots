@@ -35,9 +35,7 @@ private:
     static Action* bwl_nefarian_drakonid_mark(PlayerbotAI* botAI)
     {
         using namespace BlackwingLairHelpers;
-        return new RaidKillOrderMarkAction(botAI, "bwl nefarian drakonid mark", "",
-            { NPC_CHROMATIC_DRAKONID, NPC_BLUE_DRAKONID, NPC_GREEN_DRAKONID,
-              NPC_BRONZE_DRAKONID, NPC_RED_DRAKONID, NPC_BLACK_DRAKONID });
+        return new RaidKillOrderMarkAction(botAI, "bwl nefarian drakonid mark", "", NEFARIAN_DRAKONIDS);
     }
 
     static Action* bwl_check_onyxia_scale_cloak(PlayerbotAI* ai) { return new BwlOnyxiaScaleCloakAuraCheckAction(ai); }

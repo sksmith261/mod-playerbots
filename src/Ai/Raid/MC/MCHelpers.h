@@ -8,9 +8,6 @@ enum MoltenCoreNPCs
     // Lucifron
     NPC_FLAMEWAKER_PROTECTOR = 12119,
 
-    // Magmadar (any shaman's Tremor Totem)
-    NPC_TREMOR_TOTEM = 5913,
-
     // Gehennas
     NPC_FLAMEWAKER = 11661,
 
@@ -38,8 +35,6 @@ enum MoltenCoreSpells
     // Magmadar
     SPELL_MAGMADAR_FRENZY = 19451,
     SPELL_LAVA_BOMB_DOT = 19428,      // periodic fire while standing in the bomb's patch (GO 177704)
-    SPELL_TREMOR_TOTEM = 8143,
-    SPELL_FEAR_WARD = 6346,
 
     // Garr
     SPELL_BANISH_R1 = 710,

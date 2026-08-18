@@ -38,9 +38,7 @@ private:
     static Trigger* bwl_nefarian_drakonids(PlayerbotAI* botAI)
     {
         using namespace BlackwingLairHelpers;
-        return new RaidAddsAliveMarkTrigger(botAI, "bwl nefarian drakonids",
-            { NPC_CHROMATIC_DRAKONID, NPC_BLUE_DRAKONID, NPC_GREEN_DRAKONID,
-              NPC_BRONZE_DRAKONID, NPC_RED_DRAKONID, NPC_BLACK_DRAKONID });
+        return new RaidAddsAliveMarkTrigger(botAI, "bwl nefarian drakonids", NEFARIAN_DRAKONIDS);
     }
     static Trigger* bwl_flamegor_frenzy(PlayerbotAI* botAI)
     {

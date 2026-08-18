@@ -18,27 +18,81 @@ namespace
 constexpr uint32 NPC_TREMOR_TOTEM = 5913;
 constexpr uint32 SPELL_TREMOR_TOTEM = 8143;
 constexpr uint32 SPELL_FEAR_WARD = 6346;
+
+Player* FindMainTank(Player* bot)
+{
+    Group* group = bot->GetGroup();
+    if (!group)
+        return nullptr;
+
+    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        Player* member = itr->GetSource();
+        if (member && member->IsAlive() && PlayerbotAI::IsMainTank(member))
+            return member;
+    }
+
+    return nullptr;
+}
+
+// The bot responsible for maintaining raid marks. Normally the main tank —
+// but when a human is main-tanking (no bot AI to run the trigger), marking
+// must not go silently inert: the first living bot in shared group order
+// takes over. Every bot computes the same answer, so exactly one marks.
+bool IsMarkOwner(Player* bot)
+{
+    if (PlayerbotAI::IsMainTank(bot))
+        return true;
+
+    Group* group = bot->GetGroup();
+    if (!group)
+        return false;
+
+    Player* mainTank = FindMainTank(bot);
+    if (mainTank && GET_PLAYERBOT_AI(mainTank))
+        return false;  // a bot main tank owns marking, and it is not us
+
+    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        Player* member = itr->GetSource();
+        if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
+            continue;
+
+        return member == bot;
+    }
+
+    return false;
+}
 }
 
 bool RaidKillOrderMarkTrigger::IsActive()
 {
-    return PlayerbotAI::IsMainTank(bot) && AI_VALUE2(Unit*, "find target", bossName);
+    return IsMarkOwner(bot) && AI_VALUE2(Unit*, "find target", bossName);
 }
 
 bool RaidAddsAliveMarkTrigger::IsActive()
 {
-    if (!PlayerbotAI::IsMainTank(bot))
+    if (!IsMarkOwner(bot))
         return false;
 
     for (auto const& target : AI_VALUE(GuidVector, "possible targets no los"))
     {
-        Unit* unit = botAI->GetUnit(target);
-        if (!unit || !unit->IsAlive())
+        // Creature guids encode the entry: filter before the ObjectAccessor
+        // lookup so non-matching nearby units cost nothing.
+        bool wanted = false;
+        for (uint32 entry : addEntries)
+            if (target.GetEntry() == entry)
+            {
+                wanted = true;
+                break;
+            }
+
+        if (!wanted)
             continue;
 
-        for (uint32 entry : addEntries)
-            if (unit->GetEntry() == entry)
-                return true;
+        Unit* unit = botAI->GetUnit(target);
+        if (unit && unit->IsAlive())
+            return true;
     }
 
     return false;
@@ -70,14 +124,22 @@ Unit* RaidKillOrderMarkAction::GetTarget()
     ObjectGuid currentSkullGuid = group->GetTargetIcon(RtiTargetValue::skullIndex);
     Unit* currentSkullUnit = currentSkullGuid.IsEmpty() ? nullptr : botAI->GetUnit(currentSkullGuid);
 
+    // One grid search for all tiers: this value recalculates (a full grid
+    // visit) on every Get(), so fetching it per tier multiplied the most
+    // expensive lookup in the toolkit by the tier count.
+    GuidVector const possibleTargets = AI_VALUE(GuidVector, "possible targets no los");
+
     for (uint32 entry : addEntries)
     {
         Unit* best = nullptr;
         bool bestClean = false;
-        for (auto const& target : AI_VALUE(GuidVector, "possible targets no los"))
+        for (auto const& target : possibleTargets)
         {
+            if (target.GetEntry() != entry)
+                continue;
+
             Unit* unit = botAI->GetUnit(target);
-            if (!unit || !unit->IsAlive() || unit->GetEntry() != entry)
+            if (!unit || !unit->IsAlive())
                 continue;
 
             // Prefer targets without a shield aura; the most damaged
@@ -140,8 +202,16 @@ bool RaidTremorTotemTrigger::IsActive()
     if (!AI_VALUE2(Unit*, "find target", bossName))
         return false;
 
-    // Any shaman's totem in range covers the camp; don't stack duplicates.
-    return !bot->FindNearestCreature(NPC_TREMOR_TOTEM, 20.0f);
+    // The totem must cover the melee camp the fear actually hits, not the
+    // shaman's own feet: check coverage around the main tank, and only drop
+    // if this shaman is close enough for its totem to reach the camp — a
+    // ranged shaman's totem 30y out would satisfy a self-check while the
+    // tank stays uncovered.
+    Player* mainTank = FindMainTank(bot);
+    if (!mainTank || bot->GetDistance(mainTank) > 20.0f)
+        return false;
+
+    return !mainTank->FindNearestCreature(NPC_TREMOR_TOTEM, 20.0f);
 }
 
 bool RaidFearWardTrigger::IsActive()
@@ -152,36 +222,17 @@ bool RaidFearWardTrigger::IsActive()
     if (!AI_VALUE2(Unit*, "find target", bossName))
         return false;
 
-    if (Group* group = bot->GetGroup())
-        for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
-        {
-            Player* member = itr->GetSource();
-            if (member && member->IsAlive() && botAI->IsMainTank(member))
-                return !member->HasAura(SPELL_FEAR_WARD);
-        }
-
-    return false;
+    Player* mainTank = FindMainTank(bot);
+    return mainTank && !mainTank->HasAura(SPELL_FEAR_WARD);
 }
 
 bool RaidFearWardAction::Execute(Event /*event*/)
 {
-    Group* group = bot->GetGroup();
-    if (!group)
+    Player* mainTank = FindMainTank(bot);
+    if (!mainTank || mainTank->HasAura(SPELL_FEAR_WARD))
         return false;
 
-    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
-    {
-        Player* member = itr->GetSource();
-        if (member && member->IsAlive() && botAI->IsMainTank(member))
-        {
-            if (member->HasAura(SPELL_FEAR_WARD))
-                return false;
-
-            return botAI->CastSpell(SPELL_FEAR_WARD, member);
-        }
-    }
-
-    return false;
+    return botAI->CastSpell(SPELL_FEAR_WARD, mainTank);
 }
 
 bool RaidGroundEffectAuraTrigger::IsActive()

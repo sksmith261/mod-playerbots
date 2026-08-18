@@ -12,6 +12,7 @@
 #include "DKActions.h"
 #include "MCActions.h"
 #include "MCHelpers.h"
+#include "RaidBossScripts.h"
 
 using namespace MoltenCoreHelpers;
 
@@ -46,9 +47,13 @@ float GarrDisableDpsAoeMultiplier::GetValue(Action* action)
 
 static bool IsAllowedGeddonMovementAction(Action* action)
 {
+    // RaidMoveFromGroundEffectAction must stay allowed: a bot with Living
+    // Bomb standing in a lingering fire patch needs to flee the patch, and
+    // zeroing it left bots taking the DoT for the aura's whole duration.
     if (dynamic_cast<MovementAction*>(action) &&
                 !dynamic_cast<McMoveFromGroupAction*>(action) &&
-                !dynamic_cast<McMoveFromBaronGeddonAction*>(action))
+                !dynamic_cast<McMoveFromBaronGeddonAction*>(action) &&
+                !dynamic_cast<RaidMoveFromGroundEffectAction*>(action))
         return false;
 
     if (dynamic_cast<CastReachTargetSpellAction*>(action))
@@ -80,26 +85,32 @@ float BaronGeddonAbilityMultiplier::GetValue(Action* action)
 
 float MajordomoReflectionMultiplier::GetValue(Action* action)
 {
-    if (!PlayerbotAI::IsDps(bot))
-        return 1.0f;
-
-    if (!AI_VALUE2(Unit*, "find target", "majordomo executus"))
-        return 1.0f;
-
+    // Cheap gates first: the reflection auras exist only on Majordomo's
+    // adds, so the current target's auras fully identify the situation — no
+    // need for the find-target name scan on every action of every tick.
     Unit* target = AI_VALUE(Unit*, "current target");
     if (!target)
         return 1.0f;
 
-    if (PlayerbotAI::IsRanged(bot))
-    {
-        // Cures and ally buffs are fine; damage casts into Magic Reflection
-        // kill the caster.
-        if (target->HasAura(SPELL_DOMO_MAGIC_REFLECTION) && dynamic_cast<CastSpellAction*>(action) &&
-            !dynamic_cast<CurePartyMemberAction*>(action) && !dynamic_cast<BuffOnPartyAction*>(action) &&
-            !dynamic_cast<CastBuffSpellAction*>(action))
-            return 0.0f;
-    }
-    else if (target->HasAura(SPELL_DOMO_DAMAGE_REFLECTION) && dynamic_cast<MeleeAction*>(action))
+    bool const magicReflection = target->HasAura(SPELL_DOMO_MAGIC_REFLECTION);
+    bool const damageReflection = target->HasAura(SPELL_DOMO_DAMAGE_REFLECTION);
+    if (!magicReflection && !damageReflection)
+        return 1.0f;
+
+    // Only suppress actions actually aimed at the shielded unit: friendly
+    // utility (battle-res, decurse, self-heals, buffs) must stay available,
+    // whatever the bot's role.
+    if (action->GetTarget() != target)
+        return 1.0f;
+
+    // Classify by what the ACTION does, not what the bot is: melee classes
+    // cast magic (Exorcism, shocks) and casters can melee. Melee specials
+    // are CastMeleeSpellAction, not MeleeAction — both are physical.
+    bool const isMeleeAttack = dynamic_cast<MeleeAction*>(action) || dynamic_cast<CastMeleeSpellAction*>(action);
+    if (damageReflection && isMeleeAttack)
+        return 0.0f;
+
+    if (magicReflection && !isMeleeAttack && dynamic_cast<CastSpellAction*>(action))
         return 0.0f;
 
     return 1.0f;

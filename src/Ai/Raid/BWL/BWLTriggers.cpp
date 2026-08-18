@@ -92,6 +92,27 @@ bool BwlDeathTalonWyrmguardRangedTrigger::IsActive()
     return PlayerbotAI::IsRanged(bot) && AI_VALUE2(Unit*, "find target", "death talon wyrmguard");
 }
 
+// A tank the election may pick: it must be bot-controlled (a human tank
+// cannot be commanded to taunt) and of a class whose taunt the taunt action
+// can actually execute — "taunt spell" is aliased only by warrior/paladin/DK
+// tank strategies, druids use "growl" (handled in BwlEbonrocTauntAction).
+static bool CanExecuteEbonrocTaunt(Player* member)
+{
+    if (!GET_PLAYERBOT_AI(member))
+        return false;
+
+    switch (member->getClass())
+    {
+        case CLASS_WARRIOR:
+        case CLASS_PALADIN:
+        case CLASS_DEATH_KNIGHT:
+        case CLASS_DRUID:
+            return true;
+        default:
+            return false;
+    }
+}
+
 bool BwlEbonrocShadowSwapTrigger::IsActive()
 {
     using namespace BlackwingLairHelpers;
@@ -112,7 +133,9 @@ bool BwlEbonrocShadowSwapTrigger::IsActive()
         return false;
 
     // Deterministic single taker: the first living tank in shared group
-    // iteration order that is neither shadowed nor the current victim.
+    // iteration order that is neither shadowed nor the current victim —
+    // skipping tanks that could never execute the taunt, or the election
+    // deadlocks on them and the swap never happens.
     if (Group* group = bot->GetGroup())
         for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
         {
@@ -121,6 +144,9 @@ bool BwlEbonrocShadowSwapTrigger::IsActive()
                 continue;
 
             if (member == victim || member->HasAura(shadow))
+                continue;
+
+            if (!CanExecuteEbonrocTaunt(member))
                 continue;
 
             return member == bot;

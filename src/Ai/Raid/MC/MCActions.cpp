@@ -1,6 +1,7 @@
 #include "MCActions.h"
 
 #include <algorithm>
+#include <list>
 
 #include "Playerbots.h"
 #include "RtiTargetValue.h"
@@ -229,13 +230,18 @@ bool McGolemaggAssistTankAttackCoreRagerAction::Execute(Event event)
 
 std::vector<Unit*> MoltenCoreHelpers::GetLivingFiresworn(PlayerbotAI* botAI)
 {
+    // Search the grid directly instead of "possible targets no los": that
+    // value filters out units immune to physical+magic damage — exactly what
+    // Banish confers — so banished Firesworn would vanish from this list and
+    // reshuffle the GUID-sorted assignments mid-fight (warlocks would then
+    // serially chain-banish add after add instead of holding two).
+    std::list<Creature*> found;
+    botAI->GetBot()->GetCreatureListWithEntryInGrid(found, NPC_FIRESWORN, 150.0f);
+
     std::vector<Unit*> firesworn;
-    for (auto const& target : botAI->GetAiObjectContext()->GetValue<GuidVector>("possible targets no los")->Get())
-    {
-        Unit* unit = botAI->GetUnit(target);
-        if (unit && unit->IsAlive() && unit->GetEntry() == NPC_FIRESWORN)
+    for (Creature* unit : found)
+        if (unit->IsAlive())
             firesworn.push_back(unit);
-    }
 
     std::sort(firesworn.begin(), firesworn.end(), [](Unit* a, Unit* b)
               { return a->GetGUID().GetCounter() < b->GetGUID().GetCounter(); });
@@ -247,18 +253,44 @@ bool MoltenCoreHelpers::IsBanished(Unit* unit)
     return unit->HasAura(SPELL_BANISH_R1) || unit->HasAura(SPELL_BANISH_R2);
 }
 
-uint32 MoltenCoreHelpers::CountGarrBanishAssignments(PlayerbotAI* botAI, Player* bot)
+namespace
 {
-    uint32 warlocks = 0;
-    if (Group* group = bot->GetGroup())
-        for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
-        {
-            Player* member = itr->GetSource();
-            if (member && member->IsAlive() && member->getClass() == CLASS_WARLOCK)
-                ++warlocks;
-        }
+// One predicate for both counting and ranking: a warlock only counts toward
+// the reservation if it can actually execute the assignment — bot-controlled
+// and able to cast Banish. Counting capability-blind reserved adds nobody
+// would ever banish, permanently excluding them from the kill order.
+void CountEligibleBanishers(Player* bot, uint32& count, int32& myRank)
+{
+    count = 0;
+    myRank = -1;
 
-    return std::min<uint32>(warlocks, 2);
+    Group* group = bot->GetGroup();
+    if (!group)
+        return;
+
+    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        Player* member = itr->GetSource();
+        if (!member || !member->IsAlive() || member->getClass() != CLASS_WARLOCK)
+            continue;
+
+        if (!GET_PLAYERBOT_AI(member) || !member->HasSpell(MoltenCoreHelpers::SPELL_BANISH_R1))
+            continue;
+
+        if (member == bot)
+            myRank = count;
+
+        ++count;
+    }
+}
+}
+
+uint32 MoltenCoreHelpers::CountGarrBanishAssignments(PlayerbotAI* /*botAI*/, Player* bot)
+{
+    uint32 count = 0;
+    int32 myRank = -1;
+    CountEligibleBanishers(bot, count, myRank);
+    return std::min<uint32>(count, 2);
 }
 
 Unit* MoltenCoreHelpers::GetGarrBanishAssignment(PlayerbotAI* botAI, Player* bot)
@@ -266,21 +298,9 @@ Unit* MoltenCoreHelpers::GetGarrBanishAssignment(PlayerbotAI* botAI, Player* bot
     if (bot->getClass() != CLASS_WARLOCK)
         return nullptr;
 
-    // My rank among the group's living warlocks, in shared iteration order.
-    int32 myRank = -1;
     uint32 count = 0;
-    if (Group* group = bot->GetGroup())
-        for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
-        {
-            Player* member = itr->GetSource();
-            if (!member || !member->IsAlive() || member->getClass() != CLASS_WARLOCK)
-                continue;
-
-            if (member == bot)
-                myRank = count;
-
-            ++count;
-        }
+    int32 myRank = -1;
+    CountEligibleBanishers(bot, count, myRank);
 
     if (myRank < 0 || myRank > 1)
         return nullptr;

@@ -44,7 +44,7 @@ class RaidAddsAliveMarkTrigger : public Trigger
 {
 public:
     RaidAddsAliveMarkTrigger(PlayerbotAI* botAI, std::string const name, std::vector<uint32> const addEntries)
-        : Trigger(botAI, name), addEntries(addEntries) {}
+        : Trigger(botAI, name, 1 * 1000), addEntries(addEntries) {}
     bool IsActive() override;
 
 protected:
@@ -95,7 +95,7 @@ class RaidTremorTotemTrigger : public Trigger
 {
 public:
     RaidTremorTotemTrigger(PlayerbotAI* botAI, std::string const name, std::string const bossName)
-        : Trigger(botAI, name), bossName(bossName) {}
+        : Trigger(botAI, name, 2 * 1000), bossName(bossName) {}
     bool IsActive() override;
 
 protected:

@@ -368,5 +368,8 @@ bool BwlEbonrocTauntAction::Execute(Event event)
     if (bot->GetVictim() != boss)
         return Attack(boss);
 
-    return botAI->DoSpecificAction("taunt spell", event, true);
+    // "taunt spell" is an action-node alias registered only by the
+    // warrior/paladin/DK tank strategies; druids register "growl".
+    std::string const tauntAction = bot->getClass() == CLASS_DRUID ? "growl" : "taunt spell";
+    return botAI->DoSpecificAction(tauntAction, event, true);
 }

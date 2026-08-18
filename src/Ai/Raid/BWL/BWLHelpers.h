@@ -1,6 +1,8 @@
 #ifndef PLAYERBOTS_BWLHELPERS_H
 #define PLAYERBOTS_BWLHELPERS_H
 
+#include <vector>
+
 #include "Player.h"
 #include "PlayerbotAI.h"
 
@@ -62,6 +64,13 @@ namespace BlackwingLairHelpers
         NPC_BLACK_DRAKONID = 14265,
         NPC_CHROMATIC_DRAKONID = 14302,
     };
+
+    // One list for both the trigger and the mark action: they must agree on
+    // the entry set (and kill priority) or the trigger fires for adds the
+    // action never marks.
+    inline const std::vector<uint32> NEFARIAN_DRAKONIDS =
+        { NPC_CHROMATIC_DRAKONID, NPC_BLUE_DRAKONID, NPC_GREEN_DRAKONID,
+          NPC_BRONZE_DRAKONID, NPC_RED_DRAKONID, NPC_BLACK_DRAKONID };
 }
 
 #endif
