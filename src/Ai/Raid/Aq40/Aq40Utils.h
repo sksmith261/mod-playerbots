@@ -1,10 +1,23 @@
 #ifndef PLAYERBOTS_AQ40UTILS_H
 #define PLAYERBOTS_AQ40UTILS_H
 
+#include <cmath>
+
 #include "Define.h"
 
 namespace RaidAq40
 {
+    // Signed smallest angular difference a-b, in [-pi, pi].
+    inline float AngleDelta(float a, float b)
+    {
+        float d = std::fmod(a - b, 2.0f * static_cast<float>(M_PI));
+        if (d > static_cast<float>(M_PI))
+            d -= 2.0f * static_cast<float>(M_PI);
+        else if (d < -static_cast<float>(M_PI))
+            d += 2.0f * static_cast<float>(M_PI);
+        return d;
+    }
+
     constexpr uint32 MAP_TEMPLE_OF_AHNQIRAJ = 531;
 
     // C'Thun stomach (see core boss_cthun.cpp / areatrigger 4033)
@@ -28,6 +41,27 @@ namespace RaidAq40
     // Leave the stomach once Digestive Acid stacks this high, even if a Flesh
     // Tentacle is still alive.
     constexpr uint32 EXIT_ACID_STACKS = 5;
+
+    // Eye of C'Thun — Dark Glare (see core boss_cthun.cpp). During the glare
+    // phase the eye freezes with SPELL_RED_COLORATION up and sweeps the beam
+    // along its facing, rotating pi/35 rad per second for 35s in a random
+    // direction. The red aura goes up ~2s before the first damage tick,
+    // giving bots a head start; the eye's live orientation IS the beam angle.
+    constexpr uint32 NPC_EYE_OF_CTHUN = 15589;
+    constexpr uint32 SPELL_RED_COLORATION = 22518;
+
+    // React when the beam is within this angle of the bot (rad). The beam
+    // gains ~0.09 rad/s; a running bot at 30y gains ~0.23 rad/s tangentially,
+    // so this margin covers reaction plus travel whichever way it rotates.
+    constexpr float DARK_GLARE_DANGER_ARC = 0.7f;
+
+    // How far past the current angular gap to run per dodge step (rad).
+    constexpr float DARK_GLARE_DODGE_STEP = 0.5f;
+
+    // Engagement ring while dodging: keep the bot's current distance to the
+    // eye, clamped into this band.
+    constexpr float DARK_GLARE_MIN_RANGE = 10.0f;
+    constexpr float DARK_GLARE_MAX_RANGE = 40.0f;
 }
 
 #endif

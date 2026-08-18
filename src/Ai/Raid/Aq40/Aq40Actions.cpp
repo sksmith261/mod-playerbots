@@ -48,3 +48,31 @@ bool Aq40ExitStomachAction::Execute(Event /*event*/)
     botAI->SetNextCheckDelay(5000);
     return true;
 }
+
+bool Aq40DodgeDarkGlareAction::Execute(Event /*event*/)
+{
+    Unit* eye = AI_VALUE2(Unit*, "find target", "eye of c'thun");
+    if (!eye)
+        return false;
+
+    float const beamAngle = eye->GetOrientation();
+    float const delta = RaidAq40::AngleDelta(eye->GetAngle(bot), beamAngle);
+
+    // Run away from where the beam is NOW: if the sweep chases, the bot keeps
+    // fleeing in the same rotational direction and outruns it (~0.23 rad/s
+    // tangential at 30y vs the beam's ~0.09 rad/s); if the sweep rotates the
+    // other way, the gap opens twice as fast. No direction prediction needed.
+    float const away = delta >= 0.0f ? 1.0f : -1.0f;
+    float const targetAngle = beamAngle + away * (std::fabs(delta) + RaidAq40::DARK_GLARE_DODGE_STEP);
+
+    float const range = std::max(RaidAq40::DARK_GLARE_MIN_RANGE,
+                                 std::min(RaidAq40::DARK_GLARE_MAX_RANGE, bot->GetDistance2d(eye)));
+
+    float x = eye->GetPositionX() + std::cos(targetAngle) * range;
+    float y = eye->GetPositionY() + std::sin(targetAngle) * range;
+    float z = eye->GetPositionZ();
+    bot->UpdateAllowedPositionZ(x, y, z);
+
+    return MoveTo(RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ, x, y, z, false, false, false,
+                  /*exact_waypoint*/ true, MovementPriority::MOVEMENT_COMBAT, /*lessDelay*/ true);
+}
