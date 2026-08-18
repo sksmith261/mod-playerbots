@@ -43,12 +43,12 @@ protected:
 class RaidAddsAliveMarkTrigger : public Trigger
 {
 public:
-    RaidAddsAliveMarkTrigger(PlayerbotAI* botAI, std::string const name, uint32 addEntry)
-        : Trigger(botAI, name), addEntry(addEntry) {}
+    RaidAddsAliveMarkTrigger(PlayerbotAI* botAI, std::string const name, std::vector<uint32> const addEntries)
+        : Trigger(botAI, name), addEntries(addEntries) {}
     bool IsActive() override;
 
 protected:
-    uint32 const addEntry;
+    std::vector<uint32> const addEntries;
 };
 
 // Adds-first kill order via the skull mark: tiers of add entries die in

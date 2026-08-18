@@ -358,3 +358,15 @@ bool BwlDeathTalonWyrmguardRangedMoveAwayAction::Execute(Event /*event*/)
 
     return MoveAway(target, distToTravel);
 }
+
+bool BwlEbonrocTauntAction::Execute(Event event)
+{
+    Unit* boss = AI_VALUE2(Unit*, "find target", "ebonroc");
+    if (!boss)
+        return false;
+
+    if (bot->GetVictim() != boss)
+        return Attack(boss);
+
+    return botAI->DoSpecificAction("taunt spell", event, true);
+}

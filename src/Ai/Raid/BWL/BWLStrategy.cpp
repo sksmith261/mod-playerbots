@@ -24,6 +24,17 @@ void RaidBwlStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     triggers.push_back(new TriggerNode("bwl vaelastrasz burning adrenaline", {
         NextAction("bwl vaelastrasz move away", ACTION_RAID + 5) }));
 
+    // Ebonroc: the elected clean tank taunts him off the shadowed one.
+    triggers.push_back(new TriggerNode("bwl ebonroc shadow swap", {
+        NextAction("bwl ebonroc taunt", ACTION_RAID) }));
+
+    // Nefarian: tremor vs Bellowing Roar; phase-1 drakonids get a focused
+    // kill order (chromatics first) while Nefarian is still on the balcony.
+    triggers.push_back(new TriggerNode("bwl nefarian tremor totem", {
+        NextAction("tremor totem", ACTION_RAID) }));
+    triggers.push_back(new TriggerNode("bwl nefarian drakonids", {
+        NextAction("bwl nefarian drakonid mark", ACTION_RAID) }));
+
     // Flamegor and Chromaggus both frenzy; hunters tranq at raid priority
     // the moment it is up (same pattern as Magmadar).
     triggers.push_back(new TriggerNode("bwl flamegor frenzy", {

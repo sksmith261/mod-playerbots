@@ -78,4 +78,14 @@ public:
     bool IsActive() override;
 };
 
+// Ebonroc heals massively off whichever tank he melees while Shadow of
+// Ebonroc is on them; the designated clean tank taunts him away. Active only
+// for the one tank every bot independently computes as the taker.
+class BwlEbonrocShadowSwapTrigger : public Trigger
+{
+public:
+    BwlEbonrocShadowSwapTrigger(PlayerbotAI* botAI) : Trigger(botAI, "bwl ebonroc shadow swap") {}
+    bool IsActive() override;
+};
+
 #endif

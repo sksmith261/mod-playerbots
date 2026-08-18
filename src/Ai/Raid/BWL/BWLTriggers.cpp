@@ -91,3 +91,40 @@ bool BwlDeathTalonWyrmguardRangedTrigger::IsActive()
 {
     return PlayerbotAI::IsRanged(bot) && AI_VALUE2(Unit*, "find target", "death talon wyrmguard");
 }
+
+bool BwlEbonrocShadowSwapTrigger::IsActive()
+{
+    using namespace BlackwingLairHelpers;
+
+    if (!PlayerbotAI::IsTank(bot))
+        return false;
+
+    Unit* boss = AI_VALUE2(Unit*, "find target", "ebonroc");
+    if (!boss)
+        return false;
+
+    Unit* victim = boss->GetVictim();
+    if (!victim || victim == bot)
+        return false;
+
+    uint32 const shadow = static_cast<uint32>(BlackwingLairSpells::SPELL_SHADOW_OF_EBONROC);
+    if (!victim->HasAura(shadow) || bot->HasAura(shadow))
+        return false;
+
+    // Deterministic single taker: the first living tank in shared group
+    // iteration order that is neither shadowed nor the current victim.
+    if (Group* group = bot->GetGroup())
+        for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+        {
+            Player* member = itr->GetSource();
+            if (!member || !member->IsAlive() || !PlayerbotAI::IsTank(member))
+                continue;
+
+            if (member == victim || member->HasAura(shadow))
+                continue;
+
+            return member == bot;
+        }
+
+    return false;
+}

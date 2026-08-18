@@ -87,4 +87,13 @@ public:
     bool Execute(Event event) override;
 };
 
+// Taunt Ebonroc off the shadowed tank (trigger already elected this bot).
+class BwlEbonrocTauntAction : public AttackAction
+{
+public:
+    BwlEbonrocTauntAction(PlayerbotAI* botAI, std::string const name = "bwl ebonroc taunt")
+        : AttackAction(botAI, name) {};
+    bool Execute(Event event) override;
+};
+
 #endif

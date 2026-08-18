@@ -33,8 +33,12 @@ bool RaidAddsAliveMarkTrigger::IsActive()
     for (auto const& target : AI_VALUE(GuidVector, "possible targets no los"))
     {
         Unit* unit = botAI->GetUnit(target);
-        if (unit && unit->IsAlive() && unit->GetEntry() == addEntry)
-            return true;
+        if (!unit || !unit->IsAlive())
+            continue;
+
+        for (uint32 entry : addEntries)
+            if (unit->GetEntry() == entry)
+                return true;
     }
 
     return false;

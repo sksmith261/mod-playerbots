@@ -17,6 +17,9 @@ namespace BlackwingLairHelpers
         // Vaelastrasz the Corrupt
         SPELL_BURNING_ADRENALINE = 18173,
 
+        // Ebonroc (heals off whoever he is meleeing while it is on them)
+        SPELL_SHADOW_OF_EBONROC = 23340,
+
         // Flamegor
         SPELL_FLAMEGOR_FRENZY = 23342,
 
@@ -48,6 +51,17 @@ namespace BlackwingLairHelpers
     bool AreRazorgoreEggsAlive(PlayerbotAI* botAI);
     bool IsRazorgoreOffTank(Player* bot);
     bool IsNonBABotNearPosition(const Player* bot, Position const& position, float distance);
+
+    enum BlackwingLairNpcs : uint32
+    {
+        // Nefarian phase 1 (two colors stream per week; chromatics with them)
+        NPC_BLUE_DRAKONID = 14261,
+        NPC_GREEN_DRAKONID = 14262,
+        NPC_BRONZE_DRAKONID = 14263,
+        NPC_RED_DRAKONID = 14264,
+        NPC_BLACK_DRAKONID = 14265,
+        NPC_CHROMATIC_DRAKONID = 14302,
+    };
 }
 
 #endif

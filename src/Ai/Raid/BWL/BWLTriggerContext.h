@@ -20,6 +20,9 @@ public:
         creators["bwl vaelastrasz positioning"] = &RaidBwlTriggerContext::bwl_vaelastrasz_positioning;
         creators["bwl vaelastrasz burning adrenaline"] = &RaidBwlTriggerContext::bwl_vaelastrasz_burning_adrenaline;
 
+        creators["bwl ebonroc shadow swap"] = &RaidBwlTriggerContext::bwl_ebonroc_shadow_swap;
+        creators["bwl nefarian tremor totem"] = &RaidBwlTriggerContext::bwl_nefarian_tremor_totem;
+        creators["bwl nefarian drakonids"] = &RaidBwlTriggerContext::bwl_nefarian_drakonids;
         creators["bwl flamegor frenzy"] = &RaidBwlTriggerContext::bwl_flamegor_frenzy;
         creators["bwl chromaggus frenzy"] = &RaidBwlTriggerContext::bwl_chromaggus_frenzy;
         creators["bwl affliction bronze"] = &RaidBwlTriggerContext::bwl_affliction_bronze;
@@ -30,6 +33,15 @@ public:
     }
 
 private:
+    static Trigger* bwl_ebonroc_shadow_swap(PlayerbotAI* botAI) { return new BwlEbonrocShadowSwapTrigger(botAI); }
+    static Trigger* bwl_nefarian_tremor_totem(PlayerbotAI* botAI) { return new RaidTremorTotemTrigger(botAI, "bwl nefarian tremor totem", "nefarian"); }
+    static Trigger* bwl_nefarian_drakonids(PlayerbotAI* botAI)
+    {
+        using namespace BlackwingLairHelpers;
+        return new RaidAddsAliveMarkTrigger(botAI, "bwl nefarian drakonids",
+            { NPC_CHROMATIC_DRAKONID, NPC_BLUE_DRAKONID, NPC_GREEN_DRAKONID,
+              NPC_BRONZE_DRAKONID, NPC_RED_DRAKONID, NPC_BLACK_DRAKONID });
+    }
     static Trigger* bwl_flamegor_frenzy(PlayerbotAI* botAI)
     {
         return new RaidFrenzyTranqTrigger(botAI, "bwl flamegor frenzy", "flamegor",

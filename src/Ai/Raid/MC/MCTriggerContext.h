@@ -54,7 +54,7 @@ private:
     static Trigger* gehennas_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkTrigger(botAI, "mc gehennas mark", "gehennas"); }
     static Trigger* sulfuron_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkTrigger(botAI, "mc sulfuron mark", "sulfuron harbinger"); }
     static Trigger* majordomo_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkTrigger(botAI, "mc majordomo mark", "majordomo executus"); }
-    static Trigger* ragnaros_sons(PlayerbotAI* botAI) { return new RaidAddsAliveMarkTrigger(botAI, "mc ragnaros sons", MoltenCoreHelpers::NPC_SON_OF_FLAME); }
+    static Trigger* ragnaros_sons(PlayerbotAI* botAI) { return new RaidAddsAliveMarkTrigger(botAI, "mc ragnaros sons", { MoltenCoreHelpers::NPC_SON_OF_FLAME }); }
     static Trigger* garr_banish(PlayerbotAI* botAI) { return new McGarrBanishTrigger(botAI); }
     static Trigger* garr_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkTrigger(botAI, "mc garr mark", "garr"); }
     static Trigger* shazzrah_purge(PlayerbotAI* botAI) { return new McShazzrahPurgeTrigger(botAI); }

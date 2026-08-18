@@ -4,12 +4,16 @@
 #include "Action.h"
 #include "NamedObjectContext.h"
 #include "BWLActions.h"
+#include "BWLHelpers.h"
+#include "RaidBossScripts.h"
 
 class RaidBwlActionContext : public NamedObjectContext<Action>
 {
 public:
     RaidBwlActionContext()
     {
+        creators["bwl ebonroc taunt"] = &RaidBwlActionContext::bwl_ebonroc_taunt;
+        creators["bwl nefarian drakonid mark"] = &RaidBwlActionContext::bwl_nefarian_drakonid_mark;
         creators["bwl check onyxia scale cloak"] = &RaidBwlActionContext::bwl_check_onyxia_scale_cloak;
         creators["bwl turn off suppression device"] = &RaidBwlActionContext::bwl_turn_off_suppression_device;
 
@@ -27,6 +31,15 @@ public:
     }
 
 private:
+    static Action* bwl_ebonroc_taunt(PlayerbotAI* botAI) { return new BwlEbonrocTauntAction(botAI); }
+    static Action* bwl_nefarian_drakonid_mark(PlayerbotAI* botAI)
+    {
+        using namespace BlackwingLairHelpers;
+        return new RaidKillOrderMarkAction(botAI, "bwl nefarian drakonid mark", "",
+            { NPC_CHROMATIC_DRAKONID, NPC_BLUE_DRAKONID, NPC_GREEN_DRAKONID,
+              NPC_BRONZE_DRAKONID, NPC_RED_DRAKONID, NPC_BLACK_DRAKONID });
+    }
+
     static Action* bwl_check_onyxia_scale_cloak(PlayerbotAI* ai) { return new BwlOnyxiaScaleCloakAuraCheckAction(ai); }
     static Action* bwl_turn_off_suppression_device(PlayerbotAI* ai) { return new BwlTurnOffSuppressionDeviceAction(ai); }
     static Action* bwl_razorgore_fire_resistance_action(PlayerbotAI* ai) { return new BossFireResistanceAction(ai, "razorgore the untamed"); }
