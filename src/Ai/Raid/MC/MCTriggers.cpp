@@ -1,6 +1,7 @@
 #include "MCTriggers.h"
 
 #include "SharedDefines.h"
+#include "MCActions.h"
 #include "MCHelpers.h"
 
 using namespace MoltenCoreHelpers;
@@ -8,6 +9,23 @@ using namespace MoltenCoreHelpers;
 bool McLucifronMarkTrigger::IsActive()
 {
     return PlayerbotAI::IsMainTank(bot) && AI_VALUE2(Unit*, "find target", "lucifron");
+}
+
+bool McGarrBanishTrigger::IsActive()
+{
+    if (bot->getClass() != CLASS_WARLOCK || !bot->HasSpell(SPELL_BANISH_R1))
+        return false;
+
+    if (!AI_VALUE2(Unit*, "find target", "garr"))
+        return false;
+
+    Unit* assigned = GetGarrBanishAssignment(botAI, bot);
+    return assigned && !IsBanished(assigned) && !assigned->HasAura(SPELL_SEPARATION_ANXIETY_MINION);
+}
+
+bool McGarrMarkTrigger::IsActive()
+{
+    return PlayerbotAI::IsMainTank(bot) && AI_VALUE2(Unit*, "find target", "garr");
 }
 
 bool McMagmadarFrenzyTrigger::IsActive()

@@ -12,6 +12,20 @@ public:
     bool IsActive() override;
 };
 
+class McGarrBanishTrigger : public Trigger
+{
+public:
+    McGarrBanishTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc garr banish") {}
+    bool IsActive() override;
+};
+
+class McGarrMarkTrigger : public Trigger
+{
+public:
+    McGarrMarkTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc garr mark") {}
+    bool IsActive() override;
+};
+
 class McMagmadarFrenzyTrigger : public Trigger
 {
 public:

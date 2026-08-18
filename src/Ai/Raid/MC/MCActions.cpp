@@ -1,5 +1,7 @@
 #include "MCActions.h"
 
+#include <algorithm>
+
 #include "Playerbots.h"
 #include "RtiTargetValue.h"
 #include "MCHelpers.h"
@@ -211,6 +213,138 @@ bool McGolemaggAssistTankAttackCoreRagerAction::Execute(Event event)
     }
 
     return false;
+}
+
+std::vector<Unit*> MoltenCoreHelpers::GetLivingFiresworn(PlayerbotAI* botAI)
+{
+    std::vector<Unit*> firesworn;
+    for (auto const& target : botAI->GetAiObjectContext()->GetValue<GuidVector>("possible targets no los")->Get())
+    {
+        Unit* unit = botAI->GetUnit(target);
+        if (unit && unit->IsAlive() && unit->GetEntry() == NPC_FIRESWORN)
+            firesworn.push_back(unit);
+    }
+
+    std::sort(firesworn.begin(), firesworn.end(), [](Unit* a, Unit* b)
+              { return a->GetGUID().GetCounter() < b->GetGUID().GetCounter(); });
+    return firesworn;
+}
+
+bool MoltenCoreHelpers::IsBanished(Unit* unit)
+{
+    return unit->HasAura(SPELL_BANISH_R1) || unit->HasAura(SPELL_BANISH_R2);
+}
+
+uint32 MoltenCoreHelpers::CountGarrBanishAssignments(PlayerbotAI* botAI, Player* bot)
+{
+    uint32 warlocks = 0;
+    if (Group* group = bot->GetGroup())
+        for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+        {
+            Player* member = itr->GetSource();
+            if (member && member->IsAlive() && member->getClass() == CLASS_WARLOCK)
+                ++warlocks;
+        }
+
+    return std::min<uint32>(warlocks, 2);
+}
+
+Unit* MoltenCoreHelpers::GetGarrBanishAssignment(PlayerbotAI* botAI, Player* bot)
+{
+    if (bot->getClass() != CLASS_WARLOCK)
+        return nullptr;
+
+    // My rank among the group's living warlocks, in shared iteration order.
+    int32 myRank = -1;
+    uint32 count = 0;
+    if (Group* group = bot->GetGroup())
+        for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+        {
+            Player* member = itr->GetSource();
+            if (!member || !member->IsAlive() || member->getClass() != CLASS_WARLOCK)
+                continue;
+
+            if (member == bot)
+                myRank = count;
+
+            ++count;
+        }
+
+    if (myRank < 0 || myRank > 1)
+        return nullptr;
+
+    std::vector<Unit*> firesworn = GetLivingFiresworn(botAI);
+    if (static_cast<uint32>(myRank) >= firesworn.size())
+        return nullptr;
+
+    return firesworn[myRank];
+}
+
+bool McGarrBanishAction::Execute(Event /*event*/)
+{
+    Unit* target = MoltenCoreHelpers::GetGarrBanishAssignment(botAI, bot);
+    if (!target || MoltenCoreHelpers::IsBanished(target) || target->HasAura(SPELL_SEPARATION_ANXIETY_MINION))
+        return false;
+
+    return botAI->CastSpell("banish", target);
+}
+
+Unit* McGarrMarkAction::GetTarget()
+{
+    Unit* boss = AI_VALUE2(Unit*, "find target", "garr");
+    if (!boss)
+        return nullptr;
+
+    Group* group = bot->GetGroup();
+    if (!group)
+        return nullptr;
+
+    std::vector<Unit*> firesworn = MoltenCoreHelpers::GetLivingFiresworn(botAI);
+    uint32 const reserved = MoltenCoreHelpers::CountGarrBanishAssignments(botAI, bot);
+
+    ObjectGuid currentSkullGuid = group->GetTargetIcon(RtiTargetValue::skullIndex);
+    Unit* currentSkullUnit = currentSkullGuid.IsEmpty() ? nullptr : botAI->GetUnit(currentSkullGuid);
+
+    Unit* best = nullptr;
+    for (uint32 i = 0; i < firesworn.size(); ++i)
+    {
+        // The first `reserved` GUID-sorted adds belong to the banishing
+        // warlocks — never mark them, even before the banish lands.
+        if (i < reserved)
+            continue;
+
+        Unit* unit = firesworn[i];
+        if (MoltenCoreHelpers::IsBanished(unit))
+            continue;
+
+        // Keep the current skull while it is still a valid kill target, so
+        // the mark doesn't flap between equally-damaged adds.
+        if (unit == currentSkullUnit)
+            return nullptr;
+
+        if (!best || unit->GetHealth() < best->GetHealth())
+            best = unit;
+    }
+
+    if (best)
+        return best;
+
+    // Only banished adds (and Garr) remain: kill Garr with the pair tucked
+    // away, classic style.
+    if (currentSkullGuid.IsEmpty() || currentSkullGuid != boss->GetGUID())
+        return boss;
+
+    return nullptr;
+}
+
+bool McGarrMarkAction::Execute(Event /*event*/)
+{
+    Unit* target = GetTarget();
+    if (!target)
+        return false;
+
+    bot->GetGroup()->SetTargetIcon(RtiTargetValue::skullIndex, bot->GetGUID(), target->GetGUID());
+    return true;
 }
 
 bool McMagmadarFearWardAction::Execute(Event /*event*/)

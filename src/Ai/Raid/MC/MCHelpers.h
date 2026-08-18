@@ -11,6 +11,9 @@ enum MoltenCoreNPCs
     // Magmadar (any shaman's Tremor Totem)
     NPC_TREMOR_TOTEM = 5913,
 
+    // Garr
+    NPC_FIRESWORN = 12099,
+
     // Golemagg
     NPC_CORE_RAGER = 11672,
 
@@ -24,6 +27,11 @@ enum MoltenCoreSpells
     SPELL_LAVA_BOMB_DOT = 19428,      // periodic fire while standing in the bomb's patch (GO 177704)
     SPELL_TREMOR_TOTEM = 8143,
     SPELL_FEAR_WARD = 6346,
+
+    // Garr
+    SPELL_BANISH_R1 = 710,
+    SPELL_BANISH_R2 = 18647,
+    SPELL_SEPARATION_ANXIETY_MINION = 23492,  // banish immunity + 300% damage when dragged from Garr
 
     // Baron Geddon
     SPELL_INFERNO = 19695,

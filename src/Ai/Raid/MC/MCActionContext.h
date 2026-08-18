@@ -30,6 +30,8 @@ public:
         creators["mc lucifron mark"] = &RaidMcActionContext::lucifron_mark;
         creators["mc magmadar fear ward"] = &RaidMcActionContext::magmadar_fear_ward;
         creators["mc magmadar move from lava"] = &RaidMcActionContext::magmadar_move_from_lava;
+        creators["mc garr banish"] = &RaidMcActionContext::garr_banish;
+        creators["mc garr mark"] = &RaidMcActionContext::garr_mark;
     }
 
 private:
@@ -52,6 +54,8 @@ private:
     static Action* lucifron_mark(PlayerbotAI* botAI) { return new McLucifronMarkAction(botAI); }
     static Action* magmadar_fear_ward(PlayerbotAI* botAI) { return new McMagmadarFearWardAction(botAI); }
     static Action* magmadar_move_from_lava(PlayerbotAI* botAI) { return new McMagmadarMoveFromLavaAction(botAI); }
+    static Action* garr_banish(PlayerbotAI* botAI) { return new McGarrBanishAction(botAI); }
+    static Action* garr_mark(PlayerbotAI* botAI) { return new McGarrMarkAction(botAI); }
 };
 
 #endif

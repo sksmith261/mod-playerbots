@@ -1,6 +1,8 @@
 #ifndef PLAYERBOTS_MCACTIONS_H
 #define PLAYERBOTS_MCACTIONS_H
 
+#include <vector>
+
 #include "AttackAction.h"
 #include "MovementActions.h"
 #include "PlayerbotAI.h"
@@ -68,6 +70,39 @@ class McCoreHoundMarkAction : public Action
 {
 public:
     McCoreHoundMarkAction(PlayerbotAI* botAI, std::string const name = "mc core hound mark")
+        : Action(botAI, name) {};
+    Unit* GetTarget() override;
+    bool Execute(Event event) override;
+};
+
+namespace MoltenCoreHelpers
+{
+// Living Firesworn sorted by GUID: a deterministic order every bot computes
+// identically, used for banish assignments and kill-order marking.
+std::vector<Unit*> GetLivingFiresworn(PlayerbotAI* botAI);
+// The first min(2, group warlock count) of the sorted list are banish
+// assignments; returns this bot's assigned target (warlock ranks 0/1 only),
+// or nullptr.
+Unit* GetGarrBanishAssignment(PlayerbotAI* botAI, Player* bot);
+uint32 CountGarrBanishAssignments(PlayerbotAI* botAI, Player* bot);
+bool IsBanished(Unit* unit);
+}
+
+// Warlocks 0/1 keep their assigned Firesworn banished for the whole fight.
+class McGarrBanishAction : public Action
+{
+public:
+    McGarrBanishAction(PlayerbotAI* botAI, std::string const name = "mc garr banish")
+        : Action(botAI, name) {};
+    bool Execute(Event event) override;
+};
+
+// Skull the current kill target: most-damaged living Firesworn that is
+// neither banished nor banish-assigned; Garr once only those remain.
+class McGarrMarkAction : public Action
+{
+public:
+    McGarrMarkAction(PlayerbotAI* botAI, std::string const name = "mc garr mark")
         : Action(botAI, name) {};
     Unit* GetTarget() override;
     bool Execute(Event event) override;
