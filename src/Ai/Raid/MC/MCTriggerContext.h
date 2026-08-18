@@ -35,6 +35,7 @@ public:
         creators["mc gehennas rain of fire"] = &RaidMcTriggerContext::gehennas_rain_of_fire;
         creators["mc gehennas mark"] = &RaidMcTriggerContext::gehennas_mark;
         creators["mc sulfuron mark"] = &RaidMcTriggerContext::sulfuron_mark;
+        creators["mc majordomo mark"] = &RaidMcTriggerContext::majordomo_mark;
         creators["mc garr banish"] = &RaidMcTriggerContext::garr_banish;
         creators["mc garr mark"] = &RaidMcTriggerContext::garr_mark;
         creators["mc shazzrah purge"] = &RaidMcTriggerContext::shazzrah_purge;
@@ -50,6 +51,7 @@ private:
     static Trigger* gehennas_rain_of_fire(PlayerbotAI* botAI) { return new McGroundEffectAuraTrigger(botAI, "mc gehennas rain of fire", MoltenCoreHelpers::SPELL_RAIN_OF_FIRE); }
     static Trigger* gehennas_mark(PlayerbotAI* botAI) { return new McKillOrderMarkTrigger(botAI, "mc gehennas mark", "gehennas"); }
     static Trigger* sulfuron_mark(PlayerbotAI* botAI) { return new McKillOrderMarkTrigger(botAI, "mc sulfuron mark", "sulfuron harbinger"); }
+    static Trigger* majordomo_mark(PlayerbotAI* botAI) { return new McKillOrderMarkTrigger(botAI, "mc majordomo mark", "majordomo executus"); }
     static Trigger* garr_banish(PlayerbotAI* botAI) { return new McGarrBanishTrigger(botAI); }
     static Trigger* garr_mark(PlayerbotAI* botAI) { return new McGarrMarkTrigger(botAI); }
     static Trigger* shazzrah_purge(PlayerbotAI* botAI) { return new McShazzrahPurgeTrigger(botAI); }

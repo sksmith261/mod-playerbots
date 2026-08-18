@@ -102,6 +102,12 @@ void RaidMcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     triggers.push_back(
         new TriggerNode("mc majordomo shadow resistance",
                         { NextAction("mc majordomo shadow resistance", ACTION_RAID) }));
+    // Healers first, then elites; prefers (and switches to) adds without a
+    // reflection shield. The boss himself just despawns his aegis when the
+    // adds are done, so the mark tiers are the whole fight.
+    triggers.push_back(
+        new TriggerNode("mc majordomo mark",
+                        { NextAction("mc majordomo mark", ACTION_RAID) }));
 
     // Ragnaros
     triggers.push_back(
@@ -117,6 +123,7 @@ void RaidMcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 void RaidMcStrategy::InitMultipliers(std::vector<Multiplier*>& multipliers)
 {
     multipliers.push_back(new McDispelUrgencyMultiplier(botAI));
+    multipliers.push_back(new MajordomoReflectionMultiplier(botAI));
     multipliers.push_back(new GarrDisableDpsAoeMultiplier(botAI));
     multipliers.push_back(new BaronGeddonAbilityMultiplier(botAI));
     multipliers.push_back(new GolemaggMultiplier(botAI));

@@ -2,6 +2,7 @@
 
 #include "Playerbots.h"
 #include "ChooseTargetActions.h"
+#include "GenericActions.h"
 #include "GenericSpellActions.h"
 #include "DruidActions.h"
 #include "HunterActions.h"
@@ -86,6 +87,33 @@ float BaronGeddonAbilityMultiplier::GetValue(Action* action)
         if (!IsAllowedGeddonMovementAction(action))
             return 0.0f;
     }
+
+    return 1.0f;
+}
+
+float MajordomoReflectionMultiplier::GetValue(Action* action)
+{
+    if (!PlayerbotAI::IsDps(bot))
+        return 1.0f;
+
+    if (!AI_VALUE2(Unit*, "find target", "majordomo executus"))
+        return 1.0f;
+
+    Unit* target = AI_VALUE(Unit*, "current target");
+    if (!target)
+        return 1.0f;
+
+    if (PlayerbotAI::IsRanged(bot))
+    {
+        // Cures and ally buffs are fine; damage casts into Magic Reflection
+        // kill the caster.
+        if (target->HasAura(SPELL_DOMO_MAGIC_REFLECTION) && dynamic_cast<CastSpellAction*>(action) &&
+            !dynamic_cast<CurePartyMemberAction*>(action) && !dynamic_cast<BuffOnPartyAction*>(action) &&
+            !dynamic_cast<CastBuffSpellAction*>(action))
+            return 0.0f;
+    }
+    else if (target->HasAura(SPELL_DOMO_DAMAGE_REFLECTION) && dynamic_cast<MeleeAction*>(action))
+        return 0.0f;
 
     return 1.0f;
 }

@@ -20,6 +20,10 @@ enum MoltenCoreNPCs
     // Garr
     NPC_FIRESWORN = 12099,
 
+    // Majordomo Executus (fight ends when his eight adds die)
+    NPC_FLAMEWAKER_HEALER = 11663,
+    NPC_FLAMEWAKER_ELITE = 11664,
+
     // Golemagg
     NPC_CORE_RAGER = 11672,
 
