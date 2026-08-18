@@ -26,6 +26,8 @@ public:
         creators["aq40 move from ground effect"] = &RaidAq40ActionContext::move_from_ground;
         creators["aq40 fear ward"] = &RaidAq40ActionContext::fear_ward;
         creators["aq40 flee mound"] = &RaidAq40ActionContext::flee_mound;
+        creators["aq40 huhuran standoff"] = &RaidAq40ActionContext::huhuran_standoff;
+        creators["aq40 skeram standoff"] = &RaidAq40ActionContext::skeram_standoff;
     }
 
 private:
@@ -51,6 +53,10 @@ private:
     static Action* twins_caster_range(PlayerbotAI* ai) { return new Aq40TwinsCasterRangeAction(ai); }
     static Action* move_from_ground(PlayerbotAI* ai) { return new RaidMoveFromGroundEffectAction(ai, "aq40 move from ground effect"); }
     static Action* fear_ward(PlayerbotAI* ai) { return new RaidFearWardAction(ai, "aq40 fear ward"); }
+    static Action* huhuran_standoff(PlayerbotAI* ai)
+    { return new RaidStandoffAction(ai, "aq40 huhuran standoff", "princess huhuran", 30.0f); }
+    static Action* skeram_standoff(PlayerbotAI* ai)
+    { return new RaidStandoffAction(ai, "aq40 skeram standoff", "the prophet skeram", 22.0f); }
     static Action* flee_mound(PlayerbotAI* ai)
     { return new MoveAwayFromCreatureAction(ai, "aq40 flee mound", RaidAq40::NPC_OURO_DIRT_MOUND, RaidAq40::OURO_MOUND_FLEE_RANGE); }
 };

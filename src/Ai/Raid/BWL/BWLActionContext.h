@@ -12,6 +12,7 @@ class RaidBwlActionContext : public NamedObjectContext<Action>
 public:
     RaidBwlActionContext()
     {
+        creators["bwl broodlord standoff"] = &RaidBwlActionContext::bwl_broodlord_standoff;
         creators["bwl ebonroc taunt"] = &RaidBwlActionContext::bwl_ebonroc_taunt;
         creators["bwl nefarian drakonid mark"] = &RaidBwlActionContext::bwl_nefarian_drakonid_mark;
         creators["bwl check onyxia scale cloak"] = &RaidBwlActionContext::bwl_check_onyxia_scale_cloak;
@@ -31,6 +32,8 @@ public:
     }
 
 private:
+    static Action* bwl_broodlord_standoff(PlayerbotAI* ai)
+    { return new RaidStandoffAction(ai, "bwl broodlord standoff", "broodlord lashlayer", 22.0f); }
     static Action* bwl_ebonroc_taunt(PlayerbotAI* botAI) { return new BwlEbonrocTauntAction(botAI); }
     static Action* bwl_nefarian_drakonid_mark(PlayerbotAI* botAI)
     {

@@ -42,4 +42,9 @@ void RaidAq40Strategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     triggers.push_back(new TriggerNode("aq40 yauj tremor", { NextAction("tremor totem", ACTION_RAID) }));
     triggers.push_back(new TriggerNode("aq40 yauj fear ward", { NextAction("aq40 fear ward", ACTION_RAID) }));
     triggers.push_back(new TriggerNode("aq40 ouro mound", { NextAction("aq40 flee mound", ACTION_RAID) }));
+
+    // Ranged/healer standoff bands: Huhuran's bolts hit the nearest ~15;
+    // Skeram's Arcane Explosion is a big point-blank AoE.
+    triggers.push_back(new TriggerNode("aq40 huhuran standoff", { NextAction("aq40 huhuran standoff", ACTION_RAID) }));
+    triggers.push_back(new TriggerNode("aq40 skeram standoff", { NextAction("aq40 skeram standoff", ACTION_RAID) }));
 }

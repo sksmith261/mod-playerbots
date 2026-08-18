@@ -214,6 +214,28 @@ bool RaidTremorTotemTrigger::IsActive()
     return !mainTank->FindNearestCreature(NPC_TREMOR_TOTEM, 20.0f);
 }
 
+bool RaidStandoffTrigger::IsActive()
+{
+    if (PlayerbotAI::IsTank(bot) || PlayerbotAI::IsMelee(bot))
+        return false;
+
+    Unit* boss = AI_VALUE2(Unit*, "find target", bossName);
+    if (!boss || boss->GetVictim() == bot)
+        return false;
+
+    return bot->GetDistance(boss) < minRange;
+}
+
+bool RaidStandoffAction::Execute(Event /*event*/)
+{
+    Unit* boss = AI_VALUE2(Unit*, "find target", bossName);
+    if (!boss)
+        return false;
+
+    // A little past the line so drift doesn't re-trigger every tick.
+    return MoveAway(boss, minRange + 3.0f - bot->GetDistance(boss));
+}
+
 bool RaidRearFlankTrigger::IsActive()
 {
     if (Unit* boss = AI_VALUE2(Unit*, "find target", bossName))

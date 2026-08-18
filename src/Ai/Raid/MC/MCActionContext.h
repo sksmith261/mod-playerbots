@@ -13,6 +13,7 @@ class RaidMcActionContext : public NamedObjectContext<Action>
 public:
     RaidMcActionContext()
     {
+        creators["mc magmadar standoff"] = &RaidMcActionContext::magmadar_standoff;
         creators["mc lucifron shadow resistance"] = &RaidMcActionContext::lucifron_shadow_resistance;
         creators["mc magmadar fire resistance"] = &RaidMcActionContext::magmadar_fire_resistance;
         creators["mc gehennas shadow resistance"] = &RaidMcActionContext::gehennas_shadow_resistance;
@@ -42,6 +43,8 @@ public:
     }
 
 private:
+    static Action* magmadar_standoff(PlayerbotAI* ai)
+    { return new RaidStandoffAction(ai, "mc magmadar standoff", "magmadar", 35.0f); }
     static Action* lucifron_shadow_resistance(PlayerbotAI* botAI) { return new BossShadowResistanceAction(botAI, "lucifron"); }
     static Action* magmadar_fire_resistance(PlayerbotAI* botAI) { return new BossFireResistanceAction(botAI, "magmadar"); }
     static Action* gehennas_shadow_resistance(PlayerbotAI* botAI) { return new BossShadowResistanceAction(botAI, "gehennas"); }

@@ -31,6 +31,8 @@ public:
         creators["aq40 yauj tremor"] = &RaidAq40TriggerContext::yauj_tremor;
         creators["aq40 yauj fear ward"] = &RaidAq40TriggerContext::yauj_fear_ward;
         creators["aq40 ouro mound"] = &RaidAq40TriggerContext::ouro_mound;
+        creators["aq40 huhuran standoff"] = &RaidAq40TriggerContext::huhuran_standoff;
+        creators["aq40 skeram standoff"] = &RaidAq40TriggerContext::skeram_standoff;
     }
 
 private:
@@ -63,6 +65,10 @@ private:
     static Trigger* yauj_tremor(PlayerbotAI* ai) { return new RaidTremorTotemTrigger(ai, "aq40 yauj tremor", "princess yauj"); }
     static Trigger* yauj_fear_ward(PlayerbotAI* ai) { return new RaidFearWardTrigger(ai, "aq40 yauj fear ward", "princess yauj"); }
     static Trigger* ouro_mound(PlayerbotAI* ai) { return new Aq40OuroMoundTrigger(ai); }
+    static Trigger* huhuran_standoff(PlayerbotAI* ai)
+    { return new RaidStandoffTrigger(ai, "aq40 huhuran standoff", "princess huhuran", 30.0f); }
+    static Trigger* skeram_standoff(PlayerbotAI* ai)
+    { return new RaidStandoffTrigger(ai, "aq40 skeram standoff", "the prophet skeram", 22.0f); }
 };
 
 #endif

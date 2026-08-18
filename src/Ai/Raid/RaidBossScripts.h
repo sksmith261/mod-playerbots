@@ -116,6 +116,34 @@ protected:
     std::string const bossName;
 };
 
+// Ranged and healers hold a minimum range band from the named boss —
+// closest-N target filters (Huhuran), big point-blank AoEs (Skeram, Blast
+// Wave bosses), and PBAoE fears all read as "stand at least this far out".
+// Tanks, melee, and the boss's current victim are exempt.
+class RaidStandoffTrigger : public Trigger
+{
+public:
+    RaidStandoffTrigger(PlayerbotAI* botAI, std::string const name, std::string const bossName, float minRange)
+        : Trigger(botAI, name), bossName(bossName), minRange(minRange) {}
+    bool IsActive() override;
+
+protected:
+    std::string const bossName;
+    float const minRange;
+};
+
+class RaidStandoffAction : public MovementAction
+{
+public:
+    RaidStandoffAction(PlayerbotAI* botAI, std::string const name, std::string const bossName, float minRange)
+        : MovementAction(botAI, name), bossName(bossName), minRange(minRange) {}
+    bool Execute(Event event) override;
+
+protected:
+    std::string const bossName;
+    float const minRange;
+};
+
 // Priest: keep Fear Ward on the main tank while the named fear boss is
 // active.
 class RaidFearWardTrigger : public Trigger

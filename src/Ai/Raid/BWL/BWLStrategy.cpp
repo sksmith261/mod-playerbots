@@ -11,6 +11,8 @@ void RaidBwlStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
                                "bwl nefarian flank", "bwl broodlord flank" })
         triggers.push_back(new TriggerNode(flank, { NextAction("rear flank", ACTION_MOVE + 4) }));
 
+    triggers.push_back(new TriggerNode("bwl broodlord standoff", { NextAction("bwl broodlord standoff", ACTION_RAID) }));
+
     triggers.push_back(new TriggerNode("often", {
         NextAction("bwl check onyxia scale cloak", ACTION_RAID) }));
     triggers.push_back(new TriggerNode("bwl suppression device", {

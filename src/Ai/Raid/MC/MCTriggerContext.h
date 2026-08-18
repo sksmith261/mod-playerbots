@@ -12,6 +12,7 @@ class RaidMcTriggerContext : public NamedObjectContext<Trigger>
 public:
     RaidMcTriggerContext()
     {
+        creators["mc magmadar standoff"] = &RaidMcTriggerContext::magmadar_standoff;
         creators["mc lucifron shadow resistance"] = &RaidMcTriggerContext::lucifron_shadow_resistance;
         creators["mc magmadar fire resistance"] = &RaidMcTriggerContext::magmadar_fire_resistance;
         creators["mc gehennas shadow resistance"] = &RaidMcTriggerContext::gehennas_shadow_resistance;
@@ -44,6 +45,8 @@ public:
     }
 
 private:
+    static Trigger* magmadar_standoff(PlayerbotAI* ai)
+    { return new RaidStandoffTrigger(ai, "mc magmadar standoff", "magmadar", 35.0f); }
     static Trigger* lucifron_shadow_resistance(PlayerbotAI* botAI) { return new BossShadowResistanceTrigger(botAI, "lucifron"); }
     static Trigger* lucifron_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkTrigger(botAI, "mc lucifron mark", "lucifron"); }
     static Trigger* magmadar_frenzy(PlayerbotAI* botAI) { return new RaidFrenzyTranqTrigger(botAI, "mc magmadar frenzy", "magmadar", MoltenCoreHelpers::SPELL_MAGMADAR_FRENZY); }
