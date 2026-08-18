@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include "Define.h"
+#include "PlayerbotAI.h"
 
 namespace RaidAq40
 {
@@ -54,6 +55,50 @@ namespace RaidAq40
     // gains ~0.09 rad/s; a running bot at 30y gains ~0.23 rad/s tangentially,
     // so this margin covers reaction plus travel whichever way it rotates.
     constexpr float DARK_GLARE_DANGER_ARC = 0.7f;
+
+    // The Prophet Skeram: images are TempSummons of the boss entry; the
+    // real one is the only non-summon.
+    constexpr uint32 NPC_PROPHET_SKERAM = 15263;
+
+    // Battleguard Sartura: run from anything whirlwinding nearby.
+    constexpr uint32 SPELL_SARTURA_WHIRLWIND = 26083;
+    constexpr uint32 SPELL_GUARD_WHIRLWIND = 26038;
+    constexpr uint32 NPC_SARTURA_ROYAL_GUARD = 15984;
+    constexpr float WHIRLWIND_DANGER_RANGE = 10.0f;
+    constexpr float WHIRLWIND_FLEE_DISTANCE = 12.0f;
+
+    // Bug Trio kill order: Yauj (heals) -> Kri -> Vem last (his death buffs
+    // the survivors with Vengeance).
+    constexpr uint32 NPC_PRINCESS_YAUJ = 15543;
+    constexpr uint32 NPC_LORD_KRI = 15511;
+    constexpr uint32 NPC_VEM = 15544;
+
+    // Fankriss: enraging worm adds die first.
+    constexpr uint32 NPC_SPAWN_OF_FANKRISS = 15630;
+
+    // Princess Huhuran frenzy (hunter tranq).
+    constexpr uint32 SPELL_HUHURAN_FRENZY = 26051;
+
+    // Twin Emperors duty split: spell damage hurts Vek'lor, physical damage
+    // hurts Vek'nilash. Hunters are ranged PHYSICAL, so they share
+    // Vek'nilash duty with the melee.
+    inline bool IsCasterDps(Player* bot)
+    {
+        if (!PlayerbotAI::IsRanged(bot) || PlayerbotAI::IsHeal(bot))
+            return false;
+
+        switch (bot->getClass())
+        {
+            case CLASS_MAGE:
+            case CLASS_WARLOCK:
+            case CLASS_PRIEST:
+            case CLASS_DRUID:
+            case CLASS_SHAMAN:
+                return true;
+            default:
+                return false;
+        }
+    }
 
     // How far past the current angular gap to run per dodge step (rad).
     constexpr float DARK_GLARE_DODGE_STEP = 0.5f;

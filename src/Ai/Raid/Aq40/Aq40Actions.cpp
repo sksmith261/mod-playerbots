@@ -1,6 +1,7 @@
 #include "Aq40Actions.h"
 
 #include "Aq40Utils.h"
+#include "RtiTargetValue.h"
 
 bool Aq40ExitStomachAction::Execute(Event /*event*/)
 {
@@ -75,4 +76,75 @@ bool Aq40DodgeDarkGlareAction::Execute(Event /*event*/)
 
     return MoveTo(RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ, x, y, z, false, false, false,
                   /*exact_waypoint*/ true, MovementPriority::MOVEMENT_COMBAT, /*lessDelay*/ true);
+}
+
+bool Aq40SkeramMarkAction::Execute(Event /*event*/)
+{
+    Group* group = bot->GetGroup();
+    if (!group)
+        return false;
+
+    // Images are TempSummons of the boss entry; the real Skeram is the only
+    // non-summon. Without this, the raid splits its damage three ways.
+    std::list<Creature*> skerams;
+    bot->GetCreatureListWithEntryInGrid(skerams, RaidAq40::NPC_PROPHET_SKERAM, 120.0f);
+
+    Creature* real = nullptr;
+    bool imagePresent = false;
+    for (Creature* skeram : skerams)
+    {
+        if (!skeram->IsAlive())
+            continue;
+
+        if (skeram->ToTempSummon())
+            imagePresent = true;
+        else
+            real = skeram;
+    }
+
+    if (!real || !imagePresent)
+        return false;
+
+    if (group->GetTargetIcon(RtiTargetValue::skullIndex) == real->GetGUID())
+        return false;
+
+    group->SetTargetIcon(RtiTargetValue::skullIndex, bot->GetGUID(), real->GetGUID());
+    return true;
+}
+
+bool Aq40SarturaFleeAction::Execute(Event /*event*/)
+{
+    Unit* danger = nullptr;
+    for (auto const& guid : AI_VALUE(GuidVector, "attackers"))
+    {
+        Unit* unit = botAI->GetUnit(guid);
+        if (!unit || !unit->IsAlive())
+            continue;
+
+        if (!unit->HasAura(RaidAq40::SPELL_SARTURA_WHIRLWIND) && !unit->HasAura(RaidAq40::SPELL_GUARD_WHIRLWIND))
+            continue;
+
+        if (bot->GetDistance(unit) > RaidAq40::WHIRLWIND_DANGER_RANGE)
+            continue;
+
+        if (!danger || bot->GetDistance(unit) < bot->GetDistance(danger))
+            danger = unit;
+    }
+
+    if (!danger)
+        return false;
+
+    return MoveAway(danger, RaidAq40::WHIRLWIND_FLEE_DISTANCE);
+}
+
+bool Aq40TwinsRetargetAction::Execute(Event /*event*/)
+{
+    Unit* desired = RaidAq40::IsCasterDps(bot)
+        ? AI_VALUE2(Unit*, "find target", "emperor vek'lor")
+        : AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
+
+    if (!desired || !desired->IsAlive())
+        return false;
+
+    return Attack(desired);
 }

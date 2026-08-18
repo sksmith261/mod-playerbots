@@ -3,6 +3,7 @@
 
 #include "PlayerbotAI.h"
 #include "Playerbots.h"
+#include "RaidBossScripts.h"
 #include "Trigger.h"
 
 class Aq40InStomachTrigger : public Trigger
@@ -18,6 +19,31 @@ class Aq40DarkGlareTrigger : public Trigger
 {
 public:
     Aq40DarkGlareTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 dark glare") {}
+    bool IsActive() override;
+};
+
+// Mark-owner gate via the shared trigger; the paired action skulls the one
+// Skeram that is not a summoned image.
+class Aq40SkeramMarkTrigger : public RaidKillOrderMarkTrigger
+{
+public:
+    Aq40SkeramMarkTrigger(PlayerbotAI* botAI)
+        : RaidKillOrderMarkTrigger(botAI, "aq40 skeram mark", "the prophet skeram") {}
+};
+
+// Something next to this bot is whirlwinding (Sartura or a Royal Guard).
+class Aq40SarturaWhirlwindTrigger : public Trigger
+{
+public:
+    Aq40SarturaWhirlwindTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 sartura whirlwind") {}
+    bool IsActive() override;
+};
+
+// DPS bot is attacking the twin its damage type cannot hurt.
+class Aq40TwinsWrongTargetTrigger : public Trigger
+{
+public:
+    Aq40TwinsWrongTargetTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 twins wrong target") {}
     bool IsActive() override;
 };
 #endif
