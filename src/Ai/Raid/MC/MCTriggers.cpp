@@ -67,3 +67,18 @@ bool McCoreHoundMarkTrigger::IsActive()
 {
     return PlayerbotAI::IsMainTank(bot) && AI_VALUE2(Unit*, "find target", "core hound");
 }
+
+bool McArmageddonTrigger::IsActive()
+{
+    Unit* boss = AI_VALUE2(Unit*, "find target", "baron geddon");
+    return boss && boss->HasAura(SPELL_ARMAGEDDON) && bot->GetDistance(boss) < 35.0f;
+}
+
+bool McRagnarosTankReentryTrigger::IsActive()
+{
+    if (!PlayerbotAI::IsTank(bot) || !bot->IsAlive())
+        return false;
+
+    Unit* boss = AI_VALUE2(Unit*, "find target", "ragnaros");
+    return boss && boss->IsAlive() && bot->GetDistance(boss) > 8.0f;
+}

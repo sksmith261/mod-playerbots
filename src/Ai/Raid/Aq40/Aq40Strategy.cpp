@@ -47,4 +47,5 @@ void RaidAq40Strategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     // Skeram's Arcane Explosion is a big point-blank AoE.
     triggers.push_back(new TriggerNode("aq40 huhuran standoff", { NextAction("aq40 huhuran standoff", ACTION_RAID) }));
     triggers.push_back(new TriggerNode("aq40 skeram standoff", { NextAction("aq40 skeram standoff", ACTION_RAID) }));
+    triggers.push_back(new TriggerNode("aq40 giant claw sitter", { NextAction("aq40 giant claw sitter", ACTION_RAID) }));
 }

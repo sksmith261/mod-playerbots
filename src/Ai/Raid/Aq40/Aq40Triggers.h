@@ -80,4 +80,14 @@ public:
     Aq40TwinsWrongTargetTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 twins wrong target") {}
     bool IsActive() override;
 };
+
+// A Giant Claw Tentacle has nobody in melee contact and this bot is the
+// elected sitter (first living melee bot in shared group order).
+class Aq40GiantClawSitterTrigger : public Trigger
+{
+public:
+    Aq40GiantClawSitterTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 giant claw sitter") {}
+    bool IsActive() override;
+};
+
 #endif

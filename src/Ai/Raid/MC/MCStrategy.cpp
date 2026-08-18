@@ -8,6 +8,8 @@ void RaidMcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 {
     // Ranged/healers stay out of Panic range (and off the moat lip).
     triggers.push_back(new TriggerNode("mc magmadar standoff", { NextAction("mc magmadar standoff", ACTION_RAID) }));
+    triggers.push_back(new TriggerNode("mc geddon armageddon", { NextAction("mc geddon armageddon", ACTION_RAID + 1) }));
+    triggers.push_back(new TriggerNode("mc ragnaros tank reentry", { NextAction("mc ragnaros tank reentry", ACTION_RAID) }));
 
     // Lucifron
     triggers.push_back(

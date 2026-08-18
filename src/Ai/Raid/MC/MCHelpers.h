@@ -36,6 +36,9 @@ enum MoltenCoreSpells
     SPELL_MAGMADAR_FRENZY = 19451,
     SPELL_LAVA_BOMB_DOT = 19428,      // periodic fire while standing in the bomb's patch (GO 177704)
 
+    // Baron Geddon <2%: self-detonation, everyone runs
+    SPELL_ARMAGEDDON = 20478,
+
     // Garr
     SPELL_BANISH_R1 = 710,
     SPELL_BANISH_R2 = 18647,

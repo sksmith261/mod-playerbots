@@ -127,3 +127,30 @@ bool Aq40OuroMoundTrigger::IsActive()
     Creature* mound = bot->FindNearestCreature(RaidAq40::NPC_OURO_DIRT_MOUND, RaidAq40::OURO_MOUND_FLEE_RANGE);
     return mound && mound->IsAlive() && mound->GetVictim() == bot;
 }
+
+bool Aq40GiantClawSitterTrigger::IsActive()
+{
+    if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive() || !PlayerbotAI::IsMelee(bot))
+        return false;
+
+    Creature* tentacle = bot->FindNearestCreature(RaidAq40::NPC_GIANT_CLAW_TENTACLE, 80.0f);
+    if (!tentacle || !tentacle->IsAlive())
+        return false;
+
+    // Elected sitter: first living melee bot in shared group order — every
+    // bot computes the same answer, so exactly one walks over.
+    if (Group* group = bot->GetGroup())
+        for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+        {
+            Player* member = itr->GetSource();
+            if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member) || !PlayerbotAI::IsMelee(member))
+                continue;
+
+            if (member != bot)
+                return false;
+
+            return bot->GetDistance(tentacle) > RaidAq40::GIANT_CLAW_SIT_RANGE;
+        }
+
+    return false;
+}

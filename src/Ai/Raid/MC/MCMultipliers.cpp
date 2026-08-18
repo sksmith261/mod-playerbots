@@ -53,7 +53,8 @@ static bool IsAllowedGeddonMovementAction(Action* action)
     if (dynamic_cast<MovementAction*>(action) &&
                 !dynamic_cast<McMoveFromGroupAction*>(action) &&
                 !dynamic_cast<McMoveFromBaronGeddonAction*>(action) &&
-                !dynamic_cast<RaidMoveFromGroundEffectAction*>(action))
+                !dynamic_cast<RaidMoveFromGroundEffectAction*>(action) &&
+                !dynamic_cast<RaidStandoffAction*>(action))
         return false;
 
     if (dynamic_cast<CastReachTargetSpellAction*>(action))

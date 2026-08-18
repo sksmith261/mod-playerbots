@@ -71,4 +71,23 @@ public:
     bool IsActive() override;
 };
 
+
+// Baron Geddon is channeling Armageddon (sub-2% self-detonation): everyone
+// within blast range runs, whatever their role.
+class McArmageddonTrigger : public Trigger
+{
+public:
+    McArmageddonTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc geddon armageddon") {}
+    bool IsActive() override;
+};
+
+// Ragnaros wipes the raid with Magma Blast whenever his melee range stays
+// empty for ~4s (knockbacks empty it constantly): tanks sprint back in.
+class McRagnarosTankReentryTrigger : public Trigger
+{
+public:
+    McRagnarosTankReentryTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc ragnaros tank reentry") {}
+    bool IsActive() override;
+};
+
 #endif

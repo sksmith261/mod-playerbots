@@ -79,6 +79,11 @@ namespace RaidAq40
     // Princess Huhuran frenzy (hunter tranq).
     constexpr uint32 SPELL_HUHURAN_FRENZY = 26051;
 
+    // C'Thun P2: a Giant Claw Tentacle with no player within 5y full-heals
+    // and resubmerges — someone must sit on it.
+    constexpr uint32 NPC_GIANT_CLAW_TENTACLE = 15728;
+    constexpr float GIANT_CLAW_SIT_RANGE = 4.0f;
+
     // Zero-code positioning registrations (audit batch 1)
     constexpr uint32 SPELL_KRI_POISON_CLOUD = 26590;
     constexpr uint32 SPELL_VISCIDUS_TOXIN = 26575;

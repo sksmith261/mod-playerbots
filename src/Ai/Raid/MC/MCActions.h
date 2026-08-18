@@ -121,4 +121,15 @@ public:
 // Generic fear-ward/ground-effect/kill-order actions now live in
 // src/Ai/Raid/RaidBossScripts.h; only MC-specific actions remain here.
 
+
+// Sprint back into Ragnaros' melee range after Wrath/Hand knockbacks, inside
+// the ~4s Magma Blast grace window.
+class McRagnarosReentryAction : public MovementAction
+{
+public:
+    McRagnarosReentryAction(PlayerbotAI* botAI, std::string const name = "mc ragnaros tank reentry")
+        : MovementAction(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
 #endif

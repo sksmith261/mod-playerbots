@@ -14,6 +14,8 @@ public:
     RaidMcActionContext()
     {
         creators["mc magmadar standoff"] = &RaidMcActionContext::magmadar_standoff;
+        creators["mc geddon armageddon"] = &RaidMcActionContext::geddon_armageddon;
+        creators["mc ragnaros tank reentry"] = &RaidMcActionContext::ragnaros_reentry;
         creators["mc lucifron shadow resistance"] = &RaidMcActionContext::lucifron_shadow_resistance;
         creators["mc magmadar fire resistance"] = &RaidMcActionContext::magmadar_fire_resistance;
         creators["mc gehennas shadow resistance"] = &RaidMcActionContext::gehennas_shadow_resistance;
@@ -43,6 +45,9 @@ public:
     }
 
 private:
+    static Action* geddon_armageddon(PlayerbotAI* ai)
+    { return new RaidStandoffAction(ai, "mc geddon armageddon", "baron geddon", 35.0f); }
+    static Action* ragnaros_reentry(PlayerbotAI* ai) { return new McRagnarosReentryAction(ai); }
     static Action* magmadar_standoff(PlayerbotAI* ai)
     { return new RaidStandoffAction(ai, "mc magmadar standoff", "magmadar", 35.0f); }
     static Action* lucifron_shadow_resistance(PlayerbotAI* botAI) { return new BossShadowResistanceAction(botAI, "lucifron"); }

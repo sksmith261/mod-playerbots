@@ -76,4 +76,14 @@ public:
         : AttackAction(botAI, name) {}
     bool Execute(Event event) override;
 };
+
+// Stand on the Giant Claw Tentacle so it cannot full-heal and resubmerge.
+class Aq40GiantClawSitAction : public MovementAction
+{
+public:
+    Aq40GiantClawSitAction(PlayerbotAI* botAI, std::string const name = "aq40 giant claw sitter")
+        : MovementAction(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
 #endif

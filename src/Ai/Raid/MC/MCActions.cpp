@@ -420,3 +420,12 @@ bool McCoreHoundMarkAction::Execute(Event /*event*/)
     bot->GetGroup()->SetTargetIcon(RtiTargetValue::skullIndex, bot->GetGUID(), target->GetGUID());
     return true;
 }
+
+bool McRagnarosReentryAction::Execute(Event /*event*/)
+{
+    Unit* boss = AI_VALUE2(Unit*, "find target", "ragnaros");
+    if (!boss)
+        return false;
+
+    return MoveNear(boss, 3.0f, MovementPriority::MOVEMENT_COMBAT);
+}
