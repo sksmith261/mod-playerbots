@@ -118,3 +118,12 @@ bool Aq40TwinsCasterRangeTrigger::IsActive()
 
     return bot->GetDistance(veklor) < RaidAq40::TWINS_CASTER_MIN_RANGE;
 }
+
+bool Aq40OuroMoundTrigger::IsActive()
+{
+    if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive())
+        return false;
+
+    Creature* mound = bot->FindNearestCreature(RaidAq40::NPC_OURO_DIRT_MOUND, RaidAq40::OURO_MOUND_FLEE_RANGE);
+    return mound && mound->IsAlive() && mound->GetVictim() == bot;
+}

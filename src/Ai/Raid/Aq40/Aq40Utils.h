@@ -79,6 +79,15 @@ namespace RaidAq40
     // Princess Huhuran frenzy (hunter tranq).
     constexpr uint32 SPELL_HUHURAN_FRENZY = 26051;
 
+    // Zero-code positioning registrations (audit batch 1)
+    constexpr uint32 SPELL_KRI_POISON_CLOUD = 26590;
+    constexpr uint32 SPELL_VISCIDUS_TOXIN = 26575;
+    constexpr uint32 SPELL_HUHURAN_NOXIOUS_POISON = 26053;
+    constexpr uint32 SPELL_VEKLOR_BLIZZARD = 26607;
+    constexpr uint32 NPC_OURO_DIRT_MOUND = 15712;
+    constexpr uint32 NPC_VEKNISS_HATCHLING = 15962;
+    constexpr float OURO_MOUND_FLEE_RANGE = 20.0f;
+
     // Twin Emperors positioning (core boss_twinemperors.cpp): they heal
     // each other within 60y; Vek'lor teleports to his victim beyond 45y and
     // Arcane Bursts point-blank.

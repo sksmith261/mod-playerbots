@@ -102,6 +102,20 @@ protected:
     std::string const bossName;
 };
 
+// Non-victims keep to the named boss's rear flank (the base "rear flank"
+// action's 90-120 degree band) — one registration per boss with a frontal
+// cone/cleave/breath and/or tail sweep. The victim (tank) is exempt.
+class RaidRearFlankTrigger : public Trigger
+{
+public:
+    RaidRearFlankTrigger(PlayerbotAI* botAI, std::string const name, std::string const bossName)
+        : Trigger(botAI, name), bossName(bossName) {}
+    bool IsActive() override;
+
+protected:
+    std::string const bossName;
+};
+
 // Priest: keep Fear Ward on the main tank while the named fear boss is
 // active.
 class RaidFearWardTrigger : public Trigger

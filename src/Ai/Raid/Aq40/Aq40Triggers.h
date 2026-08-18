@@ -64,6 +64,15 @@ public:
     bool IsActive() override;
 };
 
+// An Ouro dirt mound is chasing this bot (they fixate with massive threat
+// and quake ~10y around themselves): keep moving.
+class Aq40OuroMoundTrigger : public Trigger
+{
+public:
+    Aq40OuroMoundTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 ouro mound") {}
+    bool IsActive() override;
+};
+
 // DPS bot is attacking the twin its damage type cannot hurt.
 class Aq40TwinsWrongTargetTrigger : public Trigger
 {

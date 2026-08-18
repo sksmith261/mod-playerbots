@@ -22,6 +22,15 @@ public:
         creators["aq40 twins tank pickup"] = &RaidAq40TriggerContext::twins_tank_pickup;
         creators["aq40 twins separate"] = &RaidAq40TriggerContext::twins_separate;
         creators["aq40 twins caster range"] = &RaidAq40TriggerContext::twins_caster_range;
+        creators["aq40 ouro flank"] = &RaidAq40TriggerContext::ouro_flank;
+        creators["aq40 sartura flank"] = &RaidAq40TriggerContext::sartura_flank;
+        creators["aq40 kri cloud"] = &RaidAq40TriggerContext::kri_cloud;
+        creators["aq40 viscidus toxin"] = &RaidAq40TriggerContext::viscidus_toxin;
+        creators["aq40 huhuran poison"] = &RaidAq40TriggerContext::huhuran_poison;
+        creators["aq40 twins blizzard"] = &RaidAq40TriggerContext::twins_blizzard;
+        creators["aq40 yauj tremor"] = &RaidAq40TriggerContext::yauj_tremor;
+        creators["aq40 yauj fear ward"] = &RaidAq40TriggerContext::yauj_fear_ward;
+        creators["aq40 ouro mound"] = &RaidAq40TriggerContext::ouro_mound;
     }
 
 private:
@@ -37,13 +46,23 @@ private:
         return new RaidAddsAliveMarkTrigger(ai, "aq40 bug trio", { NPC_PRINCESS_YAUJ, NPC_LORD_KRI, NPC_VEM });
     }
     static Trigger* fankriss_worms(PlayerbotAI* ai)
-    { return new RaidAddsAliveMarkTrigger(ai, "aq40 fankriss worms", { RaidAq40::NPC_SPAWN_OF_FANKRISS }); }
+    { return new RaidAddsAliveMarkTrigger(ai, "aq40 fankriss worms",
+        { RaidAq40::NPC_VEKNISS_HATCHLING, RaidAq40::NPC_SPAWN_OF_FANKRISS }); }
     static Trigger* huhuran_frenzy(PlayerbotAI* ai)
     { return new RaidFrenzyTranqTrigger(ai, "aq40 huhuran frenzy", "princess huhuran", RaidAq40::SPELL_HUHURAN_FRENZY); }
     static Trigger* twins_wrong_target(PlayerbotAI* ai) { return new Aq40TwinsWrongTargetTrigger(ai); }
     static Trigger* twins_tank_pickup(PlayerbotAI* ai) { return new Aq40TwinsTankPickupTrigger(ai); }
     static Trigger* twins_separate(PlayerbotAI* ai) { return new Aq40TwinsSeparateTrigger(ai); }
     static Trigger* twins_caster_range(PlayerbotAI* ai) { return new Aq40TwinsCasterRangeTrigger(ai); }
+    static Trigger* ouro_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "aq40 ouro flank", "ouro"); }
+    static Trigger* sartura_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "aq40 sartura flank", "battleguard sartura"); }
+    static Trigger* kri_cloud(PlayerbotAI* ai) { return new RaidGroundEffectAuraTrigger(ai, "aq40 kri cloud", RaidAq40::SPELL_KRI_POISON_CLOUD); }
+    static Trigger* viscidus_toxin(PlayerbotAI* ai) { return new RaidGroundEffectAuraTrigger(ai, "aq40 viscidus toxin", RaidAq40::SPELL_VISCIDUS_TOXIN); }
+    static Trigger* huhuran_poison(PlayerbotAI* ai) { return new RaidGroundEffectAuraTrigger(ai, "aq40 huhuran poison", RaidAq40::SPELL_HUHURAN_NOXIOUS_POISON); }
+    static Trigger* twins_blizzard(PlayerbotAI* ai) { return new RaidGroundEffectAuraTrigger(ai, "aq40 twins blizzard", RaidAq40::SPELL_VEKLOR_BLIZZARD); }
+    static Trigger* yauj_tremor(PlayerbotAI* ai) { return new RaidTremorTotemTrigger(ai, "aq40 yauj tremor", "princess yauj"); }
+    static Trigger* yauj_fear_ward(PlayerbotAI* ai) { return new RaidFearWardTrigger(ai, "aq40 yauj fear ward", "princess yauj"); }
+    static Trigger* ouro_mound(PlayerbotAI* ai) { return new Aq40OuroMoundTrigger(ai); }
 };
 
 #endif

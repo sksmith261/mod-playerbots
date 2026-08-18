@@ -23,6 +23,11 @@ public:
         creators["bwl ebonroc shadow swap"] = &RaidBwlTriggerContext::bwl_ebonroc_shadow_swap;
         creators["bwl nefarian tremor totem"] = &RaidBwlTriggerContext::bwl_nefarian_tremor_totem;
         creators["bwl nefarian drakonids"] = &RaidBwlTriggerContext::bwl_nefarian_drakonids;
+        creators["bwl firemaw flank"] = &RaidBwlTriggerContext::bwl_firemaw_flank;
+        creators["bwl ebonroc flank"] = &RaidBwlTriggerContext::bwl_ebonroc_flank;
+        creators["bwl flamegor flank"] = &RaidBwlTriggerContext::bwl_flamegor_flank;
+        creators["bwl nefarian flank"] = &RaidBwlTriggerContext::bwl_nefarian_flank;
+        creators["bwl broodlord flank"] = &RaidBwlTriggerContext::bwl_broodlord_flank;
         creators["bwl flamegor frenzy"] = &RaidBwlTriggerContext::bwl_flamegor_frenzy;
         creators["bwl chromaggus frenzy"] = &RaidBwlTriggerContext::bwl_chromaggus_frenzy;
         creators["bwl affliction bronze"] = &RaidBwlTriggerContext::bwl_affliction_bronze;
@@ -40,6 +45,11 @@ private:
         using namespace BlackwingLairHelpers;
         return new RaidAddsAliveMarkTrigger(botAI, "bwl nefarian drakonids", NEFARIAN_DRAKONIDS);
     }
+    static Trigger* bwl_firemaw_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "bwl firemaw flank", "firemaw"); }
+    static Trigger* bwl_ebonroc_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "bwl ebonroc flank", "ebonroc"); }
+    static Trigger* bwl_flamegor_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "bwl flamegor flank", "flamegor"); }
+    static Trigger* bwl_nefarian_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "bwl nefarian flank", "nefarian"); }
+    static Trigger* bwl_broodlord_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "bwl broodlord flank", "broodlord lashlayer"); }
     static Trigger* bwl_flamegor_frenzy(PlayerbotAI* botAI)
     {
         return new RaidFrenzyTranqTrigger(botAI, "bwl flamegor frenzy", "flamegor",

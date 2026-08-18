@@ -214,6 +214,14 @@ bool RaidTremorTotemTrigger::IsActive()
     return !mainTank->FindNearestCreature(NPC_TREMOR_TOTEM, 20.0f);
 }
 
+bool RaidRearFlankTrigger::IsActive()
+{
+    if (Unit* boss = AI_VALUE2(Unit*, "find target", bossName))
+        return boss->GetVictim() != bot;
+
+    return false;
+}
+
 bool RaidFearWardTrigger::IsActive()
 {
     if (bot->getClass() != CLASS_PRIEST || !bot->HasSpell(SPELL_FEAR_WARD))

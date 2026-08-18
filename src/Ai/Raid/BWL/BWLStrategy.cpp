@@ -5,6 +5,12 @@
 
 void RaidBwlStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 {
+    // Shadow Flame breath / cleave / tail-sweep bosses: everyone but the
+    // tank holds the rear flank.
+    for (char const* flank : { "bwl firemaw flank", "bwl ebonroc flank", "bwl flamegor flank",
+                               "bwl nefarian flank", "bwl broodlord flank" })
+        triggers.push_back(new TriggerNode(flank, { NextAction("rear flank", ACTION_MOVE + 4) }));
+
     triggers.push_back(new TriggerNode("often", {
         NextAction("bwl check onyxia scale cloak", ACTION_RAID) }));
     triggers.push_back(new TriggerNode("bwl suppression device", {

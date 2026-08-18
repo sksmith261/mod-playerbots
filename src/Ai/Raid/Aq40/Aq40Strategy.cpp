@@ -32,4 +32,14 @@ void RaidAq40Strategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         new TriggerNode("aq40 twins separate", { NextAction("aq40 twins separate", ACTION_RAID) }));
     triggers.push_back(
         new TriggerNode("aq40 twins caster range", { NextAction("aq40 twins caster range", ACTION_RAID) }));
+
+    // Positioning batch 1: rear flanks (frontal cones/sweeps), ground-effect
+    // step-outs, Yauj fear counters, Ouro mound kiting.
+    triggers.push_back(new TriggerNode("aq40 ouro flank", { NextAction("rear flank", ACTION_MOVE + 4) }));
+    triggers.push_back(new TriggerNode("aq40 sartura flank", { NextAction("rear flank", ACTION_MOVE + 4) }));
+    for (char const* ground : { "aq40 kri cloud", "aq40 viscidus toxin", "aq40 huhuran poison", "aq40 twins blizzard" })
+        triggers.push_back(new TriggerNode(ground, { NextAction("aq40 move from ground effect", ACTION_RAID) }));
+    triggers.push_back(new TriggerNode("aq40 yauj tremor", { NextAction("tremor totem", ACTION_RAID) }));
+    triggers.push_back(new TriggerNode("aq40 yauj fear ward", { NextAction("aq40 fear ward", ACTION_RAID) }));
+    triggers.push_back(new TriggerNode("aq40 ouro mound", { NextAction("aq40 flee mound", ACTION_RAID) }));
 }
