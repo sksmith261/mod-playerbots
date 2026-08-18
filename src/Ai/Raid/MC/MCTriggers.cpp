@@ -92,6 +92,17 @@ bool McShazzrahRangedTrigger::IsActive()
     return AI_VALUE2(Unit*, "find target", "shazzrah") && PlayerbotAI::IsRanged(bot);
 }
 
+bool McShazzrahPurgeTrigger::IsActive()
+{
+    bool const canStrip = (bot->getClass() == CLASS_SHAMAN && bot->HasSpell(SPELL_PURGE_R1)) ||
+                          (bot->getClass() == CLASS_PRIEST && bot->HasSpell(SPELL_DISPEL_MAGIC_R1));
+    if (!canStrip)
+        return false;
+
+    Unit* boss = AI_VALUE2(Unit*, "find target", "shazzrah");
+    return boss && boss->HasAura(SPELL_DEADEN_MAGIC);
+}
+
 bool McGolemaggMarkBossTrigger::IsActive()
 {
     // any tank may mark the boss

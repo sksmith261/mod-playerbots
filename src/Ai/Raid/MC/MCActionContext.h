@@ -32,6 +32,7 @@ public:
         creators["mc magmadar move from lava"] = &RaidMcActionContext::magmadar_move_from_lava;
         creators["mc garr banish"] = &RaidMcActionContext::garr_banish;
         creators["mc garr mark"] = &RaidMcActionContext::garr_mark;
+        creators["mc shazzrah purge"] = &RaidMcActionContext::shazzrah_purge;
     }
 
 private:
@@ -56,6 +57,7 @@ private:
     static Action* magmadar_move_from_lava(PlayerbotAI* botAI) { return new McMagmadarMoveFromLavaAction(botAI); }
     static Action* garr_banish(PlayerbotAI* botAI) { return new McGarrBanishAction(botAI); }
     static Action* garr_mark(PlayerbotAI* botAI) { return new McGarrMarkAction(botAI); }
+    static Action* shazzrah_purge(PlayerbotAI* botAI) { return new McShazzrahPurgeAction(botAI); }
 };
 
 #endif

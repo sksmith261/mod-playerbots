@@ -14,6 +14,17 @@ public:
     float GetValue(Action* action) override;
 };
 
+// Shazzrah's Curse doubles magic damage taken right as he spams Arcane
+// Explosion — same shape as Lucifron: non-healer dispellers prioritize
+// decursing over rotation. (Kept as a separate multiplier per boss to avoid
+// cross-session merge conflicts in shared files.)
+class ShazzrahDispelMultiplier : public Multiplier
+{
+public:
+    ShazzrahDispelMultiplier(PlayerbotAI* botAI) : Multiplier(botAI, "shazzrah dispel multiplier") {}
+    float GetValue(Action* action) override;
+};
+
 class GarrDisableDpsAoeMultiplier : public Multiplier
 {
 public:

@@ -75,6 +75,13 @@ public:
     bool IsActive() override;
 };
 
+class McShazzrahPurgeTrigger : public Trigger
+{
+public:
+    McShazzrahPurgeTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc shazzrah purge") {}
+    bool IsActive() override;
+};
+
 class McGolemaggMarkBossTrigger : public Trigger
 {
 public:

@@ -33,6 +33,7 @@ public:
         creators["mc magmadar lava bomb"] = &RaidMcTriggerContext::magmadar_lava_bomb;
         creators["mc garr banish"] = &RaidMcTriggerContext::garr_banish;
         creators["mc garr mark"] = &RaidMcTriggerContext::garr_mark;
+        creators["mc shazzrah purge"] = &RaidMcTriggerContext::shazzrah_purge;
     }
 
 private:
@@ -44,6 +45,7 @@ private:
     static Trigger* magmadar_lava_bomb(PlayerbotAI* botAI) { return new McMagmadarLavaBombTrigger(botAI); }
     static Trigger* garr_banish(PlayerbotAI* botAI) { return new McGarrBanishTrigger(botAI); }
     static Trigger* garr_mark(PlayerbotAI* botAI) { return new McGarrMarkTrigger(botAI); }
+    static Trigger* shazzrah_purge(PlayerbotAI* botAI) { return new McShazzrahPurgeTrigger(botAI); }
     static Trigger* magmadar_fire_resistance(PlayerbotAI* botAI) { return new BossFireResistanceTrigger(botAI, "magmadar"); }
     static Trigger* gehennas_shadow_resistance(PlayerbotAI* botAI) { return new BossShadowResistanceTrigger(botAI, "gehennas"); }
     static Trigger* garr_fire_resistance(PlayerbotAI* botAI) { return new BossFireResistanceTrigger(botAI, "garr"); }

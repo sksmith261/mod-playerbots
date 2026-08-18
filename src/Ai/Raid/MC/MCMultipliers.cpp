@@ -43,6 +43,16 @@ float LucifronDispelMultiplier::GetValue(Action* action)
     return 1.0f;
 }
 
+float ShazzrahDispelMultiplier::GetValue(Action* action)
+{
+    if (AI_VALUE2(Unit*, "find target", "shazzrah"))
+    {
+        if (!PlayerbotAI::IsHeal(bot) && dynamic_cast<CurePartyMemberAction*>(action))
+            return 2.0f;
+    }
+    return 1.0f;
+}
+
 float GarrDisableDpsAoeMultiplier::GetValue(Action* action)
 {
     if (AI_VALUE2(Unit*, "find target", "garr"))

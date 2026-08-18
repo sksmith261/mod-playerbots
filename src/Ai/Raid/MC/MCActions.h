@@ -32,6 +32,16 @@ public:
     bool Execute(Event event) override;
 };
 
+// Shamans Purge / priests offensively Dispel Magic Shazzrah's Deaden Magic
+// (-50% magic taken) so casters do full damage.
+class McShazzrahPurgeAction : public Action
+{
+public:
+    McShazzrahPurgeAction(PlayerbotAI* botAI, std::string const name = "mc shazzrah purge")
+        : Action(botAI, name) {};
+    bool Execute(Event event) override;
+};
+
 class McGolemaggMarkBossAction : public Action
 {
 public:

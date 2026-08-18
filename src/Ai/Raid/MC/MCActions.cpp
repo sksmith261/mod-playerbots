@@ -54,6 +54,18 @@ bool McShazzrahMoveAwayAction::Execute(Event /*event*/)
     return false;
 }
 
+bool McShazzrahPurgeAction::Execute(Event /*event*/)
+{
+    Unit* boss = AI_VALUE2(Unit*, "find target", "shazzrah");
+    if (!boss || !boss->HasAura(SPELL_DEADEN_MAGIC))
+        return false;
+
+    if (bot->getClass() == CLASS_SHAMAN)
+        return botAI->CastSpell("purge", boss);
+
+    return botAI->CastSpell("dispel magic", boss);
+}
+
 bool McGolemaggMarkBossAction::Execute(Event /*event*/)
 {
     if (Unit* boss = AI_VALUE2(Unit*, "find target", "golemagg the incinerator"))

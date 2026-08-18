@@ -33,6 +33,11 @@ enum MoltenCoreSpells
     SPELL_BANISH_R2 = 18647,
     SPELL_SEPARATION_ANXIETY_MINION = 23492,  // banish immunity + 300% damage when dragged from Garr
 
+    // Shazzrah
+    SPELL_DEADEN_MAGIC = 19714,  // -50% magic taken self-buff; purgeable
+    SPELL_PURGE_R1 = 370,
+    SPELL_DISPEL_MAGIC_R1 = 527,
+
     // Baron Geddon
     SPELL_INFERNO = 19695,
     SPELL_LIVING_BOMB = 20475,
