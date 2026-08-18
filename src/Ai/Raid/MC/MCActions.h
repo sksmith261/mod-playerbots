@@ -118,45 +118,7 @@ public:
     bool Execute(Event event) override;
 };
 
-// Priest puts Fear Ward on the main tank so Panic doesn't send Magmadar
-// sprinting through the raid.
-class McMagmadarFearWardAction : public Action
-{
-public:
-    McMagmadarFearWardAction(PlayerbotAI* botAI, std::string const name = "mc magmadar fear ward")
-        : Action(botAI, name) {};
-    bool Execute(Event event) override;
-};
-
-// Step out of a damaging ground effect (Magmadar lava bombs, Gehennas rain
-// of fire, ...).
-class McMoveFromGroundEffectAction : public MovementAction
-{
-public:
-    McMoveFromGroundEffectAction(PlayerbotAI* botAI, std::string const name = "mc move from ground effect")
-        : MovementAction(botAI, name) {};
-    bool Execute(Event event) override;
-};
-
-// Adds-first kill order via the skull mark: tiers of add entries die in
-// order (most-damaged first within a tier, sticky so the mark doesn't flap),
-// then the boss. With avoidReflections, prefers — and switches to — targets
-// not carrying Majordomo's reflection shields. An empty bossName runs
-// without a boss gate or boss fallback (Ragnaros' Sons phase, where the
-// submerged boss is stealthed and unfindable).
-class McKillOrderMarkAction : public Action
-{
-public:
-    McKillOrderMarkAction(PlayerbotAI* botAI, std::string const name, std::string const bossName,
-                          std::vector<uint32> const addEntries, bool avoidReflections = false)
-        : Action(botAI, name), bossName(bossName), addEntries(addEntries), avoidReflections(avoidReflections) {};
-    Unit* GetTarget() override;
-    bool Execute(Event event) override;
-
-protected:
-    std::string const bossName;
-    std::vector<uint32> const addEntries;
-    bool const avoidReflections;
-};
+// Generic fear-ward/ground-effect/kill-order actions now live in
+// src/Ai/Raid/RaidBossScripts.h; only MC-specific actions remain here.
 
 #endif

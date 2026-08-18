@@ -6,6 +6,7 @@
 #include "NamedObjectContext.h"
 #include "MCActions.h"
 #include "MCHelpers.h"
+#include "RaidBossScripts.h"
 
 class RaidMcActionContext : public NamedObjectContext<Action>
 {
@@ -57,13 +58,13 @@ private:
     static Action* majordomo_shadow_resistance(PlayerbotAI* botAI) { return new BossShadowResistanceAction(botAI, "majordomo executus"); }
     static Action* ragnaros_fire_resistance(PlayerbotAI* botAI) { return new BossFireResistanceAction(botAI, "ragnaros"); }
     static Action* core_hound_mark(PlayerbotAI* botAI) { return new McCoreHoundMarkAction(botAI); }
-    static Action* lucifron_mark(PlayerbotAI* botAI) { return new McKillOrderMarkAction(botAI, "mc lucifron mark", "lucifron", { MoltenCoreHelpers::NPC_FLAMEWAKER_PROTECTOR }); }
-    static Action* magmadar_fear_ward(PlayerbotAI* botAI) { return new McMagmadarFearWardAction(botAI); }
-    static Action* move_from_ground_effect(PlayerbotAI* botAI) { return new McMoveFromGroundEffectAction(botAI); }
-    static Action* gehennas_mark(PlayerbotAI* botAI) { return new McKillOrderMarkAction(botAI, "mc gehennas mark", "gehennas", { MoltenCoreHelpers::NPC_FLAMEWAKER }); }
-    static Action* sulfuron_mark(PlayerbotAI* botAI) { return new McKillOrderMarkAction(botAI, "mc sulfuron mark", "sulfuron harbinger", { MoltenCoreHelpers::NPC_FLAMEWAKER_PRIEST }); }
-    static Action* majordomo_mark(PlayerbotAI* botAI) { return new McKillOrderMarkAction(botAI, "mc majordomo mark", "majordomo executus", { MoltenCoreHelpers::NPC_FLAMEWAKER_HEALER, MoltenCoreHelpers::NPC_FLAMEWAKER_ELITE }, /*avoidReflections*/ true); }
-    static Action* ragnaros_sons_mark(PlayerbotAI* botAI) { return new McKillOrderMarkAction(botAI, "mc ragnaros sons mark", "", { MoltenCoreHelpers::NPC_SON_OF_FLAME }); }
+    static Action* lucifron_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkAction(botAI, "mc lucifron mark", "lucifron", { MoltenCoreHelpers::NPC_FLAMEWAKER_PROTECTOR }); }
+    static Action* magmadar_fear_ward(PlayerbotAI* botAI) { return new RaidFearWardAction(botAI, "mc magmadar fear ward"); }
+    static Action* move_from_ground_effect(PlayerbotAI* botAI) { return new RaidMoveFromGroundEffectAction(botAI, "mc move from ground effect"); }
+    static Action* gehennas_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkAction(botAI, "mc gehennas mark", "gehennas", { MoltenCoreHelpers::NPC_FLAMEWAKER }); }
+    static Action* sulfuron_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkAction(botAI, "mc sulfuron mark", "sulfuron harbinger", { MoltenCoreHelpers::NPC_FLAMEWAKER_PRIEST }); }
+    static Action* majordomo_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkAction(botAI, "mc majordomo mark", "majordomo executus", { MoltenCoreHelpers::NPC_FLAMEWAKER_HEALER, MoltenCoreHelpers::NPC_FLAMEWAKER_ELITE }, std::vector<uint32>{ MoltenCoreHelpers::SPELL_DOMO_MAGIC_REFLECTION, MoltenCoreHelpers::SPELL_DOMO_DAMAGE_REFLECTION }); }
+    static Action* ragnaros_sons_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkAction(botAI, "mc ragnaros sons mark", "", { MoltenCoreHelpers::NPC_SON_OF_FLAME }); }
     static Action* garr_banish(PlayerbotAI* botAI) { return new McGarrBanishAction(botAI); }
     static Action* garr_mark(PlayerbotAI* botAI) { return new McGarrMarkAction(botAI); }
     static Action* shazzrah_purge(PlayerbotAI* botAI) { return new McShazzrahPurgeAction(botAI); }

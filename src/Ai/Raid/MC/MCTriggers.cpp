@@ -6,11 +6,6 @@
 
 using namespace MoltenCoreHelpers;
 
-bool McKillOrderMarkTrigger::IsActive()
-{
-    return PlayerbotAI::IsMainTank(bot) && AI_VALUE2(Unit*, "find target", bossName);
-}
-
 bool McGarrBanishTrigger::IsActive()
 {
     if (bot->getClass() != CLASS_WARLOCK || !bot->HasSpell(SPELL_BANISH_R1))
@@ -21,57 +16,6 @@ bool McGarrBanishTrigger::IsActive()
 
     Unit* assigned = GetGarrBanishAssignment(botAI, bot);
     return assigned && !IsBanished(assigned) && !assigned->HasAura(SPELL_SEPARATION_ANXIETY_MINION);
-}
-
-bool McGarrMarkTrigger::IsActive()
-{
-    return PlayerbotAI::IsMainTank(bot) && AI_VALUE2(Unit*, "find target", "garr");
-}
-
-bool McMagmadarFrenzyTrigger::IsActive()
-{
-    if (bot->getClass() != CLASS_HUNTER)
-        return false;
-
-    Unit* boss = AI_VALUE2(Unit*, "find target", "magmadar");
-    return boss && boss->HasAura(SPELL_MAGMADAR_FRENZY);
-}
-
-bool McMagmadarTremorTotemTrigger::IsActive()
-{
-    if (bot->getClass() != CLASS_SHAMAN || !bot->HasSpell(SPELL_TREMOR_TOTEM))
-        return false;
-
-    if (!AI_VALUE2(Unit*, "find target", "magmadar"))
-        return false;
-
-    // Any shaman's totem in range covers the camp; don't stack duplicates.
-    return !bot->FindNearestCreature(NPC_TREMOR_TOTEM, 20.0f);
-}
-
-bool McMagmadarFearWardTrigger::IsActive()
-{
-    if (bot->getClass() != CLASS_PRIEST || !bot->HasSpell(SPELL_FEAR_WARD))
-        return false;
-
-    if (!AI_VALUE2(Unit*, "find target", "magmadar"))
-        return false;
-
-    if (Group* group = bot->GetGroup())
-        for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
-        {
-            Player* member = itr->GetSource();
-            if (member && member->IsAlive() && botAI->IsMainTank(member))
-                return !member->HasAura(SPELL_FEAR_WARD);
-        }
-
-    return false;
-}
-
-bool McGroundEffectAuraTrigger::IsActive()
-{
-    // No boss check: fire patches (and their DoTs) outlive target switches.
-    return bot->HasAura(spellId);
 }
 
 bool McLivingBombDebuffTrigger::IsActive()
@@ -90,23 +34,6 @@ bool McBaronGeddonInfernoTrigger::IsActive()
 bool McShazzrahRangedTrigger::IsActive()
 {
     return AI_VALUE2(Unit*, "find target", "shazzrah") && PlayerbotAI::IsRanged(bot);
-}
-
-bool McRagnarosSonsTrigger::IsActive()
-{
-    if (!PlayerbotAI::IsMainTank(bot))
-        return false;
-
-    // No boss gate: the submerged Ragnaros is stealthed and pacified, so he
-    // is unfindable exactly when this needs to run.
-    for (auto const& target : AI_VALUE(GuidVector, "possible targets no los"))
-    {
-        Unit* unit = botAI->GetUnit(target);
-        if (unit && unit->IsAlive() && unit->GetEntry() == NPC_SON_OF_FLAME)
-            return true;
-    }
-
-    return false;
 }
 
 bool McShazzrahPurgeTrigger::IsActive()

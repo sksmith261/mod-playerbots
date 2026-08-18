@@ -34,63 +34,6 @@ static bool IsDpsBotWithAoeAction(Player* bot, Action* action)
     return false;
 }
 
-float McDispelUrgencyMultiplier::GetValue(Action* action)
-{
-    if (PlayerbotAI::IsHeal(bot) || !dynamic_cast<CurePartyMemberAction*>(action))
-        return 1.0f;
-
-    static char const* const CURSE_SPAM_BOSSES[] = { "lucifron", "shazzrah", "gehennas" };
-    for (char const* boss : CURSE_SPAM_BOSSES)
-        if (AI_VALUE2(Unit*, "find target", boss))
-            return 2.0f;
-
-    return 1.0f;
-}
-
-float GarrDisableDpsAoeMultiplier::GetValue(Action* action)
-{
-    if (AI_VALUE2(Unit*, "find target", "garr"))
-    {
-        if (IsDpsBotWithAoeAction(bot, action))
-            return 0.0f;
-    }
-    return 1.0f;
-}
-
-static bool IsAllowedGeddonMovementAction(Action* action)
-{
-    if (dynamic_cast<MovementAction*>(action) &&
-                !dynamic_cast<McMoveFromGroupAction*>(action) &&
-                !dynamic_cast<McMoveFromBaronGeddonAction*>(action))
-        return false;
-
-    if (dynamic_cast<CastReachTargetSpellAction*>(action))
-        return false;
-
-    return true;
-}
-
-float BaronGeddonAbilityMultiplier::GetValue(Action* action)
-{
-    if (Unit* boss = AI_VALUE2(Unit*, "find target", "baron geddon"))
-    {
-        if (boss->HasAura(SPELL_INFERNO))
-        {
-            if (!IsAllowedGeddonMovementAction(action))
-                return 0.0f;
-        }
-    }
-
-    // No check for Baron Geddon, because bots may have the bomb even after Geddon died.
-    if (bot->HasAura(SPELL_LIVING_BOMB))
-    {
-        if (!IsAllowedGeddonMovementAction(action))
-            return 0.0f;
-    }
-
-    return 1.0f;
-}
-
 float MajordomoReflectionMultiplier::GetValue(Action* action)
 {
     if (!PlayerbotAI::IsDps(bot))

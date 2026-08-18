@@ -4,6 +4,7 @@
 #include "BossAuraTriggers.h"
 #include "NamedObjectContext.h"
 #include "MCHelpers.h"
+#include "RaidBossScripts.h"
 #include "MCTriggers.h"
 
 class RaidMcTriggerContext : public NamedObjectContext<Trigger>
@@ -44,18 +45,18 @@ public:
 
 private:
     static Trigger* lucifron_shadow_resistance(PlayerbotAI* botAI) { return new BossShadowResistanceTrigger(botAI, "lucifron"); }
-    static Trigger* lucifron_mark(PlayerbotAI* botAI) { return new McKillOrderMarkTrigger(botAI, "mc lucifron mark", "lucifron"); }
-    static Trigger* magmadar_frenzy(PlayerbotAI* botAI) { return new McMagmadarFrenzyTrigger(botAI); }
-    static Trigger* magmadar_tremor_totem(PlayerbotAI* botAI) { return new McMagmadarTremorTotemTrigger(botAI); }
-    static Trigger* magmadar_fear_ward(PlayerbotAI* botAI) { return new McMagmadarFearWardTrigger(botAI); }
-    static Trigger* magmadar_lava_bomb(PlayerbotAI* botAI) { return new McGroundEffectAuraTrigger(botAI, "mc magmadar lava bomb", MoltenCoreHelpers::SPELL_LAVA_BOMB_DOT); }
-    static Trigger* gehennas_rain_of_fire(PlayerbotAI* botAI) { return new McGroundEffectAuraTrigger(botAI, "mc gehennas rain of fire", MoltenCoreHelpers::SPELL_RAIN_OF_FIRE); }
-    static Trigger* gehennas_mark(PlayerbotAI* botAI) { return new McKillOrderMarkTrigger(botAI, "mc gehennas mark", "gehennas"); }
-    static Trigger* sulfuron_mark(PlayerbotAI* botAI) { return new McKillOrderMarkTrigger(botAI, "mc sulfuron mark", "sulfuron harbinger"); }
-    static Trigger* majordomo_mark(PlayerbotAI* botAI) { return new McKillOrderMarkTrigger(botAI, "mc majordomo mark", "majordomo executus"); }
-    static Trigger* ragnaros_sons(PlayerbotAI* botAI) { return new McRagnarosSonsTrigger(botAI); }
+    static Trigger* lucifron_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkTrigger(botAI, "mc lucifron mark", "lucifron"); }
+    static Trigger* magmadar_frenzy(PlayerbotAI* botAI) { return new RaidFrenzyTranqTrigger(botAI, "mc magmadar frenzy", "magmadar", MoltenCoreHelpers::SPELL_MAGMADAR_FRENZY); }
+    static Trigger* magmadar_tremor_totem(PlayerbotAI* botAI) { return new RaidTremorTotemTrigger(botAI, "mc magmadar tremor totem", "magmadar"); }
+    static Trigger* magmadar_fear_ward(PlayerbotAI* botAI) { return new RaidFearWardTrigger(botAI, "mc magmadar fear ward", "magmadar"); }
+    static Trigger* magmadar_lava_bomb(PlayerbotAI* botAI) { return new RaidGroundEffectAuraTrigger(botAI, "mc magmadar lava bomb", MoltenCoreHelpers::SPELL_LAVA_BOMB_DOT); }
+    static Trigger* gehennas_rain_of_fire(PlayerbotAI* botAI) { return new RaidGroundEffectAuraTrigger(botAI, "mc gehennas rain of fire", MoltenCoreHelpers::SPELL_RAIN_OF_FIRE); }
+    static Trigger* gehennas_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkTrigger(botAI, "mc gehennas mark", "gehennas"); }
+    static Trigger* sulfuron_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkTrigger(botAI, "mc sulfuron mark", "sulfuron harbinger"); }
+    static Trigger* majordomo_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkTrigger(botAI, "mc majordomo mark", "majordomo executus"); }
+    static Trigger* ragnaros_sons(PlayerbotAI* botAI) { return new RaidAddsAliveMarkTrigger(botAI, "mc ragnaros sons", MoltenCoreHelpers::NPC_SON_OF_FLAME); }
     static Trigger* garr_banish(PlayerbotAI* botAI) { return new McGarrBanishTrigger(botAI); }
-    static Trigger* garr_mark(PlayerbotAI* botAI) { return new McGarrMarkTrigger(botAI); }
+    static Trigger* garr_mark(PlayerbotAI* botAI) { return new RaidKillOrderMarkTrigger(botAI, "mc garr mark", "garr"); }
     static Trigger* shazzrah_purge(PlayerbotAI* botAI) { return new McShazzrahPurgeTrigger(botAI); }
     static Trigger* magmadar_fire_resistance(PlayerbotAI* botAI) { return new BossFireResistanceTrigger(botAI, "magmadar"); }
     static Trigger* gehennas_shadow_resistance(PlayerbotAI* botAI) { return new BossShadowResistanceTrigger(botAI, "gehennas"); }

@@ -1,6 +1,7 @@
 #include "MCStrategy.h"
 
 #include "MCMultipliers.h"
+#include "RaidBossScripts.h"
 #include "Strategy.h"
 
 void RaidMcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
@@ -128,7 +129,7 @@ void RaidMcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 
 void RaidMcStrategy::InitMultipliers(std::vector<Multiplier*>& multipliers)
 {
-    multipliers.push_back(new McDispelUrgencyMultiplier(botAI));
+    multipliers.push_back(new RaidDispelUrgencyMultiplier(botAI, "mc dispel urgency multiplier", { "lucifron", "shazzrah", "gehennas" }));
     multipliers.push_back(new MajordomoReflectionMultiplier(botAI));
     multipliers.push_back(new GarrDisableDpsAoeMultiplier(botAI));
     multipliers.push_back(new BaronGeddonAbilityMultiplier(botAI));
