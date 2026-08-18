@@ -14,6 +14,9 @@ enum MoltenCoreNPCs
     // Gehennas
     NPC_FLAMEWAKER = 11661,
 
+    // Sulfuron Harbinger (adds heal via Dark Mending; kill/interrupt first)
+    NPC_FLAMEWAKER_PRIEST = 11662,
+
     // Garr
     NPC_FIRESWORN = 12099,
 

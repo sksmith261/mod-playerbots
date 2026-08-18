@@ -78,6 +78,11 @@ void RaidMcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     triggers.push_back(
         new TriggerNode("mc sulfuron harbinger fire resistance",
                         { NextAction("mc sulfuron harbinger fire resistance", ACTION_RAID) }));
+    // Focusing a Flamewaker Priest also concentrates the raid's generic
+    // interrupt triggers on it, shutting down Dark Mending.
+    triggers.push_back(
+        new TriggerNode("mc sulfuron mark",
+                        { NextAction("mc sulfuron mark", ACTION_RAID) }));
 
     // Golemagg the Incinerator
     triggers.push_back(
