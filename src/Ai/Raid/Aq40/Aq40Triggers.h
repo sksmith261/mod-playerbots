@@ -39,6 +39,31 @@ public:
     bool IsActive() override;
 };
 
+// Tank with no twin targeted while the twins are up (post-teleport pickup).
+class Aq40TwinsTankPickupTrigger : public Trigger
+{
+public:
+    Aq40TwinsTankPickupTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 twins tank pickup") {}
+    bool IsActive() override;
+};
+
+// This bot is Vek'lor's victim and the twins are close enough to heal
+// each other.
+class Aq40TwinsSeparateTrigger : public Trigger
+{
+public:
+    Aq40TwinsSeparateTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 twins separate") {}
+    bool IsActive() override;
+};
+
+// Caster DPS standing in Vek'lor's Arcane Burst range.
+class Aq40TwinsCasterRangeTrigger : public Trigger
+{
+public:
+    Aq40TwinsCasterRangeTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 twins caster range") {}
+    bool IsActive() override;
+};
+
 // DPS bot is attacking the twin its damage type cannot hurt.
 class Aq40TwinsWrongTargetTrigger : public Trigger
 {

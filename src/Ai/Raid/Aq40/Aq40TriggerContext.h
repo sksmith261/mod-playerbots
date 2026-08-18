@@ -19,6 +19,9 @@ public:
         creators["aq40 fankriss worms"] = &RaidAq40TriggerContext::fankriss_worms;
         creators["aq40 huhuran frenzy"] = &RaidAq40TriggerContext::huhuran_frenzy;
         creators["aq40 twins wrong target"] = &RaidAq40TriggerContext::twins_wrong_target;
+        creators["aq40 twins tank pickup"] = &RaidAq40TriggerContext::twins_tank_pickup;
+        creators["aq40 twins separate"] = &RaidAq40TriggerContext::twins_separate;
+        creators["aq40 twins caster range"] = &RaidAq40TriggerContext::twins_caster_range;
     }
 
 private:
@@ -38,6 +41,9 @@ private:
     static Trigger* huhuran_frenzy(PlayerbotAI* ai)
     { return new RaidFrenzyTranqTrigger(ai, "aq40 huhuran frenzy", "princess huhuran", RaidAq40::SPELL_HUHURAN_FRENZY); }
     static Trigger* twins_wrong_target(PlayerbotAI* ai) { return new Aq40TwinsWrongTargetTrigger(ai); }
+    static Trigger* twins_tank_pickup(PlayerbotAI* ai) { return new Aq40TwinsTankPickupTrigger(ai); }
+    static Trigger* twins_separate(PlayerbotAI* ai) { return new Aq40TwinsSeparateTrigger(ai); }
+    static Trigger* twins_caster_range(PlayerbotAI* ai) { return new Aq40TwinsCasterRangeTrigger(ai); }
 };
 
 #endif

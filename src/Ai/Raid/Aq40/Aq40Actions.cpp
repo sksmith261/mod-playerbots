@@ -148,3 +148,39 @@ bool Aq40TwinsRetargetAction::Execute(Event /*event*/)
 
     return Attack(desired);
 }
+
+bool Aq40TwinsTankPickupAction::Execute(Event /*event*/)
+{
+    Unit* veklor = AI_VALUE2(Unit*, "find target", "emperor vek'lor");
+    Unit* veknilash = AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
+
+    Unit* nearest = nullptr;
+    for (Unit* twin : { veklor, veknilash })
+        if (twin && twin->IsAlive() && (!nearest || bot->GetDistance(twin) < bot->GetDistance(nearest)))
+            nearest = twin;
+
+    if (!nearest)
+        return false;
+
+    return Attack(nearest);
+}
+
+bool Aq40TwinsSeparateAction::Execute(Event /*event*/)
+{
+    Unit* veknilash = AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
+    if (!veknilash)
+        return false;
+
+    // Vek'lor follows his victim (teleporting past 45y), so walking away
+    // from Vek'nilash drags him out of heal range.
+    return MoveAway(veknilash, RaidAq40::TWINS_SEPARATION_STEP);
+}
+
+bool Aq40TwinsCasterRangeAction::Execute(Event /*event*/)
+{
+    Unit* veklor = AI_VALUE2(Unit*, "find target", "emperor vek'lor");
+    if (!veklor)
+        return false;
+
+    return MoveAway(veklor, RaidAq40::TWINS_CASTER_FLEE_DISTANCE);
+}

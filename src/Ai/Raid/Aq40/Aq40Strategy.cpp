@@ -26,4 +26,10 @@ void RaidAq40Strategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         new TriggerNode("aq40 huhuran frenzy", { NextAction("tranquilizing shot", ACTION_RAID) }));
     triggers.push_back(
         new TriggerNode("aq40 twins wrong target", { NextAction("aq40 twins retarget", ACTION_RAID) }));
+    triggers.push_back(
+        new TriggerNode("aq40 twins tank pickup", { NextAction("aq40 twins tank pickup", ACTION_RAID) }));
+    triggers.push_back(
+        new TriggerNode("aq40 twins separate", { NextAction("aq40 twins separate", ACTION_RAID) }));
+    triggers.push_back(
+        new TriggerNode("aq40 twins caster range", { NextAction("aq40 twins caster range", ACTION_RAID) }));
 }

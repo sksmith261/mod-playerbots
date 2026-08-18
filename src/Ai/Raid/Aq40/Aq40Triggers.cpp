@@ -75,3 +75,46 @@ bool Aq40TwinsWrongTargetTrigger::IsActive()
 
     return veknilash && current == veklor;
 }
+
+bool Aq40TwinsTankPickupTrigger::IsActive()
+{
+    if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive() || !PlayerbotAI::IsTank(bot))
+        return false;
+
+    Unit* veklor = AI_VALUE2(Unit*, "find target", "emperor vek'lor");
+    Unit* veknilash = AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
+    if (!veklor && !veknilash)
+        return false;
+
+    Unit* current = AI_VALUE(Unit*, "current target");
+    return current != veklor && current != veknilash;
+}
+
+bool Aq40TwinsSeparateTrigger::IsActive()
+{
+    if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive())
+        return false;
+
+    Unit* veklor = AI_VALUE2(Unit*, "find target", "emperor vek'lor");
+    Unit* veknilash = AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
+    if (!veklor || !veknilash || veklor->GetVictim() != bot)
+        return false;
+
+    return veklor->GetDistance(veknilash) < RaidAq40::TWINS_SEPARATION_RANGE;
+}
+
+bool Aq40TwinsCasterRangeTrigger::IsActive()
+{
+    if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive() || !RaidAq40::IsCasterDps(bot))
+        return false;
+
+    Unit* veklor = AI_VALUE2(Unit*, "find target", "emperor vek'lor");
+    if (!veklor || AI_VALUE(Unit*, "current target") != veklor)
+        return false;
+
+    // Do not kite him while he is chasing us; the separate action owns that.
+    if (veklor->GetVictim() == bot)
+        return false;
+
+    return bot->GetDistance(veklor) < RaidAq40::TWINS_CASTER_MIN_RANGE;
+}

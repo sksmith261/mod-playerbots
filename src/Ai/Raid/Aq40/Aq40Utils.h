@@ -79,6 +79,14 @@ namespace RaidAq40
     // Princess Huhuran frenzy (hunter tranq).
     constexpr uint32 SPELL_HUHURAN_FRENZY = 26051;
 
+    // Twin Emperors positioning (core boss_twinemperors.cpp): they heal
+    // each other within 60y; Vek'lor teleports to his victim beyond 45y and
+    // Arcane Bursts point-blank.
+    constexpr float TWINS_SEPARATION_RANGE = 65.0f;
+    constexpr float TWINS_SEPARATION_STEP = 25.0f;
+    constexpr float TWINS_CASTER_MIN_RANGE = 12.0f;
+    constexpr float TWINS_CASTER_FLEE_DISTANCE = 18.0f;
+
     // Twin Emperors duty split: spell damage hurts Vek'lor, physical damage
     // hurts Vek'nilash. Hunters are ranged PHYSICAL, so they share
     // Vek'nilash duty with the melee.

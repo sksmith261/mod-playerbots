@@ -41,6 +41,33 @@ public:
     bool Execute(Event event) override;
 };
 
+// Tank grabs the nearest twin (post-teleport pickup).
+class Aq40TwinsTankPickupAction : public AttackAction
+{
+public:
+    Aq40TwinsTankPickupAction(PlayerbotAI* botAI, std::string const name = "aq40 twins tank pickup")
+        : AttackAction(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
+// Drag Vek'lor away from his brother (he follows his victim within 45y).
+class Aq40TwinsSeparateAction : public MovementAction
+{
+public:
+    Aq40TwinsSeparateAction(PlayerbotAI* botAI, std::string const name = "aq40 twins separate")
+        : MovementAction(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
+// Step out of Vek'lor's Arcane Burst range.
+class Aq40TwinsCasterRangeAction : public MovementAction
+{
+public:
+    Aq40TwinsCasterRangeAction(PlayerbotAI* botAI, std::string const name = "aq40 twins caster range")
+        : MovementAction(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
 // Switch a DPS bot onto the twin its damage type can hurt.
 class Aq40TwinsRetargetAction : public AttackAction
 {

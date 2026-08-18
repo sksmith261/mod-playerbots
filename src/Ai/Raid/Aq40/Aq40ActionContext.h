@@ -20,6 +20,9 @@ public:
         creators["aq40 bug trio mark"] = &RaidAq40ActionContext::bug_trio_mark;
         creators["aq40 fankriss worm mark"] = &RaidAq40ActionContext::fankriss_worm_mark;
         creators["aq40 twins retarget"] = &RaidAq40ActionContext::twins_retarget;
+        creators["aq40 twins tank pickup"] = &RaidAq40ActionContext::twins_tank_pickup;
+        creators["aq40 twins separate"] = &RaidAq40ActionContext::twins_separate;
+        creators["aq40 twins caster range"] = &RaidAq40ActionContext::twins_caster_range;
     }
 
 private:
@@ -39,6 +42,9 @@ private:
     static Action* fankriss_worm_mark(PlayerbotAI* ai)
     { return new RaidKillOrderMarkAction(ai, "aq40 fankriss worm mark", "fankriss the unyielding", { RaidAq40::NPC_SPAWN_OF_FANKRISS }); }
     static Action* twins_retarget(PlayerbotAI* ai) { return new Aq40TwinsRetargetAction(ai); }
+    static Action* twins_tank_pickup(PlayerbotAI* ai) { return new Aq40TwinsTankPickupAction(ai); }
+    static Action* twins_separate(PlayerbotAI* ai) { return new Aq40TwinsSeparateAction(ai); }
+    static Action* twins_caster_range(PlayerbotAI* ai) { return new Aq40TwinsCasterRangeAction(ai); }
 };
 
 #endif
