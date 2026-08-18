@@ -17,7 +17,11 @@ namespace BlackwingLairHelpers
         // Vaelastrasz the Corrupt
         SPELL_BURNING_ADRENALINE = 18173,
 
+        // Flamegor
+        SPELL_FLAMEGOR_FRENZY = 23342,
+
         // Chromaggus
+        SPELL_CHROMAGGUS_FRENZY = 23128,
         SPELL_BROOD_AFFLICTION_BRONZE = 23170,
         SPELL_HOURGLASS_SAND = 23645,
 

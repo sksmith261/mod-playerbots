@@ -1,6 +1,7 @@
 #include "BWLStrategy.h"
 
 #include "BWLMultipliers.h"
+#include "RaidBossScripts.h"
 
 void RaidBwlStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 {
@@ -23,6 +24,13 @@ void RaidBwlStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     triggers.push_back(new TriggerNode("bwl vaelastrasz burning adrenaline", {
         NextAction("bwl vaelastrasz move away", ACTION_RAID + 5) }));
 
+    // Flamegor and Chromaggus both frenzy; hunters tranq at raid priority
+    // the moment it is up (same pattern as Magmadar).
+    triggers.push_back(new TriggerNode("bwl flamegor frenzy", {
+        NextAction("tranquilizing shot", ACTION_RAID) }));
+    triggers.push_back(new TriggerNode("bwl chromaggus frenzy", {
+        NextAction("tranquilizing shot", ACTION_RAID) }));
+
     triggers.push_back(new TriggerNode("bwl affliction bronze", {
         NextAction("bwl use hourglass sand", ACTION_RAID) }));
 
@@ -42,4 +50,7 @@ void RaidBwlStrategy::InitMultipliers(std::vector<Multiplier*>& multipliers)
     multipliers.push_back(new RazorgoreTankMultiplier(botAI));
     multipliers.push_back(new VaelastraszTankMultiplier(botAI));
     multipliers.push_back(new VaelastraszBurningAdrenalineMultiplier(botAI));
+    // Chromaggus' brood afflictions (curse/magic/poison/disease) stack up
+    // faster than casual dispelling clears them.
+    multipliers.push_back(new RaidDispelUrgencyMultiplier(botAI, "bwl dispel urgency multiplier", { "chromaggus" }));
 }

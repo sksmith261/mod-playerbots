@@ -2,7 +2,9 @@
 #define PLAYERBOTS_BWLTRIGGERCONTEXT_H
 
 #include "NamedObjectContext.h"
+#include "BWLHelpers.h"
 #include "BWLTriggers.h"
+#include "RaidBossScripts.h"
 
 class RaidBwlTriggerContext : public NamedObjectContext<Trigger>
 {
@@ -18,6 +20,8 @@ public:
         creators["bwl vaelastrasz positioning"] = &RaidBwlTriggerContext::bwl_vaelastrasz_positioning;
         creators["bwl vaelastrasz burning adrenaline"] = &RaidBwlTriggerContext::bwl_vaelastrasz_burning_adrenaline;
 
+        creators["bwl flamegor frenzy"] = &RaidBwlTriggerContext::bwl_flamegor_frenzy;
+        creators["bwl chromaggus frenzy"] = &RaidBwlTriggerContext::bwl_chromaggus_frenzy;
         creators["bwl affliction bronze"] = &RaidBwlTriggerContext::bwl_affliction_bronze;
         creators["bwl wild magic"] = &RaidBwlTriggerContext::bwl_wild_magic;
         creators["bwl nefarian fear ward"] = &RaidBwlTriggerContext::bwl_nefarian_fear_ward;
@@ -26,6 +30,17 @@ public:
     }
 
 private:
+    static Trigger* bwl_flamegor_frenzy(PlayerbotAI* botAI)
+    {
+        return new RaidFrenzyTranqTrigger(botAI, "bwl flamegor frenzy", "flamegor",
+            static_cast<uint32>(BlackwingLairHelpers::BlackwingLairSpells::SPELL_FLAMEGOR_FRENZY));
+    }
+    static Trigger* bwl_chromaggus_frenzy(PlayerbotAI* botAI)
+    {
+        return new RaidFrenzyTranqTrigger(botAI, "bwl chromaggus frenzy", "chromaggus",
+            static_cast<uint32>(BlackwingLairHelpers::BlackwingLairSpells::SPELL_CHROMAGGUS_FRENZY));
+    }
+
     static Trigger* bwl_suppression_device(PlayerbotAI* ai) { return new BwlSuppressionDeviceTrigger(ai); }
     static Trigger* bwl_razorgore_fire_resistance_trigger(PlayerbotAI* ai) { return new BossFireResistanceTrigger(ai, "razorgore the untamed"); }
     static Trigger* bwl_razorgore_not_mind_controlled(PlayerbotAI* ai) { return new BwlRazorgoreNotMindControlledTrigger(ai); }
