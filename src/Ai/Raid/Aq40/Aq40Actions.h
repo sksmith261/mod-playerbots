@@ -96,4 +96,14 @@ public:
     bool Execute(Event event) override;
 };
 
+
+// Move to heal range of the paired platform tank (see the paired trigger).
+class Aq40SkeramHealerFollowAction : public MovementAction
+{
+public:
+    Aq40SkeramHealerFollowAction(PlayerbotAI* botAI, std::string const name = "aq40 skeram healer follow")
+        : MovementAction(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
 #endif

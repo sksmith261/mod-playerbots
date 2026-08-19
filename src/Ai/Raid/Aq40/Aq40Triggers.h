@@ -101,4 +101,15 @@ public:
     bool IsActive() override;
 };
 
+
+// Skeram's blinks and splits put tanks on the elevated side platforms,
+// around stair corners healers below cannot heal through. Healer rank h is
+// paired with pickup-tank rank (h % tanks) and follows it.
+class Aq40SkeramHealerFollowTrigger : public Trigger
+{
+public:
+    Aq40SkeramHealerFollowTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 skeram healer follow") {}
+    bool IsActive() override;
+};
+
 #endif

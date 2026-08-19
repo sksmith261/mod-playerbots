@@ -220,6 +220,9 @@ bool RaidStandoffTrigger::IsActive()
     if (PlayerbotAI::IsTank(bot) || PlayerbotAI::IsMelee(bot))
         return false;
 
+    if (!includeHealers && PlayerbotAI::IsHeal(bot))
+        return false;
+
     Unit* boss = AI_VALUE2(Unit*, "find target", bossName);
     if (!boss || boss->GetVictim() == bot)
         return false;

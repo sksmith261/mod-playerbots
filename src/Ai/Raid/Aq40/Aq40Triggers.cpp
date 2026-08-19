@@ -215,3 +215,57 @@ bool Aq40SkeramTankPickupTrigger::IsActive()
     Unit* assigned = RaidAq40::GetSkeramPickupAssignment(botAI, bot);
     return assigned && bot->GetVictim() != assigned;
 }
+
+Player* RaidAq40::GetSkeramHealerTank(PlayerbotAI* botAI, Player* bot)
+{
+    if (!PlayerbotAI::IsHeal(bot) || !bot->IsAlive())
+        return nullptr;
+
+    Group* group = bot->GetGroup();
+    if (!group)
+        return nullptr;
+
+    // Same tank list the pickup assignment uses, so pairs stay aligned.
+    std::vector<Player*> tanks;
+    int32 myRank = -1;
+    uint32 healerCount = 0;
+    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        Player* member = itr->GetSource();
+        if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
+            continue;
+
+        if (PlayerbotAI::IsTank(member))
+            tanks.push_back(member);
+        else if (PlayerbotAI::IsHeal(member))
+        {
+            if (member == bot)
+                myRank = healerCount;
+
+            ++healerCount;
+        }
+    }
+
+    if (myRank < 0 || tanks.empty())
+        return nullptr;
+
+    return tanks[myRank % tanks.size()];
+}
+
+bool Aq40SkeramHealerFollowTrigger::IsActive()
+{
+    if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive())
+        return false;
+
+    // Any Skeram (real or image) present = the fight is on.
+    if (!bot->FindNearestCreature(RaidAq40::NPC_PROPHET_SKERAM, 150.0f))
+        return false;
+
+    Player* tank = RaidAq40::GetSkeramHealerTank(botAI, bot);
+    if (!tank)
+        return false;
+
+    // Follow when far OR when platform geometry breaks line of sight.
+    return bot->GetDistance(tank) > 30.0f ||
+           !bot->IsWithinLOS(tank->GetPositionX(), tank->GetPositionY(), tank->GetPositionZ());
+}

@@ -202,13 +202,15 @@ protected:
 class RaidStandoffTrigger : public Trigger
 {
 public:
-    RaidStandoffTrigger(PlayerbotAI* botAI, std::string const name, std::string const bossName, float minRange)
-        : Trigger(botAI, name), bossName(bossName), minRange(minRange) {}
+    RaidStandoffTrigger(PlayerbotAI* botAI, std::string const name, std::string const bossName, float minRange,
+                        bool includeHealers = true)
+        : Trigger(botAI, name), bossName(bossName), minRange(minRange), includeHealers(includeHealers) {}
     bool IsActive() override;
 
 protected:
     std::string const bossName;
     float const minRange;
+    bool const includeHealers;
 };
 
 class RaidStandoffAction : public MovementAction

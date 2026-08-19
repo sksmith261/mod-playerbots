@@ -206,3 +206,12 @@ bool Aq40SkeramTankPickupAction::Execute(Event event)
     std::string const tauntAction = bot->getClass() == CLASS_DRUID ? "growl" : "taunt spell";
     return botAI->DoSpecificAction(tauntAction, event, true);
 }
+
+bool Aq40SkeramHealerFollowAction::Execute(Event /*event*/)
+{
+    Player* tank = RaidAq40::GetSkeramHealerTank(botAI, bot);
+    if (!tank)
+        return false;
+
+    return MoveNear(tank, 15.0f, MovementPriority::MOVEMENT_COMBAT);
+}

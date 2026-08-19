@@ -28,6 +28,7 @@ public:
         creators["aq40 flee mound"] = &RaidAq40ActionContext::flee_mound;
         creators["aq40 vem backup taunt"] = &RaidAq40ActionContext::vem_taunt;
         creators["aq40 skeram tank pickup"] = &RaidAq40ActionContext::skeram_pickup;
+        creators["aq40 skeram healer follow"] = &RaidAq40ActionContext::skeram_healer_follow;
         creators["aq40 ouro backup taunt"] = &RaidAq40ActionContext::ouro_taunt;
         creators["aq40 huhuran standoff"] = &RaidAq40ActionContext::huhuran_standoff;
         creators["aq40 skeram standoff"] = &RaidAq40ActionContext::skeram_standoff;
@@ -62,6 +63,7 @@ private:
     { return new RaidStandoffAction(ai, "aq40 huhuran standoff", "princess huhuran", 30.0f); }
     static Action* skeram_standoff(PlayerbotAI* ai)
     { return new RaidStandoffAction(ai, "aq40 skeram standoff", "the prophet skeram", 22.0f); }
+    static Action* skeram_healer_follow(PlayerbotAI* ai) { return new Aq40SkeramHealerFollowAction(ai); }
     static Action* skeram_pickup(PlayerbotAI* ai) { return new Aq40SkeramTankPickupAction(ai); }
     static Action* vem_taunt(PlayerbotAI* ai)
     { return new RaidBackupTauntAction(ai, "aq40 vem backup taunt", "vem"); }
