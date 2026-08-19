@@ -166,13 +166,12 @@ bool Aq40TwinsTankPickupAction::Execute(Event /*event*/)
 
 bool Aq40TwinsSeparateAction::Execute(Event /*event*/)
 {
-    Unit* veknilash = AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
-    if (!veknilash)
-        return false;
+    float x = RaidAq40::TWINS_CAMP_VEKLOR_X;
+    float y = RaidAq40::TWINS_CAMP_VEKLOR_Y;
+    float z = RaidAq40::TWINS_CAMP_VEKLOR_Z;
+    bot->UpdateAllowedPositionZ(x, y, z);
 
-    // Vek'lor follows his victim (teleporting past 45y), so walking away
-    // from Vek'nilash drags him out of heal range.
-    return MoveAway(veknilash, RaidAq40::TWINS_SEPARATION_STEP);
+    return MoveNear(bot->GetMapId(), x, y, z, 6.0f, MovementPriority::MOVEMENT_COMBAT);
 }
 
 bool Aq40TwinsCasterRangeAction::Execute(Event /*event*/)
@@ -217,22 +216,30 @@ bool Aq40SkeramHealerFollowAction::Execute(Event /*event*/)
 
 bool Aq40TwinsTeamSpacingAction::Execute(Event /*event*/)
 {
-    Unit* veknilash = AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
-    if (!veknilash)
-        return false;
-
-    return MoveAway(veknilash, RaidAq40::TWINS_TEAM_SPACING - bot->GetDistance(veknilash) + 5.0f);
-}
-
-bool Aq40TwinsTankDragAction::Execute(Event /*event*/)
-{
     Unit* veklor = AI_VALUE2(Unit*, "find target", "emperor vek'lor");
     if (!veklor)
         return false;
 
-    // Step away from Vek'lor; Vek'nilash follows his tank. Short steps so
-    // the tank keeps landing melee threat between moves.
-    return MoveAway(veklor, 10.0f);
+    return MoveNear(veklor, 25.0f, MovementPriority::MOVEMENT_COMBAT);
+}
+
+bool Aq40TwinsTankDragAction::Execute(Event /*event*/)
+{
+    // Walk to the throne camp in short steps; Vek'nilash follows his tank,
+    // and short steps keep melee threat landing between moves.
+    float const dx = RaidAq40::TWINS_CAMP_VEKNILASH_X - bot->GetPositionX();
+    float const dy = RaidAq40::TWINS_CAMP_VEKNILASH_Y - bot->GetPositionY();
+    float const dist = std::sqrt(dx * dx + dy * dy);
+    if (dist < 1.0f)
+        return false;
+
+    float const step = std::min(10.0f, dist);
+    float x = bot->GetPositionX() + dx / dist * step;
+    float y = bot->GetPositionY() + dy / dist * step;
+    float z = bot->GetPositionZ();
+    bot->UpdateAllowedPositionZ(x, y, z);
+
+    return MoveTo(bot->GetMapId(), x, y, z, false, false, false, true, MovementPriority::MOVEMENT_COMBAT, true);
 }
 
 bool Aq40TwinsMarkAction::Execute(Event /*event*/)

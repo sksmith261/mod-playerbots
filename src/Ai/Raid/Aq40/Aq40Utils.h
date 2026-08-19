@@ -101,6 +101,17 @@ namespace RaidAq40
     // Twin Emperors positioning (core boss_twinemperors.cpp): they heal
     // each other within 60y; Vek'lor teleports to his victim beyond 45y and
     // Arcane Bursts point-blank.
+    // Fixed camps at the twins' spawn thrones (155y apart, from creature
+    // spawns): each duty team parks at its twin's camp. On teleport swaps
+    // the teams cross; Vek'lor teleports to his victim beyond 45y, so a
+    // victim standing at the caster camp snaps him back automatically.
+    constexpr float TWINS_CAMP_VEKNILASH_X = -9023.67f;
+    constexpr float TWINS_CAMP_VEKNILASH_Y = 1176.24f;
+    constexpr float TWINS_CAMP_VEKNILASH_Z = -104.23f;
+    constexpr float TWINS_CAMP_VEKLOR_X = -8868.31f;
+    constexpr float TWINS_CAMP_VEKLOR_Y = 1205.97f;
+    constexpr float TWINS_CAMP_VEKLOR_Z = -104.23f;
+
     constexpr float TWINS_SEPARATION_RANGE = 70.0f;
     constexpr float TWINS_SEPARATION_STEP = 30.0f;
 

@@ -100,11 +100,12 @@ bool Aq40TwinsSeparateTrigger::IsActive()
         return false;
 
     Unit* veklor = AI_VALUE2(Unit*, "find target", "emperor vek'lor");
-    Unit* veknilash = AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
-    if (!veklor || !veknilash || veklor->GetVictim() != bot)
+    if (!veklor || veklor->GetVictim() != bot)
         return false;
 
-    return veklor->GetDistance(veknilash) < RaidAq40::TWINS_SEPARATION_RANGE;
+    // His victim stands at the caster camp; beyond 45y he teleports to
+    // them, which is exactly how he gets snapped back after swaps.
+    return bot->GetExactDist2d(RaidAq40::TWINS_CAMP_VEKLOR_X, RaidAq40::TWINS_CAMP_VEKLOR_Y) > 12.0f;
 }
 
 bool Aq40TwinsCasterRangeTrigger::IsActive()
@@ -299,20 +300,18 @@ bool Aq40TwinsTeamSpacingTrigger::IsActive()
     if (!veklor || !veknilash || !veklor->IsInCombat())
         return false;
 
-    // Healers split with their team: only those nearer Vek'lor's side count
-    // as caster-team (the physical team keeps its own healers).
-    if (PlayerbotAI::IsHeal(bot) && bot->GetDistance(veknilash) < bot->GetDistance(veklor))
-        return false;
+    // Healers split by pairing parity: even ranks run with the caster
+    // team, odd ranks with the physical team.
+    if (PlayerbotAI::IsHeal(bot))
+    {
+        Player* pairedTank = RaidAq40::GetSkeramHealerTank(botAI, bot);
+        if (pairedTank)
+            return false;  // paired with a tank: stay with the physical team
+    }
 
-    // Only maintain spacing once the twins are actually split: while they
-    // stand together (the pull, right after a swap) "35y from Vek'nilash
-    // AND in cast range of Vek'lor" has no solution, and enforcing it froze
-    // the whole caster team into doing nothing. Fight first, spread once
-    // the tanks have made room.
-    if (veklor->GetDistance(veknilash) < 55.0f)
-        return false;
-
-    return bot->GetDistance(veknilash) < RaidAq40::TWINS_TEAM_SPACING;
+    // Caster team belongs within casting distance of Vek'lor — simply "be
+    // near your twin". No cross-constraints; always solvable.
+    return bot->GetDistance(veklor) > 32.0f;
 }
 
 bool Aq40TwinsTankDragTrigger::IsActive()
@@ -328,7 +327,9 @@ bool Aq40TwinsTankDragTrigger::IsActive()
     if (veknilash->GetVictim() != bot)
         return false;
 
-    return veklor->GetDistance(veknilash) < RaidAq40::TWINS_SEPARATION_RANGE;
+    // Anchor him AT his throne camp: bounded destination instead of an
+    // open-ended walk away from his brother.
+    return bot->GetExactDist2d(RaidAq40::TWINS_CAMP_VEKNILASH_X, RaidAq40::TWINS_CAMP_VEKNILASH_Y) > 8.0f;
 }
 
 bool Aq40TwinsMarkTrigger::IsActive()
