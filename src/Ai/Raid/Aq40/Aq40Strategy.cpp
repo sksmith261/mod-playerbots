@@ -70,4 +70,5 @@ void RaidAq40Strategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 void RaidAq40Strategy::InitMultipliers(std::vector<Multiplier*>& multipliers)
 {
     multipliers.push_back(new Aq40TwinsDutyMultiplier(botAI));
+    multipliers.push_back(new Aq40StomachFocusMultiplier(botAI));
 }
