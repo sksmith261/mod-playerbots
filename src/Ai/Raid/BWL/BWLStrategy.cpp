@@ -13,6 +13,13 @@ void RaidBwlStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 
     triggers.push_back(new TriggerNode("bwl broodlord standoff", { NextAction("bwl broodlord standoff", ACTION_RAID) }));
 
+    // Knockback + threat-drop bosses: elected backup tank retakes a loose
+    // boss; punted tanks sprint back into melee.
+    for (char const* taunt : { "bwl broodlord backup taunt", "bwl firemaw backup taunt", "bwl flamegor backup taunt" })
+        triggers.push_back(new TriggerNode(taunt, { NextAction(taunt, ACTION_RAID + 1) }));
+    for (char const* reentry : { "bwl broodlord reentry", "bwl firemaw reentry", "bwl flamegor reentry" })
+        triggers.push_back(new TriggerNode(reentry, { NextAction(reentry, ACTION_RAID) }));
+
     triggers.push_back(new TriggerNode("often", {
         NextAction("bwl check onyxia scale cloak", ACTION_RAID) }));
     triggers.push_back(new TriggerNode("bwl suppression device", {

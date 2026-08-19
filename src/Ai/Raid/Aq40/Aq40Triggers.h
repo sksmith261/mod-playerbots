@@ -90,4 +90,15 @@ public:
     bool IsActive() override;
 };
 
+
+// After a Skeram split/blink, every image (and the real one) needs a tank
+// or it free-casts and mind-controls: tank rank r takes the r-th untanked
+// Skeram in GUID order.
+class Aq40SkeramTankPickupTrigger : public Trigger
+{
+public:
+    Aq40SkeramTankPickupTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 skeram tank pickup") {}
+    bool IsActive() override;
+};
+
 #endif

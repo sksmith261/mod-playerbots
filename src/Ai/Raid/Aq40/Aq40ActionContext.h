@@ -26,6 +26,9 @@ public:
         creators["aq40 move from ground effect"] = &RaidAq40ActionContext::move_from_ground;
         creators["aq40 fear ward"] = &RaidAq40ActionContext::fear_ward;
         creators["aq40 flee mound"] = &RaidAq40ActionContext::flee_mound;
+        creators["aq40 vem backup taunt"] = &RaidAq40ActionContext::vem_taunt;
+        creators["aq40 skeram tank pickup"] = &RaidAq40ActionContext::skeram_pickup;
+        creators["aq40 ouro backup taunt"] = &RaidAq40ActionContext::ouro_taunt;
         creators["aq40 huhuran standoff"] = &RaidAq40ActionContext::huhuran_standoff;
         creators["aq40 skeram standoff"] = &RaidAq40ActionContext::skeram_standoff;
         creators["aq40 giant claw sitter"] = &RaidAq40ActionContext::giant_claw_sitter;
@@ -59,6 +62,11 @@ private:
     { return new RaidStandoffAction(ai, "aq40 huhuran standoff", "princess huhuran", 30.0f); }
     static Action* skeram_standoff(PlayerbotAI* ai)
     { return new RaidStandoffAction(ai, "aq40 skeram standoff", "the prophet skeram", 22.0f); }
+    static Action* skeram_pickup(PlayerbotAI* ai) { return new Aq40SkeramTankPickupAction(ai); }
+    static Action* vem_taunt(PlayerbotAI* ai)
+    { return new RaidBackupTauntAction(ai, "aq40 vem backup taunt", "vem"); }
+    static Action* ouro_taunt(PlayerbotAI* ai)
+    { return new RaidBackupTauntAction(ai, "aq40 ouro backup taunt", "ouro"); }
     static Action* flee_mound(PlayerbotAI* ai)
     { return new MoveAwayFromCreatureAction(ai, "aq40 flee mound", RaidAq40::NPC_OURO_DIRT_MOUND, RaidAq40::OURO_MOUND_FLEE_RANGE); }
 };

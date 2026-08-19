@@ -154,3 +154,64 @@ bool Aq40GiantClawSitterTrigger::IsActive()
 
     return false;
 }
+
+// Shared by the Skeram pickup trigger and action so both compute the same
+// assignment: GUID-sorted living Skerams whose victim is not a tank, and
+// this bot's rank among the group's taunt-capable bot tanks.
+Unit* RaidAq40::GetSkeramPickupAssignment(PlayerbotAI* botAI, Player* bot)
+{
+    if (!PlayerbotAI::IsTank(bot) || !bot->IsAlive())
+        return nullptr;
+
+    std::list<Creature*> skerams;
+    bot->GetCreatureListWithEntryInGrid(skerams, RaidAq40::NPC_PROPHET_SKERAM, 120.0f);
+
+    std::vector<Unit*> untanked;
+    for (Creature* skeram : skerams)
+    {
+        if (!skeram->IsAlive())
+            continue;
+
+        Unit* victim = skeram->GetVictim();
+        Player* victimPlayer = victim ? victim->ToPlayer() : nullptr;
+        if (victimPlayer && PlayerbotAI::IsTank(victimPlayer))
+            continue;
+
+        untanked.push_back(skeram);
+    }
+
+    if (untanked.empty())
+        return nullptr;
+
+    std::sort(untanked.begin(), untanked.end(), [](Unit* a, Unit* b)
+              { return a->GetGUID().GetCounter() < b->GetGUID().GetCounter(); });
+
+    int32 myRank = -1;
+    uint32 count = 0;
+    if (Group* group = bot->GetGroup())
+        for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+        {
+            Player* member = itr->GetSource();
+            if (!member || !member->IsAlive() || !PlayerbotAI::IsTank(member) || !GET_PLAYERBOT_AI(member))
+                continue;
+
+            if (member == bot)
+                myRank = count;
+
+            ++count;
+        }
+
+    if (myRank < 0 || static_cast<uint32>(myRank) >= untanked.size())
+        return nullptr;
+
+    return untanked[myRank];
+}
+
+bool Aq40SkeramTankPickupTrigger::IsActive()
+{
+    if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ)
+        return false;
+
+    Unit* assigned = RaidAq40::GetSkeramPickupAssignment(botAI, bot);
+    return assigned && bot->GetVictim() != assigned;
+}

@@ -10,6 +10,9 @@ void RaidMcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     triggers.push_back(new TriggerNode("mc magmadar standoff", { NextAction("mc magmadar standoff", ACTION_RAID) }));
     triggers.push_back(new TriggerNode("mc geddon armageddon", { NextAction("mc geddon armageddon", ACTION_RAID + 1) }));
     triggers.push_back(new TriggerNode("mc ragnaros tank reentry", { NextAction("mc ragnaros tank reentry", ACTION_RAID) }));
+    // Post-Gate Shazzrah free-casts in the ranged camp with a wiped threat
+    // list until a tank takes him back.
+    triggers.push_back(new TriggerNode("mc shazzrah backup taunt", { NextAction("mc shazzrah backup taunt", ACTION_RAID + 1) }));
 
     // Lucifron
     triggers.push_back(

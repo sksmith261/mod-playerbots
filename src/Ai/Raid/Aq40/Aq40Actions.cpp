@@ -193,3 +193,16 @@ bool Aq40GiantClawSitAction::Execute(Event /*event*/)
 
     return MoveNear(tentacle, 2.0f, MovementPriority::MOVEMENT_COMBAT);
 }
+
+bool Aq40SkeramTankPickupAction::Execute(Event event)
+{
+    Unit* assigned = RaidAq40::GetSkeramPickupAssignment(botAI, bot);
+    if (!assigned)
+        return false;
+
+    if (bot->GetVictim() != assigned)
+        return Attack(assigned);
+
+    std::string const tauntAction = bot->getClass() == CLASS_DRUID ? "growl" : "taunt spell";
+    return botAI->DoSpecificAction(tauntAction, event, true);
+}

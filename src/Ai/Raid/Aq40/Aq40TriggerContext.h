@@ -31,6 +31,9 @@ public:
         creators["aq40 yauj tremor"] = &RaidAq40TriggerContext::yauj_tremor;
         creators["aq40 yauj fear ward"] = &RaidAq40TriggerContext::yauj_fear_ward;
         creators["aq40 ouro mound"] = &RaidAq40TriggerContext::ouro_mound;
+        creators["aq40 vem backup taunt"] = &RaidAq40TriggerContext::vem_taunt;
+        creators["aq40 skeram tank pickup"] = &RaidAq40TriggerContext::skeram_pickup;
+        creators["aq40 ouro backup taunt"] = &RaidAq40TriggerContext::ouro_taunt;
         creators["aq40 huhuran standoff"] = &RaidAq40TriggerContext::huhuran_standoff;
         creators["aq40 skeram standoff"] = &RaidAq40TriggerContext::skeram_standoff;
         creators["aq40 giant claw sitter"] = &RaidAq40TriggerContext::giant_claw_sitter;
@@ -66,6 +69,11 @@ private:
     static Trigger* yauj_tremor(PlayerbotAI* ai) { return new RaidTremorTotemTrigger(ai, "aq40 yauj tremor", "princess yauj"); }
     static Trigger* yauj_fear_ward(PlayerbotAI* ai) { return new RaidFearWardTrigger(ai, "aq40 yauj fear ward", "princess yauj"); }
     static Trigger* ouro_mound(PlayerbotAI* ai) { return new Aq40OuroMoundTrigger(ai); }
+    static Trigger* skeram_pickup(PlayerbotAI* ai) { return new Aq40SkeramTankPickupTrigger(ai); }
+    static Trigger* vem_taunt(PlayerbotAI* ai)
+    { return new RaidBackupTauntTrigger(ai, "aq40 vem backup taunt", "vem"); }
+    static Trigger* ouro_taunt(PlayerbotAI* ai)
+    { return new RaidBackupTauntTrigger(ai, "aq40 ouro backup taunt", "ouro"); }
     static Trigger* giant_claw_sitter(PlayerbotAI* ai) { return new Aq40GiantClawSitterTrigger(ai); }
     static Trigger* huhuran_standoff(PlayerbotAI* ai)
     { return new RaidStandoffTrigger(ai, "aq40 huhuran standoff", "princess huhuran", 30.0f); }

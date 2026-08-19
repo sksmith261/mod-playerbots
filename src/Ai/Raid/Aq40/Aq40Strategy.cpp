@@ -48,4 +48,8 @@ void RaidAq40Strategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     triggers.push_back(new TriggerNode("aq40 huhuran standoff", { NextAction("aq40 huhuran standoff", ACTION_RAID) }));
     triggers.push_back(new TriggerNode("aq40 skeram standoff", { NextAction("aq40 skeram standoff", ACTION_RAID) }));
     triggers.push_back(new TriggerNode("aq40 giant claw sitter", { NextAction("aq40 giant claw sitter", ACTION_RAID) }));
+    // Vem's knockback strips 80% threat; Ouro's Sand Blast wipes the tank's.
+    triggers.push_back(new TriggerNode("aq40 skeram tank pickup", { NextAction("aq40 skeram tank pickup", ACTION_RAID + 1) }));
+    triggers.push_back(new TriggerNode("aq40 vem backup taunt", { NextAction("aq40 vem backup taunt", ACTION_RAID + 1) }));
+    triggers.push_back(new TriggerNode("aq40 ouro backup taunt", { NextAction("aq40 ouro backup taunt", ACTION_RAID + 1) }));
 }

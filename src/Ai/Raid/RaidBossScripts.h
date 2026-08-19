@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "Action.h"
+#include "AttackAction.h"
 #include "MovementActions.h"
 #include "Multiplier.h"
 #include "Trigger.h"
@@ -97,6 +98,57 @@ public:
     RaidTremorTotemTrigger(PlayerbotAI* botAI, std::string const name, std::string const bossName)
         : Trigger(botAI, name, 2 * 1000), bossName(bossName) {}
     bool IsActive() override;
+
+protected:
+    std::string const bossName;
+};
+
+// The named boss is attacking a non-tank (knockback threat drop, blink,
+// teleport, fear): an elected taunt-capable bot tank takes it back. Fires
+// only for the elected tank; every bot computes the same election.
+class RaidBackupTauntTrigger : public Trigger
+{
+public:
+    RaidBackupTauntTrigger(PlayerbotAI* botAI, std::string const name, std::string const bossName)
+        : Trigger(botAI, name), bossName(bossName) {}
+    bool IsActive() override;
+
+protected:
+    std::string const bossName;
+};
+
+class RaidBackupTauntAction : public AttackAction
+{
+public:
+    RaidBackupTauntAction(PlayerbotAI* botAI, std::string const name, std::string const bossName)
+        : AttackAction(botAI, name), bossName(bossName) {}
+    bool Execute(Event event) override;
+
+protected:
+    std::string const bossName;
+};
+
+// Tanks sprint back to the named boss after being punted out of melee range
+// (wing buffets, knock-aways) — melee range going empty hands the boss to
+// the raid or triggers punish mechanics.
+class RaidTankReentryTrigger : public Trigger
+{
+public:
+    RaidTankReentryTrigger(PlayerbotAI* botAI, std::string const name, std::string const bossName, float maxRange)
+        : Trigger(botAI, name), bossName(bossName), maxRange(maxRange) {}
+    bool IsActive() override;
+
+protected:
+    std::string const bossName;
+    float const maxRange;
+};
+
+class RaidTankReentryAction : public MovementAction
+{
+public:
+    RaidTankReentryAction(PlayerbotAI* botAI, std::string const name, std::string const bossName)
+        : MovementAction(botAI, name), bossName(bossName) {}
+    bool Execute(Event event) override;
 
 protected:
     std::string const bossName;

@@ -13,6 +13,12 @@ public:
     RaidBwlActionContext()
     {
         creators["bwl broodlord standoff"] = &RaidBwlActionContext::bwl_broodlord_standoff;
+        creators["bwl broodlord backup taunt"] = &RaidBwlActionContext::bwl_broodlord_taunt;
+        creators["bwl firemaw backup taunt"] = &RaidBwlActionContext::bwl_firemaw_taunt;
+        creators["bwl flamegor backup taunt"] = &RaidBwlActionContext::bwl_flamegor_taunt;
+        creators["bwl broodlord reentry"] = &RaidBwlActionContext::bwl_broodlord_reentry;
+        creators["bwl firemaw reentry"] = &RaidBwlActionContext::bwl_firemaw_reentry;
+        creators["bwl flamegor reentry"] = &RaidBwlActionContext::bwl_flamegor_reentry;
         creators["bwl ebonroc taunt"] = &RaidBwlActionContext::bwl_ebonroc_taunt;
         creators["bwl nefarian drakonid mark"] = &RaidBwlActionContext::bwl_nefarian_drakonid_mark;
         creators["bwl check onyxia scale cloak"] = &RaidBwlActionContext::bwl_check_onyxia_scale_cloak;
@@ -32,6 +38,18 @@ public:
     }
 
 private:
+    static Action* bwl_broodlord_taunt(PlayerbotAI* ai)
+    { return new RaidBackupTauntAction(ai, "bwl broodlord backup taunt", "broodlord lashlayer"); }
+    static Action* bwl_firemaw_taunt(PlayerbotAI* ai)
+    { return new RaidBackupTauntAction(ai, "bwl firemaw backup taunt", "firemaw"); }
+    static Action* bwl_flamegor_taunt(PlayerbotAI* ai)
+    { return new RaidBackupTauntAction(ai, "bwl flamegor backup taunt", "flamegor"); }
+    static Action* bwl_broodlord_reentry(PlayerbotAI* ai)
+    { return new RaidTankReentryAction(ai, "bwl broodlord reentry", "broodlord lashlayer"); }
+    static Action* bwl_firemaw_reentry(PlayerbotAI* ai)
+    { return new RaidTankReentryAction(ai, "bwl firemaw reentry", "firemaw"); }
+    static Action* bwl_flamegor_reentry(PlayerbotAI* ai)
+    { return new RaidTankReentryAction(ai, "bwl flamegor reentry", "flamegor"); }
     static Action* bwl_broodlord_standoff(PlayerbotAI* ai)
     { return new RaidStandoffAction(ai, "bwl broodlord standoff", "broodlord lashlayer", 22.0f); }
     static Action* bwl_ebonroc_taunt(PlayerbotAI* botAI) { return new BwlEbonrocTauntAction(botAI); }

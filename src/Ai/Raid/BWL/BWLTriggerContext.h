@@ -29,6 +29,12 @@ public:
         creators["bwl nefarian flank"] = &RaidBwlTriggerContext::bwl_nefarian_flank;
         creators["bwl broodlord flank"] = &RaidBwlTriggerContext::bwl_broodlord_flank;
         creators["bwl broodlord standoff"] = &RaidBwlTriggerContext::bwl_broodlord_standoff;
+        creators["bwl broodlord backup taunt"] = &RaidBwlTriggerContext::bwl_broodlord_taunt;
+        creators["bwl firemaw backup taunt"] = &RaidBwlTriggerContext::bwl_firemaw_taunt;
+        creators["bwl flamegor backup taunt"] = &RaidBwlTriggerContext::bwl_flamegor_taunt;
+        creators["bwl broodlord reentry"] = &RaidBwlTriggerContext::bwl_broodlord_reentry;
+        creators["bwl firemaw reentry"] = &RaidBwlTriggerContext::bwl_firemaw_reentry;
+        creators["bwl flamegor reentry"] = &RaidBwlTriggerContext::bwl_flamegor_reentry;
         creators["bwl flamegor frenzy"] = &RaidBwlTriggerContext::bwl_flamegor_frenzy;
         creators["bwl chromaggus frenzy"] = &RaidBwlTriggerContext::bwl_chromaggus_frenzy;
         creators["bwl affliction bronze"] = &RaidBwlTriggerContext::bwl_affliction_bronze;
@@ -51,6 +57,18 @@ private:
     static Trigger* bwl_flamegor_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "bwl flamegor flank", "flamegor"); }
     static Trigger* bwl_nefarian_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "bwl nefarian flank", "nefarian"); }
     static Trigger* bwl_broodlord_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "bwl broodlord flank", "broodlord lashlayer"); }
+    static Trigger* bwl_broodlord_taunt(PlayerbotAI* ai)
+    { return new RaidBackupTauntTrigger(ai, "bwl broodlord backup taunt", "broodlord lashlayer"); }
+    static Trigger* bwl_firemaw_taunt(PlayerbotAI* ai)
+    { return new RaidBackupTauntTrigger(ai, "bwl firemaw backup taunt", "firemaw"); }
+    static Trigger* bwl_flamegor_taunt(PlayerbotAI* ai)
+    { return new RaidBackupTauntTrigger(ai, "bwl flamegor backup taunt", "flamegor"); }
+    static Trigger* bwl_broodlord_reentry(PlayerbotAI* ai)
+    { return new RaidTankReentryTrigger(ai, "bwl broodlord reentry", "broodlord lashlayer", 10.0f); }
+    static Trigger* bwl_firemaw_reentry(PlayerbotAI* ai)
+    { return new RaidTankReentryTrigger(ai, "bwl firemaw reentry", "firemaw", 10.0f); }
+    static Trigger* bwl_flamegor_reentry(PlayerbotAI* ai)
+    { return new RaidTankReentryTrigger(ai, "bwl flamegor reentry", "flamegor", 10.0f); }
     static Trigger* bwl_broodlord_standoff(PlayerbotAI* ai)
     { return new RaidStandoffTrigger(ai, "bwl broodlord standoff", "broodlord lashlayer", 22.0f); }
     static Trigger* bwl_flamegor_frenzy(PlayerbotAI* botAI)

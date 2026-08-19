@@ -86,4 +86,14 @@ public:
     bool Execute(Event event) override;
 };
 
+
+// Grab this tank's assigned untanked Skeram (see the paired trigger).
+class Aq40SkeramTankPickupAction : public AttackAction
+{
+public:
+    Aq40SkeramTankPickupAction(PlayerbotAI* botAI, std::string const name = "aq40 skeram tank pickup")
+        : AttackAction(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
 #endif

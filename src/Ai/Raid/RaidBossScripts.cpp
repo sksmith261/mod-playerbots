@@ -236,6 +236,93 @@ bool RaidStandoffAction::Execute(Event /*event*/)
     return MoveAway(boss, minRange + 3.0f - bot->GetDistance(boss));
 }
 
+namespace
+{
+// A tank the backup election may pick: bot-controlled and of a class whose
+// taunt the action can execute ("taunt spell" is aliased only by the
+// warrior/paladin/DK tank strategies; druids use "growl").
+bool CanExecuteBackupTaunt(Player* member)
+{
+    if (!GET_PLAYERBOT_AI(member))
+        return false;
+
+    switch (member->getClass())
+    {
+        case CLASS_WARRIOR:
+        case CLASS_PALADIN:
+        case CLASS_DEATH_KNIGHT:
+        case CLASS_DRUID:
+            return true;
+        default:
+            return false;
+    }
+}
+}
+
+bool RaidBackupTauntTrigger::IsActive()
+{
+    if (!PlayerbotAI::IsTank(bot) || !bot->IsAlive())
+        return false;
+
+    Unit* boss = AI_VALUE2(Unit*, "find target", bossName);
+    if (!boss || !boss->IsAlive())
+        return false;
+
+    Unit* victim = boss->GetVictim();
+    if (victim)
+        if (Player* victimPlayer = victim->ToPlayer())
+            if (PlayerbotAI::IsTank(victimPlayer))
+                return false;  // a tank already has it
+
+    // Elected taker: first living taunt-capable bot tank in shared group
+    // order that isn't the boss's current victim.
+    if (Group* group = bot->GetGroup())
+        for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+        {
+            Player* member = itr->GetSource();
+            if (!member || !member->IsAlive() || !PlayerbotAI::IsTank(member))
+                continue;
+
+            if (member == victim || !CanExecuteBackupTaunt(member))
+                continue;
+
+            return member == bot;
+        }
+
+    return false;
+}
+
+bool RaidBackupTauntAction::Execute(Event event)
+{
+    Unit* boss = AI_VALUE2(Unit*, "find target", bossName);
+    if (!boss)
+        return false;
+
+    if (bot->GetVictim() != boss)
+        return Attack(boss);
+
+    std::string const tauntAction = bot->getClass() == CLASS_DRUID ? "growl" : "taunt spell";
+    return botAI->DoSpecificAction(tauntAction, event, true);
+}
+
+bool RaidTankReentryTrigger::IsActive()
+{
+    if (!PlayerbotAI::IsTank(bot) || !bot->IsAlive())
+        return false;
+
+    Unit* boss = AI_VALUE2(Unit*, "find target", bossName);
+    return boss && boss->IsAlive() && bot->GetDistance(boss) > maxRange;
+}
+
+bool RaidTankReentryAction::Execute(Event /*event*/)
+{
+    Unit* boss = AI_VALUE2(Unit*, "find target", bossName);
+    if (!boss)
+        return false;
+
+    return MoveNear(boss, 3.0f, MovementPriority::MOVEMENT_COMBAT);
+}
+
 bool RaidRearFlankTrigger::IsActive()
 {
     if (Unit* boss = AI_VALUE2(Unit*, "find target", bossName))

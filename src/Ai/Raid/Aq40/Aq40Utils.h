@@ -84,6 +84,10 @@ namespace RaidAq40
     constexpr uint32 NPC_GIANT_CLAW_TENTACLE = 15728;
     constexpr float GIANT_CLAW_SIT_RANGE = 4.0f;
 
+    // Skeram pickup assignment (defined in Aq40Triggers.cpp; shared with
+    // the action so both compute identical assignments).
+    Unit* GetSkeramPickupAssignment(PlayerbotAI* botAI, Player* bot);
+
     // Zero-code positioning registrations (audit batch 1)
     constexpr uint32 SPELL_KRI_POISON_CLOUD = 26590;
     constexpr uint32 SPELL_VISCIDUS_TOXIN = 26575;

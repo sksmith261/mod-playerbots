@@ -15,6 +15,7 @@ public:
     {
         creators["mc magmadar standoff"] = &RaidMcActionContext::magmadar_standoff;
         creators["mc geddon armageddon"] = &RaidMcActionContext::geddon_armageddon;
+        creators["mc shazzrah backup taunt"] = &RaidMcActionContext::shazzrah_taunt;
         creators["mc ragnaros tank reentry"] = &RaidMcActionContext::ragnaros_reentry;
         creators["mc lucifron shadow resistance"] = &RaidMcActionContext::lucifron_shadow_resistance;
         creators["mc magmadar fire resistance"] = &RaidMcActionContext::magmadar_fire_resistance;
@@ -45,6 +46,8 @@ public:
     }
 
 private:
+    static Action* shazzrah_taunt(PlayerbotAI* ai)
+    { return new RaidBackupTauntAction(ai, "mc shazzrah backup taunt", "shazzrah"); }
     static Action* geddon_armageddon(PlayerbotAI* ai)
     { return new RaidStandoffAction(ai, "mc geddon armageddon", "baron geddon", 35.0f); }
     static Action* ragnaros_reentry(PlayerbotAI* ai) { return new McRagnarosReentryAction(ai); }
