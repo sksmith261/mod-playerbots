@@ -168,6 +168,38 @@ bool MovementAction::MoveToLOS(WorldObject* target, bool ranged)
     return false;
 }
 
+bool MovementAction::IsBodyPullRisk(float x, float y, float z)
+{
+    // Deliberate fights and explicit orders are exempt: combat approaches,
+    // raid-scripted positioning, and master ground-click commands all move
+    // at MOVEMENT_COMBAT or higher (checked by the caller). This guard only
+    // vets routine drift: follow slots, loot runs, formation jitter.
+    if (bot->IsInCombat())
+        return false;
+
+    Player* master = botAI->GetMaster();
+    if (master && master->IsInCombat())
+        return false;  // the fight is on; movement freedom matters more
+
+    Unit* intendedTarget = AI_VALUE(Unit*, "current target");
+
+    for (auto const& guid : AI_VALUE(GuidVector, "possible targets no los"))
+    {
+        Unit* unit = botAI->GetUnit(guid);
+        if (!unit || !unit->IsAlive() || unit->IsInCombat() || unit == intendedTarget)
+            continue;
+
+        Creature* creature = unit->ToCreature();
+        if (!creature)
+            continue;
+
+        if (creature->GetExactDist(x, y, z) < creature->GetAttackDistance(bot) + 3.0f)
+            return true;
+    }
+
+    return false;
+}
+
 bool MovementAction::MoveTo(uint32 mapId, float x, float y, float z, bool /*idle*/, bool /*react*/, bool normal_only,
                             bool exact_waypoint, MovementPriority priority, bool lessDelay, bool backwards)
 {
@@ -181,6 +213,10 @@ bool MovementAction::MoveTo(uint32 mapId, float x, float y, float z, bool /*idle
         return false;
     }
     if (IsWaitingForLastMove(priority))
+    {
+        return false;
+    }
+    if (priority <= MovementPriority::MOVEMENT_NORMAL && IsBodyPullRisk(x, y, z))
     {
         return false;
     }
