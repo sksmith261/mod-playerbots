@@ -1,6 +1,7 @@
 #include "Aq40Triggers.h"
 
 #include "Aq40Utils.h"
+#include "RtiTargetValue.h"
 
 bool Aq40InStomachTrigger::IsActive()
 {
@@ -328,4 +329,22 @@ bool Aq40TwinsTankDragTrigger::IsActive()
         return false;
 
     return veklor->GetDistance(veknilash) < RaidAq40::TWINS_SEPARATION_RANGE;
+}
+
+bool Aq40TwinsMarkTrigger::IsActive()
+{
+    if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive() || !IsRaidMarkOwner(bot))
+        return false;
+
+    Group* group = bot->GetGroup();
+    if (!group)
+        return false;
+
+    Unit* veklor = AI_VALUE2(Unit*, "find target", "emperor vek'lor");
+    Unit* veknilash = AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
+    if (!veklor || !veknilash || !veknilash->IsInCombat())
+        return false;
+
+    return group->GetTargetIcon(RtiTargetValue::skullIndex) != veknilash->GetGUID() ||
+           group->GetTargetIcon(RtiTargetValue::crossIndex) != veklor->GetGUID();
 }

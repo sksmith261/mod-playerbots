@@ -124,4 +124,13 @@ public:
     bool Execute(Event event) override;
 };
 
+
+class Aq40TwinsMarkAction : public Action
+{
+public:
+    Aq40TwinsMarkAction(PlayerbotAI* botAI, std::string const name = "aq40 twins marks")
+        : Action(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
 #endif

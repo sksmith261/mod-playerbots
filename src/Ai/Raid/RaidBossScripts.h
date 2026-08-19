@@ -31,6 +31,9 @@ class PlayerbotAI;
 // toward a fight their raid is not actually in.
 bool IsRaidGroupInCombat(Player* bot);
 
+// The elected marking bot (main tank, or first bot when a human tanks).
+bool IsRaidMarkOwner(Player* bot);
+
 // Main tank keeps the skull mark maintained while the named boss is active;
 // which unit gets skulled is the paired RaidKillOrderMarkAction's decision.
 class RaidKillOrderMarkTrigger : public Trigger

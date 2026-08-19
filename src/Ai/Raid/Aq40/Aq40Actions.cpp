@@ -2,6 +2,7 @@
 
 #include "Aq40Utils.h"
 #include "RtiTargetValue.h"
+#include "RaidBossHelpers.h"
 
 bool Aq40ExitStomachAction::Execute(Event /*event*/)
 {
@@ -139,13 +140,18 @@ bool Aq40SarturaFleeAction::Execute(Event /*event*/)
 
 bool Aq40TwinsRetargetAction::Execute(Event /*event*/)
 {
-    Unit* desired = RaidAq40::IsCasterDps(bot)
+    bool const caster = RaidAq40::IsCasterDps(bot);
+    Unit* desired = caster
         ? AI_VALUE2(Unit*, "find target", "emperor vek'lor")
         : AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
 
     if (!desired || !desired->IsAlive())
         return false;
 
+    // Anchor this bot's own RTI preference to its duty twin so the generic
+    // assist logic reinforces the assignment instead of yanking the bot
+    // back to the raid's default mark every tick (the melee ping-pong).
+    SetRtiTarget(botAI, caster ? "cross" : "skull", desired);
     return Attack(desired);
 }
 
@@ -227,4 +233,16 @@ bool Aq40TwinsTankDragAction::Execute(Event /*event*/)
     // Step away from Vek'lor; Vek'nilash follows his tank. Short steps so
     // the tank keeps landing melee threat between moves.
     return MoveAway(veklor, 10.0f);
+}
+
+bool Aq40TwinsMarkAction::Execute(Event /*event*/)
+{
+    Unit* veklor = AI_VALUE2(Unit*, "find target", "emperor vek'lor");
+    Unit* veknilash = AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
+    if (!veklor || !veknilash)
+        return false;
+
+    MarkTargetWithSkull(bot, veknilash);
+    MarkTargetWithCross(bot, veklor);
+    return true;
 }

@@ -66,6 +66,11 @@ bool IsMarkOwner(Player* bot)
 }
 }
 
+bool IsRaidMarkOwner(Player* bot)
+{
+    return IsMarkOwner(bot);
+}
+
 bool IsRaidGroupInCombat(Player* bot)
 {
     Group* group = bot->GetGroup();

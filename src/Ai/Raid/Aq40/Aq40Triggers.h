@@ -132,4 +132,15 @@ public:
     bool IsActive() override;
 };
 
+
+// Keep skull on Vek'nilash and cross on Vek'lor: per-bot RTI preferences
+// anchor each duty team's assist logic to its own twin, ending the
+// retarget/assist ping-pong that paralyzed melee mid-room.
+class Aq40TwinsMarkTrigger : public Trigger
+{
+public:
+    Aq40TwinsMarkTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 twins marks") {}
+    bool IsActive() override;
+};
+
 #endif
