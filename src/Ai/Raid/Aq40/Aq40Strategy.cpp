@@ -1,5 +1,6 @@
 #include "Aq40Strategy.h"
 
+#include "Aq40Multipliers.h"
 #include "Strategy.h"
 
 void RaidAq40Strategy::InitTriggers(std::vector<TriggerNode*>& triggers)
@@ -53,4 +54,9 @@ void RaidAq40Strategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     triggers.push_back(new TriggerNode("aq40 skeram healer follow", { NextAction("aq40 skeram healer follow", ACTION_RAID + 1) }));
     triggers.push_back(new TriggerNode("aq40 vem backup taunt", { NextAction("aq40 vem backup taunt", ACTION_RAID + 1) }));
     triggers.push_back(new TriggerNode("aq40 ouro backup taunt", { NextAction("aq40 ouro backup taunt", ACTION_RAID + 1) }));
+}
+
+void RaidAq40Strategy::InitMultipliers(std::vector<Multiplier*>& multipliers)
+{
+    multipliers.push_back(new Aq40TwinsDutyMultiplier(botAI));
 }
