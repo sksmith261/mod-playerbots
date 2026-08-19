@@ -125,7 +125,7 @@ bool Aq40OuroMoundTrigger::IsActive()
         return false;
 
     Creature* mound = bot->FindNearestCreature(RaidAq40::NPC_OURO_DIRT_MOUND, RaidAq40::OURO_MOUND_FLEE_RANGE);
-    return mound && mound->IsAlive() && mound->GetVictim() == bot;
+    return mound && mound->IsAlive() && mound->IsInCombat() && mound->GetVictim() == bot;
 }
 
 bool Aq40GiantClawSitterTrigger::IsActive()
@@ -134,7 +134,7 @@ bool Aq40GiantClawSitterTrigger::IsActive()
         return false;
 
     Creature* tentacle = bot->FindNearestCreature(RaidAq40::NPC_GIANT_CLAW_TENTACLE, 80.0f);
-    if (!tentacle || !tentacle->IsAlive())
+    if (!tentacle || !tentacle->IsAlive() || !tentacle->IsInCombat())
         return false;
 
     // Elected sitter: first living melee bot in shared group order — every
@@ -169,7 +169,10 @@ Unit* RaidAq40::GetSkeramPickupAssignment(PlayerbotAI* botAI, Player* bot)
     std::vector<Unit*> untanked;
     for (Creature* skeram : skerams)
     {
-        if (!skeram->IsAlive())
+        // Grid-found, not threat-found: an unengaged Skeram has no victim
+        // and read as "untanked", sending tanks to body-pull him from the
+        // trash. Only fight-engaged Skerams need pickup.
+        if (!skeram->IsAlive() || !skeram->IsInCombat())
             continue;
 
         Unit* victim = skeram->GetVictim();
@@ -257,8 +260,8 @@ bool Aq40SkeramHealerFollowTrigger::IsActive()
     if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive())
         return false;
 
-    // Any Skeram (real or image) present = the fight is on.
-    if (!bot->FindNearestCreature(RaidAq40::NPC_PROPHET_SKERAM, 150.0f))
+    Creature* skeram = bot->FindNearestCreature(RaidAq40::NPC_PROPHET_SKERAM, 150.0f);
+    if (!skeram || !skeram->IsInCombat())
         return false;
 
     Player* tank = RaidAq40::GetSkeramHealerTank(botAI, bot);

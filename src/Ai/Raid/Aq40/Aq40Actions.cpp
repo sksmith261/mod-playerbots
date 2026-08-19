@@ -93,7 +93,7 @@ bool Aq40SkeramMarkAction::Execute(Event /*event*/)
     bool imagePresent = false;
     for (Creature* skeram : skerams)
     {
-        if (!skeram->IsAlive())
+        if (!skeram->IsAlive() || !skeram->IsInCombat())
             continue;
 
         if (skeram->ToTempSummon())

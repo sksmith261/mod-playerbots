@@ -269,7 +269,7 @@ bool RaidBackupTauntTrigger::IsActive()
         return false;
 
     Unit* boss = AI_VALUE2(Unit*, "find target", bossName);
-    if (!boss || !boss->IsAlive())
+    if (!boss || !boss->IsAlive() || !boss->IsInCombat())
         return false;
 
     Unit* victim = boss->GetVictim();
@@ -315,7 +315,7 @@ bool RaidTankReentryTrigger::IsActive()
         return false;
 
     Unit* boss = AI_VALUE2(Unit*, "find target", bossName);
-    return boss && boss->IsAlive() && bot->GetDistance(boss) > maxRange;
+    return boss && boss->IsAlive() && boss->IsInCombat() && bot->GetDistance(boss) > maxRange;
 }
 
 bool RaidTankReentryAction::Execute(Event /*event*/)
