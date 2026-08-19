@@ -6,6 +6,8 @@
 
 #include "ChatCommandHandlerStrategy.h"
 
+#include "PullStrategy.h"
+
 class ChatCommandActionNodeFactoryInternal : public NamedObjectFactory<ActionNode>
 {
 public:
@@ -184,4 +186,10 @@ ChatCommandHandlerStrategy::ChatCommandHandlerStrategy(PlayerbotAI* botAI) : Pas
     supported.push_back("pet");
     supported.push_back("pet attack");
     supported.push_back("wait for attack time");
+}
+void ChatCommandHandlerStrategy::InitMultipliers(std::vector<Multiplier*>& multipliers)
+{
+    // Rides the always-on chat strategy so every bot holds fire while a
+    // group member's ranged pull is bringing a mob home.
+    multipliers.push_back(new GroupPullHoldMultiplier(botAI));
 }

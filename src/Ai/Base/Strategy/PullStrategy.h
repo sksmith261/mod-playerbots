@@ -60,6 +60,16 @@ private:
     ReactStates petReactState = REACT_DEFENSIVE;
 };
 
+// Non-pullers hold fire while a group member's pull is in flight: actions
+// against the incoming mob are zeroed until it reaches the pull position,
+// so the party engages at home instead of charging into the patrol zone.
+class GroupPullHoldMultiplier : public Multiplier
+{
+public:
+    GroupPullHoldMultiplier(PlayerbotAI* botAI) : Multiplier(botAI, "group pull hold") {}
+    float GetValue(Action* action) override;
+};
+
 class PullMultiplier : public Multiplier
 {
 public:

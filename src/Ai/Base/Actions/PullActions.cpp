@@ -31,13 +31,44 @@ bool IsWithinPullRange(Player* bot, Unit* target, PullStrategy const* strategy)
 }
 }
 
+namespace
+{
+// Preferred puller: the first living hunter bot with a ranged weapon in
+// shared group order — ranged pulls bring the mob to the party instead of
+// the party to the mob. Falls back to tanks (the original behavior) when
+// the group has no hunter.
+Player* ElectPuller(Player* bot)
+{
+    Group* group = bot->GetGroup();
+    if (!group)
+        return nullptr;
+
+    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        Player* member = itr->GetSource();
+        if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
+            continue;
+
+        if (member->getClass() == CLASS_HUNTER &&
+            member->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_RANGED))
+            return member;
+    }
+
+    return nullptr;
+}
+}
+
 bool PullRequestAction::Execute(Event event)
 {
     PullStrategy* strategy = PullStrategy::Get(botAI);
     if (!strategy)
         return false;
 
-    if (!botAI->IsTank(bot))
+    // One puller per group: the elected hunter, or (no hunter) tanks as
+    // before. Everyone else declines silently so a party-chat 'pull'
+    // doesn't send the whole raid.
+    Player* puller = ElectPuller(bot);
+    if (puller ? puller != bot : !botAI->IsTank(bot))
         return false;
 
     Unit* target = GetPullTarget(event);

@@ -8,6 +8,7 @@
 
 #include "AiObjectContext.h"
 #include "PassiveMultiplier.h"
+#include "PositionValue.h"
 #include "Player.h"
 #include "PlayerbotAI.h"
 #include "Playerbots.h"
@@ -161,6 +162,52 @@ void PullStrategy::OnPullEnded()
     pullStartTime = 0;
     pendingToStart = false;
     SetTarget(nullptr);
+}
+
+float GroupPullHoldMultiplier::GetValue(Action* action)
+{
+    if (!action)
+        return 1.0f;
+
+    Player* bot = botAI->GetBot();
+    if (!bot || bot->IsInCombat())
+        return 1.0f;  // it reached us (or something else did): weapons free
+
+    Group* group = bot->GetGroup();
+    if (!group)
+        return 1.0f;
+
+    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        Player* member = itr->GetSource();
+        if (!member || member == bot)
+            continue;
+
+        PlayerbotAI* memberAI = GET_PLAYERBOT_AI(member);
+        if (!memberAI)
+            continue;
+
+        PullStrategy* strategy = PullStrategy::Get(memberAI);
+        if (!strategy)
+            continue;
+
+        Unit* target = strategy->GetTarget();
+        if (!target)
+            continue;
+
+        PositionInfo pullPosition =
+            memberAI->GetAiObjectContext()->GetValue<PositionMap&>("position")->Get()["pull"];
+        if (!pullPosition.isSet() ||
+            target->GetDistance(pullPosition.x, pullPosition.y, pullPosition.z) < 20.0f)
+            return 1.0f;  // arrived (or no anchor): engage
+
+        if (action->GetTarget() == target)
+            return 0.0f;  // still inbound: hold
+
+        return 1.0f;
+    }
+
+    return 1.0f;
 }
 
 PullMultiplier::PullMultiplier(PlayerbotAI* botAI) : Multiplier(botAI, "pull") {}
