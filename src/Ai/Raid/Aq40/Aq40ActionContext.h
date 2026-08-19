@@ -36,6 +36,7 @@ public:
         creators["aq40 huhuran standoff"] = &RaidAq40ActionContext::huhuran_standoff;
         creators["aq40 skeram standoff"] = &RaidAq40ActionContext::skeram_standoff;
         creators["aq40 giant claw sitter"] = &RaidAq40ActionContext::giant_claw_sitter;
+        creators["aq40 cthun ring"] = &RaidAq40ActionContext::cthun_ring;
     }
 
 private:
@@ -65,6 +66,7 @@ private:
     static Action* move_from_ground(PlayerbotAI* ai) { return new RaidMoveFromGroundEffectAction(ai, "aq40 move from ground effect"); }
     static Action* fear_ward(PlayerbotAI* ai) { return new RaidFearWardAction(ai, "aq40 fear ward"); }
     static Action* giant_claw_sitter(PlayerbotAI* ai) { return new Aq40GiantClawSitAction(ai); }
+    static Action* cthun_ring(PlayerbotAI* ai) { return new Aq40CthunRingAction(ai); }
     static Action* huhuran_standoff(PlayerbotAI* ai)
     { return new RaidStandoffAction(ai, "aq40 huhuran standoff", "princess huhuran", 30.0f); }
     static Action* skeram_standoff(PlayerbotAI* ai)

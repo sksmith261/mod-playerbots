@@ -19,6 +19,11 @@ void RaidAq40Strategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         new TriggerNode("aq40 dark glare",
             { NextAction("aq40 dodge dark glare", ACTION_RAID) }));
 
+    // Below stomach/glare/claw-sitter: the ring is the default posture,
+    // every scripted reflex overrides it.
+    triggers.push_back(
+        new TriggerNode("aq40 cthun ring", { NextAction("aq40 cthun ring", ACTION_RAID - 2) }));
+
     triggers.push_back(
         new TriggerNode("aq40 skeram mark", { NextAction("aq40 skeram mark", ACTION_RAID) }));
     triggers.push_back(
@@ -65,4 +70,5 @@ void RaidAq40Strategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 void RaidAq40Strategy::InitMultipliers(std::vector<Multiplier*>& multipliers)
 {
     multipliers.push_back(new Aq40TwinsDutyMultiplier(botAI));
+    multipliers.push_back(new Aq40CthunP1MeleeMultiplier(botAI));
 }

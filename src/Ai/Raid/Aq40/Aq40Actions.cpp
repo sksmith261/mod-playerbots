@@ -183,6 +183,15 @@ bool Aq40TwinsCasterRangeAction::Execute(Event /*event*/)
     return MoveAway(veklor, RaidAq40::TWINS_CASTER_FLEE_DISTANCE);
 }
 
+bool Aq40CthunRingAction::Execute(Event /*event*/)
+{
+    float x, y, z;
+    if (!RaidAq40::GetCthunRingSlot(botAI, bot, x, y, z))
+        return false;
+
+    return MoveTo(bot->GetMapId(), x, y, z, false, false, false, true, MovementPriority::MOVEMENT_COMBAT, true);
+}
+
 bool Aq40GiantClawSitAction::Execute(Event /*event*/)
 {
     Creature* tentacle = bot->FindNearestCreature(RaidAq40::NPC_GIANT_CLAW_TENTACLE, 80.0f);

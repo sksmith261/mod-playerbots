@@ -78,6 +78,14 @@ public:
 };
 
 // Stand on the Giant Claw Tentacle so it cannot full-heal and resubmerge.
+class Aq40CthunRingAction : public MovementAction
+{
+public:
+    Aq40CthunRingAction(PlayerbotAI* botAI, std::string const name = "aq40 cthun ring")
+        : MovementAction(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
 class Aq40GiantClawSitAction : public MovementAction
 {
 public:

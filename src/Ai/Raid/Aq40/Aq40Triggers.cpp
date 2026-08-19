@@ -14,6 +14,77 @@ bool Aq40InStomachTrigger::IsActive()
     return bot->GetDistance2d(RaidAq40::STOMACH_X, RaidAq40::STOMACH_Y) < RaidAq40::STOMACH_RANGE_2D;
 }
 
+bool RaidAq40::GetCthunRingSlot(PlayerbotAI* botAI, Player* bot, float& x, float& y, float& z)
+{
+    // Rank among living bot members in shared group iteration order — every
+    // bot computes the same roster, so slots never collide (same election
+    // pattern as the Nefarian door split).
+    Group* group = bot->GetGroup();
+    if (!group)
+        return false;
+
+    int32 myRank = -1;
+    uint32 count = 0;
+    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        Player* member = itr->GetSource();
+        if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
+            continue;
+
+        if (member == bot)
+            myRank = count;
+
+        ++count;
+    }
+
+    if (myRank < 0)
+        return false;
+
+    float const angle = 2.0f * static_cast<float>(M_PI) * myRank / count;
+    x = CTHUN_CENTER_X + CTHUN_RING_RADIUS * std::cos(angle);
+    y = CTHUN_CENTER_Y + CTHUN_RING_RADIUS * std::sin(angle);
+    z = CTHUN_CENTER_Z;
+    bot->UpdateAllowedPositionZ(x, y, z);
+    return true;
+}
+
+bool Aq40CthunRingTrigger::IsActive()
+{
+    if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive())
+        return false;
+
+    // Bots down in the stomach are handled by the stomach logic.
+    if (bot->GetPositionZ() <= RaidAq40::STOMACH_MAX_Z)
+        return false;
+
+    if (!IsRaidGroupInCombat(bot))
+        return false;
+
+    Unit* eye = AI_VALUE2(Unit*, "find target", "eye of c'thun");
+    Unit* cthun = AI_VALUE2(Unit*, "find target", "c'thun");
+    Unit* boss = (eye && eye->IsAlive()) ? eye : cthun;
+    if (!boss || !boss->IsAlive() || !boss->IsInCombat())
+        return false;
+
+    // Glare phase: the dodge logic owns movement outright — pulling bots
+    // back toward slots inside the sweep would feed them to the beam.
+    if (eye && eye->HasAura(RaidAq40::SPELL_RED_COLORATION))
+        return false;
+
+    // Local business: a live tentacle in reach spawned on the ring; melee
+    // step over, kill it, and the ring reclaims them afterwards.
+    Unit* current = AI_VALUE(Unit*, "current target");
+    if (current && current->IsAlive() && RaidAq40::IsCthunTentacle(current->GetEntry()) &&
+        bot->GetDistance(current) < 15.0f)
+        return false;
+
+    float x, y, z;
+    if (!RaidAq40::GetCthunRingSlot(botAI, bot, x, y, z))
+        return false;
+
+    return bot->GetExactDist2d(x, y) > RaidAq40::CTHUN_RING_TOLERANCE;
+}
+
 bool Aq40DarkGlareTrigger::IsActive()
 {
     if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive())

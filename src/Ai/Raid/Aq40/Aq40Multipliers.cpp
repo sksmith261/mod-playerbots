@@ -3,6 +3,24 @@
 #include "Aq40Utils.h"
 #include "Playerbots.h"
 
+float Aq40CthunP1MeleeMultiplier::GetValue(Action* action)
+{
+    if (!action)
+        return 1.0f;
+
+    if (PlayerbotAI::IsRanged(bot))
+        return 1.0f;
+
+    Unit* eye = AI_VALUE2(Unit*, "find target", "eye of c'thun");
+    if (!eye || !eye->IsAlive() || !eye->IsInCombat())
+        return 1.0f;
+
+    if (action->GetTarget() != eye)
+        return 1.0f;
+
+    return 0.0f;
+}
+
 float Aq40TwinsDutyMultiplier::GetValue(Action* action)
 {
     if (!action)

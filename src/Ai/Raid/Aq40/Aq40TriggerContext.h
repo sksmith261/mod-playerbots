@@ -12,6 +12,7 @@ public:
     {
         creators["aq40 in stomach"] = &RaidAq40TriggerContext::in_stomach;
         creators["aq40 dark glare"] = &RaidAq40TriggerContext::dark_glare;
+        creators["aq40 cthun ring"] = &RaidAq40TriggerContext::cthun_ring;
         creators["aq40 skeram mark"] = &RaidAq40TriggerContext::skeram_mark;
         creators["aq40 sartura whirlwind"] = &RaidAq40TriggerContext::sartura_whirlwind;
         creators["aq40 sartura mark"] = &RaidAq40TriggerContext::sartura_mark;
@@ -46,6 +47,7 @@ public:
 private:
     static Trigger* in_stomach(PlayerbotAI* ai) { return new Aq40InStomachTrigger(ai); }
     static Trigger* dark_glare(PlayerbotAI* ai) { return new Aq40DarkGlareTrigger(ai); }
+    static Trigger* cthun_ring(PlayerbotAI* ai) { return new Aq40CthunRingTrigger(ai); }
     static Trigger* skeram_mark(PlayerbotAI* ai) { return new Aq40SkeramMarkTrigger(ai); }
     static Trigger* sartura_whirlwind(PlayerbotAI* ai) { return new Aq40SarturaWhirlwindTrigger(ai); }
     static Trigger* sartura_mark(PlayerbotAI* ai)

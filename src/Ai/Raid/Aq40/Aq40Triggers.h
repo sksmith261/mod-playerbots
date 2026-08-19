@@ -15,6 +15,15 @@ public:
 
 // The Eye of C'Thun is sweeping Dark Glare and the beam is closing on this
 // bot's angular position.
+// C'Thun (both phases): bot is away from its assigned ring slot with no
+// local excuse (tentacle in reach, glare phase, stomach).
+class Aq40CthunRingTrigger : public Trigger
+{
+public:
+    Aq40CthunRingTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 cthun ring") {}
+    bool IsActive() override;
+};
+
 class Aq40DarkGlareTrigger : public Trigger
 {
 public:

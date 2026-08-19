@@ -16,4 +16,16 @@ public:
     float GetValue(Action* action) override;
 };
 
+// C'Thun P1: the eye needs no tank and melee cannot usefully reach it —
+// any melee bot's action aimed at the Eye of C'Thun is zeroed, so assist
+// logic can't drag the melee half of the raid off the ring into the
+// beam/glare kill zone. Ranged and healers are untouched; P2 (eye dead)
+// is untouched.
+class Aq40CthunP1MeleeMultiplier : public Multiplier
+{
+public:
+    Aq40CthunP1MeleeMultiplier(PlayerbotAI* botAI) : Multiplier(botAI, "aq40 cthun p1 melee") {}
+    float GetValue(Action* action) override;
+};
+
 #endif

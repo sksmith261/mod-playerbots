@@ -56,6 +56,34 @@ namespace RaidAq40
     // so this margin covers reaction plus travel whichever way it rotates.
     constexpr float DARK_GLARE_DANGER_ARC = 0.7f;
 
+    // C'Thun ring: every bot holds an assigned slot on a circle around the
+    // eye for the whole fight. This is what keeps the raid off the entrance
+    // stairs (where beams and the glare hit a clump) and caps P2 giant eye
+    // tentacle chain-beam jumps. 30y keeps every caster in range; ~5y
+    // spacing at 40 slots. Center is C'Thun's static spawn point.
+    constexpr float CTHUN_CENTER_X = -8578.65f;
+    constexpr float CTHUN_CENTER_Y = 1985.85f;
+    constexpr float CTHUN_CENTER_Z = 100.304f;
+    constexpr float CTHUN_RING_RADIUS = 30.0f;
+    constexpr float CTHUN_RING_TOLERANCE = 4.0f;
+
+    // Tentacles a bot may leave its ring slot to fight locally (they spawn
+    // on top of players, i.e. on the ring itself).
+    constexpr uint32 NPC_CLAW_TENTACLE = 15725;
+    constexpr uint32 NPC_EYE_TENTACLE = 15726;
+    constexpr uint32 NPC_GIANT_CLAW_TENTACLE_ = 15728;
+    constexpr uint32 NPC_GIANT_EYE_TENTACLE = 15334;
+
+    inline bool IsCthunTentacle(uint32 entry)
+    {
+        return entry == NPC_CLAW_TENTACLE || entry == NPC_EYE_TENTACLE ||
+               entry == NPC_GIANT_CLAW_TENTACLE_ || entry == NPC_GIANT_EYE_TENTACLE ||
+               entry == NPC_FLESH_TENTACLE;
+    }
+
+    // False when the bot has no slot (not in a group / not a bot).
+    bool GetCthunRingSlot(PlayerbotAI* botAI, Player* bot, float& x, float& y, float& z);
+
     // The Prophet Skeram: images are TempSummons of the boss entry; the
     // real one is the only non-summon.
     constexpr uint32 NPC_PROPHET_SKERAM = 15263;
