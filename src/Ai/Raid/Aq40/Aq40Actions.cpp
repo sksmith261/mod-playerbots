@@ -151,18 +151,11 @@ bool Aq40TwinsRetargetAction::Execute(Event /*event*/)
 
 bool Aq40TwinsTankPickupAction::Execute(Event /*event*/)
 {
-    Unit* veklor = AI_VALUE2(Unit*, "find target", "emperor vek'lor");
     Unit* veknilash = AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
-
-    Unit* nearest = nullptr;
-    for (Unit* twin : { veklor, veknilash })
-        if (twin && twin->IsAlive() && (!nearest || bot->GetDistance(twin) < bot->GetDistance(nearest)))
-            nearest = twin;
-
-    if (!nearest)
+    if (!veknilash || !veknilash->IsAlive())
         return false;
 
-    return Attack(nearest);
+    return Attack(veknilash);
 }
 
 bool Aq40TwinsSeparateAction::Execute(Event /*event*/)

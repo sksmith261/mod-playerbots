@@ -81,13 +81,16 @@ bool Aq40TwinsTankPickupTrigger::IsActive()
     if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive() || !PlayerbotAI::IsTank(bot))
         return false;
 
-    Unit* veklor = AI_VALUE2(Unit*, "find target", "emperor vek'lor");
+    // Tanks hold VEK'NILASH ONLY. Vek'lor is immune to physical damage: a
+    // plate tank can never build threat on him (classic warlock-tanked him),
+    // so sending one just parks it in Arcane Burst range doing nothing.
+    // Vek'lor is held by the caster team's damage threat — his victim gets
+    // dragged apart and healed by the separation logic.
     Unit* veknilash = AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
-    if (!veklor && !veknilash)
+    if (!veknilash || !veknilash->IsAlive() || !veknilash->IsInCombat())
         return false;
 
-    Unit* current = AI_VALUE(Unit*, "current target");
-    return current != veklor && current != veknilash;
+    return AI_VALUE(Unit*, "current target") != veknilash;
 }
 
 bool Aq40TwinsSeparateTrigger::IsActive()
