@@ -66,6 +66,22 @@ bool IsMarkOwner(Player* bot)
 }
 }
 
+bool IsRaidGroupInCombat(Player* bot)
+{
+    Group* group = bot->GetGroup();
+    if (!group)
+        return bot->IsInCombat();
+
+    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        Player* member = itr->GetSource();
+        if (member && member->IsAlive() && member->IsInCombat())
+            return true;
+    }
+
+    return false;
+}
+
 bool RaidKillOrderMarkTrigger::IsActive()
 {
     return IsMarkOwner(bot) && AI_VALUE2(Unit*, "find target", bossName);

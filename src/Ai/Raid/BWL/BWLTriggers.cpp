@@ -187,7 +187,7 @@ bool BwlNefarianDoorCampTrigger::IsActive()
 {
     using namespace BlackwingLairHelpers;
 
-    if (!bot->IsAlive())
+    if (!bot->IsAlive() || !IsRaidGroupInCombat(bot))
         return false;
 
     // P1 only: drakonids streaming and Nefarian himself not yet landed.

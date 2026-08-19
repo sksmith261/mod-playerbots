@@ -1,6 +1,7 @@
 #ifndef PLAYERBOTS_BWLTRIGGERS_H
 #define PLAYERBOTS_BWLTRIGGERS_H
 
+#include "RaidBossScripts.h"
 #include "Trigger.h"
 
 // General

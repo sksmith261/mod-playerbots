@@ -133,6 +133,9 @@ bool Aq40GiantClawSitterTrigger::IsActive()
     if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive() || !PlayerbotAI::IsMelee(bot))
         return false;
 
+    if (!IsRaidGroupInCombat(bot))
+        return false;
+
     Creature* tentacle = bot->FindNearestCreature(RaidAq40::NPC_GIANT_CLAW_TENTACLE, 80.0f);
     if (!tentacle || !tentacle->IsAlive() || !tentacle->IsInCombat())
         return false;
@@ -215,6 +218,9 @@ bool Aq40SkeramTankPickupTrigger::IsActive()
     if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ)
         return false;
 
+    if (!IsRaidGroupInCombat(bot))
+        return false;
+
     Unit* assigned = RaidAq40::GetSkeramPickupAssignment(botAI, bot);
     return assigned && bot->GetVictim() != assigned;
 }
@@ -258,6 +264,9 @@ Player* RaidAq40::GetSkeramHealerTank(PlayerbotAI* botAI, Player* bot)
 bool Aq40SkeramHealerFollowTrigger::IsActive()
 {
     if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive())
+        return false;
+
+    if (!IsRaidGroupInCombat(bot))
         return false;
 
     Creature* skeram = bot->FindNearestCreature(RaidAq40::NPC_PROPHET_SKERAM, 150.0f);

@@ -26,6 +26,11 @@
 
 class PlayerbotAI;
 
+// Any living member of the bot's group is in combat — the gate that keeps
+// positioning behaviors from marching out-of-combat bots across an instance
+// toward a fight their raid is not actually in.
+bool IsRaidGroupInCombat(Player* bot);
+
 // Main tank keeps the skull mark maintained while the named boss is active;
 // which unit gets skulled is the paired RaidKillOrderMarkAction's decision.
 class RaidKillOrderMarkTrigger : public Trigger
