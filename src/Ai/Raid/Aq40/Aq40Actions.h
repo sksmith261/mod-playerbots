@@ -115,4 +115,13 @@ public:
     bool Execute(Event event) override;
 };
 
+
+class Aq40TwinsTankDragAction : public MovementAction
+{
+public:
+    Aq40TwinsTankDragAction(PlayerbotAI* botAI, std::string const name = "aq40 twins tank drag")
+        : MovementAction(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
 #endif

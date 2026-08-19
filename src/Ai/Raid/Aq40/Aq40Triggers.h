@@ -122,4 +122,14 @@ public:
     bool IsActive() override;
 };
 
+
+// Vek'nilash's tank walks him away from his brother while they are within
+// heal range — the reliable separator, since tanking him is well-defined.
+class Aq40TwinsTankDragTrigger : public Trigger
+{
+public:
+    Aq40TwinsTankDragTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 twins tank drag") {}
+    bool IsActive() override;
+};
+
 #endif

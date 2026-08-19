@@ -217,3 +217,14 @@ bool Aq40TwinsTeamSpacingAction::Execute(Event /*event*/)
 
     return MoveAway(veknilash, RaidAq40::TWINS_TEAM_SPACING - bot->GetDistance(veknilash) + 5.0f);
 }
+
+bool Aq40TwinsTankDragAction::Execute(Event /*event*/)
+{
+    Unit* veklor = AI_VALUE2(Unit*, "find target", "emperor vek'lor");
+    if (!veklor)
+        return false;
+
+    // Step away from Vek'lor; Vek'nilash follows his tank. Short steps so
+    // the tank keeps landing melee threat between moves.
+    return MoveAway(veklor, 10.0f);
+}

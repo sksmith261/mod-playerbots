@@ -303,5 +303,29 @@ bool Aq40TwinsTeamSpacingTrigger::IsActive()
     if (PlayerbotAI::IsHeal(bot) && bot->GetDistance(veknilash) < bot->GetDistance(veklor))
         return false;
 
+    // Only maintain spacing once the twins are actually split: while they
+    // stand together (the pull, right after a swap) "35y from Vek'nilash
+    // AND in cast range of Vek'lor" has no solution, and enforcing it froze
+    // the whole caster team into doing nothing. Fight first, spread once
+    // the tanks have made room.
+    if (veklor->GetDistance(veknilash) < 55.0f)
+        return false;
+
     return bot->GetDistance(veknilash) < RaidAq40::TWINS_TEAM_SPACING;
+}
+
+bool Aq40TwinsTankDragTrigger::IsActive()
+{
+    if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive() || !PlayerbotAI::IsTank(bot))
+        return false;
+
+    Unit* veklor = AI_VALUE2(Unit*, "find target", "emperor vek'lor");
+    Unit* veknilash = AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
+    if (!veklor || !veknilash || !veknilash->IsInCombat())
+        return false;
+
+    if (veknilash->GetVictim() != bot)
+        return false;
+
+    return veklor->GetDistance(veknilash) < RaidAq40::TWINS_SEPARATION_RANGE;
 }
