@@ -92,6 +92,13 @@ bool RaidAddsAliveMarkTrigger::IsActive()
     if (!IsMarkOwner(bot))
         return false;
 
+    // The grid scan below sees through walls at sight range: without combat
+    // gates, standing bosses detected from the hallway got skull-marked and
+    // every DPS bot charged the mark through live trash (Bug Trio report).
+    // Mid-fight add phases — this trigger's real purpose — pass trivially.
+    if (!IsRaidGroupInCombat(bot))
+        return false;
+
     for (auto const& target : AI_VALUE(GuidVector, "possible targets no los"))
     {
         // Creature guids encode the entry: filter before the ObjectAccessor
@@ -108,7 +115,7 @@ bool RaidAddsAliveMarkTrigger::IsActive()
             continue;
 
         Unit* unit = botAI->GetUnit(target);
-        if (unit && unit->IsAlive())
+        if (unit && unit->IsAlive() && unit->IsInCombat())
             return true;
     }
 
@@ -156,7 +163,7 @@ Unit* RaidKillOrderMarkAction::GetTarget()
                 continue;
 
             Unit* unit = botAI->GetUnit(target);
-            if (!unit || !unit->IsAlive())
+            if (!unit || !unit->IsAlive() || !unit->IsInCombat())
                 continue;
 
             // Prefer targets without a shield aura; the most damaged
