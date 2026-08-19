@@ -112,4 +112,14 @@ public:
     bool IsActive() override;
 };
 
+
+// Caster-duty bot is standing too close to Vek'nilash, anchoring Vek'lor
+// inside heal range of his brother.
+class Aq40TwinsTeamSpacingTrigger : public Trigger
+{
+public:
+    Aq40TwinsTeamSpacingTrigger(PlayerbotAI* botAI) : Trigger(botAI, "aq40 twins team spacing") {}
+    bool IsActive() override;
+};
+
 #endif

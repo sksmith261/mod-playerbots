@@ -101,8 +101,13 @@ namespace RaidAq40
     // Twin Emperors positioning (core boss_twinemperors.cpp): they heal
     // each other within 60y; Vek'lor teleports to his victim beyond 45y and
     // Arcane Bursts point-blank.
-    constexpr float TWINS_SEPARATION_RANGE = 65.0f;
-    constexpr float TWINS_SEPARATION_STEP = 25.0f;
+    constexpr float TWINS_SEPARATION_RANGE = 70.0f;
+    constexpr float TWINS_SEPARATION_STEP = 30.0f;
+
+    // The whole caster team keeps this far from Vek'nilash: Vek'lor walks to
+    // caster range of his threat targets, so a clumped caster camp parks him
+    // inside the 60y mutual-heal bubble no matter what his victim does.
+    constexpr float TWINS_TEAM_SPACING = 35.0f;
     constexpr float TWINS_CASTER_MIN_RANGE = 12.0f;
     constexpr float TWINS_CASTER_FLEE_DISTANCE = 18.0f;
 

@@ -281,3 +281,24 @@ bool Aq40SkeramHealerFollowTrigger::IsActive()
     return bot->GetDistance(tank) > 30.0f ||
            !bot->IsWithinLOS(tank->GetPositionX(), tank->GetPositionY(), tank->GetPositionZ());
 }
+
+bool Aq40TwinsTeamSpacingTrigger::IsActive()
+{
+    if (bot->GetMapId() != RaidAq40::MAP_TEMPLE_OF_AHNQIRAJ || !bot->IsAlive())
+        return false;
+
+    if (!RaidAq40::IsCasterDps(bot) && !PlayerbotAI::IsHeal(bot))
+        return false;
+
+    Unit* veklor = AI_VALUE2(Unit*, "find target", "emperor vek'lor");
+    Unit* veknilash = AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
+    if (!veklor || !veknilash || !veklor->IsInCombat())
+        return false;
+
+    // Healers split with their team: only those nearer Vek'lor's side count
+    // as caster-team (the physical team keeps its own healers).
+    if (PlayerbotAI::IsHeal(bot) && bot->GetDistance(veknilash) < bot->GetDistance(veklor))
+        return false;
+
+    return bot->GetDistance(veknilash) < RaidAq40::TWINS_TEAM_SPACING;
+}

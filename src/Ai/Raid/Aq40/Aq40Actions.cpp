@@ -215,3 +215,12 @@ bool Aq40SkeramHealerFollowAction::Execute(Event /*event*/)
 
     return MoveNear(tank, 15.0f, MovementPriority::MOVEMENT_COMBAT);
 }
+
+bool Aq40TwinsTeamSpacingAction::Execute(Event /*event*/)
+{
+    Unit* veknilash = AI_VALUE2(Unit*, "find target", "emperor vek'nilash");
+    if (!veknilash)
+        return false;
+
+    return MoveAway(veknilash, RaidAq40::TWINS_TEAM_SPACING - bot->GetDistance(veknilash) + 5.0f);
+}

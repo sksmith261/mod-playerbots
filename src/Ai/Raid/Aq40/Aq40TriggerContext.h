@@ -22,6 +22,7 @@ public:
         creators["aq40 twins tank pickup"] = &RaidAq40TriggerContext::twins_tank_pickup;
         creators["aq40 twins separate"] = &RaidAq40TriggerContext::twins_separate;
         creators["aq40 twins caster range"] = &RaidAq40TriggerContext::twins_caster_range;
+        creators["aq40 twins team spacing"] = &RaidAq40TriggerContext::twins_team_spacing;
         creators["aq40 ouro flank"] = &RaidAq40TriggerContext::ouro_flank;
         creators["aq40 sartura flank"] = &RaidAq40TriggerContext::sartura_flank;
         creators["aq40 kri cloud"] = &RaidAq40TriggerContext::kri_cloud;
@@ -60,6 +61,7 @@ private:
     static Trigger* twins_wrong_target(PlayerbotAI* ai) { return new Aq40TwinsWrongTargetTrigger(ai); }
     static Trigger* twins_tank_pickup(PlayerbotAI* ai) { return new Aq40TwinsTankPickupTrigger(ai); }
     static Trigger* twins_separate(PlayerbotAI* ai) { return new Aq40TwinsSeparateTrigger(ai); }
+    static Trigger* twins_team_spacing(PlayerbotAI* ai) { return new Aq40TwinsTeamSpacingTrigger(ai); }
     static Trigger* twins_caster_range(PlayerbotAI* ai) { return new Aq40TwinsCasterRangeTrigger(ai); }
     static Trigger* ouro_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "aq40 ouro flank", "ouro"); }
     static Trigger* sartura_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "aq40 sartura flank", "battleguard sartura"); }

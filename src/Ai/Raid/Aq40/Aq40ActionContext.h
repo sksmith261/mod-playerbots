@@ -23,6 +23,7 @@ public:
         creators["aq40 twins tank pickup"] = &RaidAq40ActionContext::twins_tank_pickup;
         creators["aq40 twins separate"] = &RaidAq40ActionContext::twins_separate;
         creators["aq40 twins caster range"] = &RaidAq40ActionContext::twins_caster_range;
+        creators["aq40 twins team spacing"] = &RaidAq40ActionContext::twins_team_spacing;
         creators["aq40 move from ground effect"] = &RaidAq40ActionContext::move_from_ground;
         creators["aq40 fear ward"] = &RaidAq40ActionContext::fear_ward;
         creators["aq40 flee mound"] = &RaidAq40ActionContext::flee_mound;
@@ -55,6 +56,7 @@ private:
     static Action* twins_retarget(PlayerbotAI* ai) { return new Aq40TwinsRetargetAction(ai); }
     static Action* twins_tank_pickup(PlayerbotAI* ai) { return new Aq40TwinsTankPickupAction(ai); }
     static Action* twins_separate(PlayerbotAI* ai) { return new Aq40TwinsSeparateAction(ai); }
+    static Action* twins_team_spacing(PlayerbotAI* ai) { return new Aq40TwinsTeamSpacingAction(ai); }
     static Action* twins_caster_range(PlayerbotAI* ai) { return new Aq40TwinsCasterRangeAction(ai); }
     static Action* move_from_ground(PlayerbotAI* ai) { return new RaidMoveFromGroundEffectAction(ai, "aq40 move from ground effect"); }
     static Action* fear_ward(PlayerbotAI* ai) { return new RaidFearWardAction(ai, "aq40 fear ward"); }

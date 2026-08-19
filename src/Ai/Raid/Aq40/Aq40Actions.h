@@ -106,4 +106,13 @@ public:
     bool Execute(Event event) override;
 };
 
+
+class Aq40TwinsTeamSpacingAction : public MovementAction
+{
+public:
+    Aq40TwinsTeamSpacingAction(PlayerbotAI* botAI, std::string const name = "aq40 twins team spacing")
+        : MovementAction(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
 #endif
