@@ -7,6 +7,7 @@
 #include "RaidBossScripts.h"
 
 #include "Event.h"
+#include "GameObject.h"
 #include "GenericSpellActions.h"
 #include "Group.h"
 #include "Playerbots.h"
@@ -321,6 +322,20 @@ bool RaidTankReentryAction::Execute(Event /*event*/)
         return false;
 
     return MoveNear(boss, 3.0f, MovementPriority::MOVEMENT_COMBAT);
+}
+
+bool RaidNearGameObjectTrigger::IsActive()
+{
+    return bot->IsAlive() && bot->FindNearestGameObject(goEntry, radius);
+}
+
+bool RaidMoveFromGameObjectAction::Execute(Event /*event*/)
+{
+    GameObject* hazard = bot->FindNearestGameObject(goEntry, radius);
+    if (!hazard)
+        return false;
+
+    return FleePosition(hazard->GetPosition(), radius + 4.0f);
 }
 
 bool RaidRearFlankTrigger::IsActive()

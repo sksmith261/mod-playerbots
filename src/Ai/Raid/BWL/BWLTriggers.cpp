@@ -154,3 +154,69 @@ bool BwlEbonrocShadowSwapTrigger::IsActive()
 
     return false;
 }
+
+// Core boss_nefarian.cpp spawnerPositions.
+Position const NEFARIAN_DOOR_CAMPS[2] = {
+    { -7599.32f, -1191.72f, 475.545f },
+    { -7526.27f, -1135.04f, 473.445f },
+};
+
+int32 BlackwingLairHelpers::GetNefarianDoorAssignment(PlayerbotAI* botAI, Player* bot)
+{
+    // Parity split among living bot members in shared group order.
+    int32 myIndex = -1;
+    uint32 count = 0;
+    if (Group* group = bot->GetGroup())
+        for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+        {
+            Player* member = itr->GetSource();
+            if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
+                continue;
+
+            if (member == bot)
+                myIndex = count;
+
+            ++count;
+        }
+
+    return myIndex < 0 ? -1 : myIndex % 2;
+}
+
+bool BwlNefarianDoorCampTrigger::IsActive()
+{
+    using namespace BlackwingLairHelpers;
+
+    if (!bot->IsAlive())
+        return false;
+
+    // P1 only: drakonids streaming and Nefarian himself not yet landed.
+    if (AI_VALUE2(Unit*, "find target", "nefarian"))
+        return false;
+
+    bool drakonidAlive = false;
+    for (auto const& target : AI_VALUE(GuidVector, "possible targets no los"))
+    {
+        for (uint32 entry : NEFARIAN_DRAKONIDS)
+            if (target.GetEntry() == entry)
+            {
+                Unit* unit = botAI->GetUnit(target);
+                if (unit && unit->IsAlive())
+                {
+                    drakonidAlive = true;
+                    break;
+                }
+            }
+
+        if (drakonidAlive)
+            break;
+    }
+
+    if (!drakonidAlive)
+        return false;
+
+    int32 door = GetNefarianDoorAssignment(botAI, bot);
+    if (door < 0)
+        return false;
+
+    return bot->GetExactDist2d(NEFARIAN_DOOR_CAMPS[door].GetPositionX(), NEFARIAN_DOOR_CAMPS[door].GetPositionY()) > 25.0f;
+}

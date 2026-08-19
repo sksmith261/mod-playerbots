@@ -154,6 +154,33 @@ protected:
     std::string const bossName;
 };
 
+// A damaging ground-hazard GameObject (lava burst rune, bomb patch) is
+// within radius of the bot — the only shared step-out primitive keyed on
+// the player AURA misses hazards that hurt on contact with no debuff.
+class RaidNearGameObjectTrigger : public Trigger
+{
+public:
+    RaidNearGameObjectTrigger(PlayerbotAI* botAI, std::string const name, uint32 goEntry, float radius)
+        : Trigger(botAI, name), goEntry(goEntry), radius(radius) {}
+    bool IsActive() override;
+
+protected:
+    uint32 const goEntry;
+    float const radius;
+};
+
+class RaidMoveFromGameObjectAction : public MovementAction
+{
+public:
+    RaidMoveFromGameObjectAction(PlayerbotAI* botAI, std::string const name, uint32 goEntry, float radius)
+        : MovementAction(botAI, name), goEntry(goEntry), radius(radius) {}
+    bool Execute(Event event) override;
+
+protected:
+    uint32 const goEntry;
+    float const radius;
+};
+
 // Non-victims keep to the named boss's rear flank (the base "rear flank"
 // action's 90-120 degree band) — one registration per boss with a frontal
 // cone/cleave/breath and/or tail sweep. The victim (tank) is exempt.

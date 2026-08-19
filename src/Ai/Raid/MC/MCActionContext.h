@@ -16,6 +16,10 @@ public:
         creators["mc magmadar standoff"] = &RaidMcActionContext::magmadar_standoff;
         creators["mc geddon armageddon"] = &RaidMcActionContext::geddon_armageddon;
         creators["mc shazzrah backup taunt"] = &RaidMcActionContext::shazzrah_taunt;
+        creators["mc ragnaros ranged camp"] = &RaidMcActionContext::ragnaros_camp;
+        creators["mc garr eruption flee"] = &RaidMcActionContext::garr_eruption_flee;
+        creators["mc lava burst go"] = &RaidMcActionContext::lava_burst_go;
+        creators["mc bomb patch go"] = &RaidMcActionContext::bomb_patch_go;
         creators["mc ragnaros tank reentry"] = &RaidMcActionContext::ragnaros_reentry;
         creators["mc lucifron shadow resistance"] = &RaidMcActionContext::lucifron_shadow_resistance;
         creators["mc magmadar fire resistance"] = &RaidMcActionContext::magmadar_fire_resistance;
@@ -46,6 +50,12 @@ public:
     }
 
 private:
+    static Action* ragnaros_camp(PlayerbotAI* ai) { return new McRagnarosRangedCampAction(ai); }
+    static Action* garr_eruption_flee(PlayerbotAI* ai) { return new McGarrEruptionFleeAction(ai); }
+    static Action* lava_burst_go(PlayerbotAI* ai)
+    { return new RaidMoveFromGameObjectAction(ai, "mc lava burst go", MoltenCoreHelpers::GO_LAVA_BURST_RUNE, 6.0f); }
+    static Action* bomb_patch_go(PlayerbotAI* ai)
+    { return new RaidMoveFromGameObjectAction(ai, "mc bomb patch go", MoltenCoreHelpers::GO_LAVA_BOMB_PATCH, 6.0f); }
     static Action* shazzrah_taunt(PlayerbotAI* ai)
     { return new RaidBackupTauntAction(ai, "mc shazzrah backup taunt", "shazzrah"); }
     static Action* geddon_armageddon(PlayerbotAI* ai)

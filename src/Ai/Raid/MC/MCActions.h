@@ -132,4 +132,21 @@ public:
     bool Execute(Event event) override;
 };
 
+
+class McRagnarosRangedCampAction : public MovementAction
+{
+public:
+    McRagnarosRangedCampAction(PlayerbotAI* botAI, std::string const name = "mc ragnaros ranged camp")
+        : MovementAction(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
+class McGarrEruptionFleeAction : public MovementAction
+{
+public:
+    McGarrEruptionFleeAction(PlayerbotAI* botAI, std::string const name = "mc garr eruption flee")
+        : MovementAction(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
 #endif

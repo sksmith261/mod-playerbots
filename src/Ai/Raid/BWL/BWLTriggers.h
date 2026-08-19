@@ -88,4 +88,14 @@ public:
     bool IsActive() override;
 };
 
+
+// Nefarian P1: drakonids stream from two doors; bots split by parity and
+// camp their door until Nefarian lands.
+class BwlNefarianDoorCampTrigger : public Trigger
+{
+public:
+    BwlNefarianDoorCampTrigger(PlayerbotAI* botAI) : Trigger(botAI, "bwl nefarian door camp") {}
+    bool IsActive() override;
+};
+
 #endif

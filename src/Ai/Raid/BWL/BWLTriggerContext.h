@@ -30,6 +30,9 @@ public:
         creators["bwl broodlord flank"] = &RaidBwlTriggerContext::bwl_broodlord_flank;
         creators["bwl broodlord standoff"] = &RaidBwlTriggerContext::bwl_broodlord_standoff;
         creators["bwl broodlord backup taunt"] = &RaidBwlTriggerContext::bwl_broodlord_taunt;
+        creators["bwl chromaggus flank"] = &RaidBwlTriggerContext::bwl_chromaggus_flank;
+        creators["bwl chromaggus backup taunt"] = &RaidBwlTriggerContext::bwl_chromaggus_taunt;
+        creators["bwl nefarian door camp"] = &RaidBwlTriggerContext::bwl_nefarian_door_camp;
         creators["bwl firemaw backup taunt"] = &RaidBwlTriggerContext::bwl_firemaw_taunt;
         creators["bwl flamegor backup taunt"] = &RaidBwlTriggerContext::bwl_flamegor_taunt;
         creators["bwl broodlord reentry"] = &RaidBwlTriggerContext::bwl_broodlord_reentry;
@@ -57,6 +60,11 @@ private:
     static Trigger* bwl_flamegor_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "bwl flamegor flank", "flamegor"); }
     static Trigger* bwl_nefarian_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "bwl nefarian flank", "nefarian"); }
     static Trigger* bwl_broodlord_flank(PlayerbotAI* ai) { return new RaidRearFlankTrigger(ai, "bwl broodlord flank", "broodlord lashlayer"); }
+    static Trigger* bwl_chromaggus_flank(PlayerbotAI* ai)
+    { return new RaidRearFlankTrigger(ai, "bwl chromaggus flank", "chromaggus"); }
+    static Trigger* bwl_chromaggus_taunt(PlayerbotAI* ai)
+    { return new RaidBackupTauntTrigger(ai, "bwl chromaggus backup taunt", "chromaggus"); }
+    static Trigger* bwl_nefarian_door_camp(PlayerbotAI* ai) { return new BwlNefarianDoorCampTrigger(ai); }
     static Trigger* bwl_broodlord_taunt(PlayerbotAI* ai)
     { return new RaidBackupTauntTrigger(ai, "bwl broodlord backup taunt", "broodlord lashlayer"); }
     static Trigger* bwl_firemaw_taunt(PlayerbotAI* ai)

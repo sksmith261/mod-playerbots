@@ -53,6 +53,7 @@ namespace BlackwingLairHelpers
     bool AreRazorgoreEggsAlive(PlayerbotAI* botAI);
     bool IsRazorgoreOffTank(Player* bot);
     bool IsNonBABotNearPosition(const Player* bot, Position const& position, float distance);
+    int32 GetNefarianDoorAssignment(PlayerbotAI* botAI, Player* bot);
 
     enum BlackwingLairNpcs : uint32
     {

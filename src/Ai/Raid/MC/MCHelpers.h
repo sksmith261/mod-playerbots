@@ -39,6 +39,10 @@ enum MoltenCoreSpells
     // Baron Geddon <2%: self-detonation, everyone runs
     SPELL_ARMAGEDDON = 20478,
 
+    // Ground-hazard GameObjects (hurt on contact, no player aura to key on)
+    GO_LAVA_BOMB_PATCH = 177704,
+    GO_LAVA_BURST_RUNE = 178088,
+
     // Garr
     SPELL_BANISH_R1 = 710,
     SPELL_BANISH_R2 = 18647,

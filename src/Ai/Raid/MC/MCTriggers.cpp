@@ -82,3 +82,31 @@ bool McRagnarosTankReentryTrigger::IsActive()
     Unit* boss = AI_VALUE2(Unit*, "find target", "ragnaros");
     return boss && boss->IsAlive() && bot->GetDistance(boss) > 8.0f;
 }
+
+// Ragnaros spawns at {838.31, -831.47} facing 2.199 rad toward the raid
+// platform (core RagnarosSummonPos); the camp anchor sits 35y along that
+// facing, on the rock.
+Position const RAGNAROS_RANGED_CAMP = { 817.7f, -803.2f, -228.9f };
+
+bool McRagnarosRangedCampTrigger::IsActive()
+{
+    if (!bot->IsAlive() || PlayerbotAI::IsTank(bot) || PlayerbotAI::IsMelee(bot))
+        return false;
+
+    if (!AI_VALUE2(Unit*, "find target", "ragnaros"))
+        return false;
+
+    return bot->GetExactDist2d(RAGNAROS_RANGED_CAMP.GetPositionX(), RAGNAROS_RANGED_CAMP.GetPositionY()) > 12.0f;
+}
+
+bool McGarrEruptionTrigger::IsActive()
+{
+    if (!bot->IsAlive() || !PlayerbotAI::IsMelee(bot) || PlayerbotAI::IsTank(bot))
+        return false;
+
+    if (!AI_VALUE2(Unit*, "find target", "garr"))
+        return false;
+
+    Creature* firesworn = bot->FindNearestCreature(NPC_FIRESWORN, 8.0f);
+    return firesworn && firesworn->IsAlive() && firesworn->HealthBelowPct(20);
+}

@@ -13,6 +13,10 @@ void RaidMcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     // Post-Gate Shazzrah free-casts in the ranged camp with a wiped threat
     // list until a tank takes him back.
     triggers.push_back(new TriggerNode("mc shazzrah backup taunt", { NextAction("mc shazzrah backup taunt", ACTION_RAID + 1) }));
+    triggers.push_back(new TriggerNode("mc ragnaros ranged camp", { NextAction("mc ragnaros ranged camp", ACTION_RAID) }));
+    triggers.push_back(new TriggerNode("mc garr eruption", { NextAction("mc garr eruption flee", ACTION_RAID + 1) }));
+    triggers.push_back(new TriggerNode("mc lava burst go", { NextAction("mc lava burst go", ACTION_RAID + 1) }));
+    triggers.push_back(new TriggerNode("mc bomb patch go", { NextAction("mc bomb patch go", ACTION_RAID + 1) }));
 
     // Lucifron
     triggers.push_back(

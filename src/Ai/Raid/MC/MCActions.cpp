@@ -429,3 +429,20 @@ bool McRagnarosReentryAction::Execute(Event /*event*/)
 
     return MoveNear(boss, 3.0f, MovementPriority::MOVEMENT_COMBAT);
 }
+
+extern Position const RAGNAROS_RANGED_CAMP;
+
+bool McRagnarosRangedCampAction::Execute(Event /*event*/)
+{
+    return MoveNear(bot->GetMapId(), RAGNAROS_RANGED_CAMP.GetPositionX(), RAGNAROS_RANGED_CAMP.GetPositionY(),
+                    RAGNAROS_RANGED_CAMP.GetPositionZ(), 8.0f, MovementPriority::MOVEMENT_COMBAT);
+}
+
+bool McGarrEruptionFleeAction::Execute(Event /*event*/)
+{
+    Creature* firesworn = bot->FindNearestCreature(NPC_FIRESWORN, 8.0f);
+    if (!firesworn || !firesworn->IsAlive())
+        return false;
+
+    return MoveAway(firesworn, 12.0f);
+}

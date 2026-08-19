@@ -96,4 +96,13 @@ public:
     bool Execute(Event event) override;
 };
 
+
+class BwlNefarianDoorCampAction : public MovementAction
+{
+public:
+    BwlNefarianDoorCampAction(PlayerbotAI* botAI, std::string const name = "bwl nefarian door camp")
+        : MovementAction(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
 #endif

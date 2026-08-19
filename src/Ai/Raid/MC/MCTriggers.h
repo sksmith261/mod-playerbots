@@ -90,4 +90,22 @@ public:
     bool IsActive() override;
 };
 
+
+// Ranged/healers hold the safe-platform camp during Ragnaros so Might of
+// Ragnaros punts land on rock instead of lava.
+class McRagnarosRangedCampTrigger : public Trigger
+{
+public:
+    McRagnarosRangedCampTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc ragnaros ranged camp") {}
+    bool IsActive() override;
+};
+
+// A Firesworn near this melee bot is about to die (Eruption on death).
+class McGarrEruptionTrigger : public Trigger
+{
+public:
+    McGarrEruptionTrigger(PlayerbotAI* botAI) : Trigger(botAI, "mc garr eruption") {}
+    bool IsActive() override;
+};
+
 #endif

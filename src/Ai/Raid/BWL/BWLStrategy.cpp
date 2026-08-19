@@ -8,17 +8,20 @@ void RaidBwlStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     // Shadow Flame breath / cleave / tail-sweep bosses: everyone but the
     // tank holds the rear flank.
     for (char const* flank : { "bwl firemaw flank", "bwl ebonroc flank", "bwl flamegor flank",
-                               "bwl nefarian flank", "bwl broodlord flank" })
+                               "bwl nefarian flank", "bwl broodlord flank", "bwl chromaggus flank" })
         triggers.push_back(new TriggerNode(flank, { NextAction("rear flank", ACTION_MOVE + 4) }));
 
     triggers.push_back(new TriggerNode("bwl broodlord standoff", { NextAction("bwl broodlord standoff", ACTION_RAID) }));
 
     // Knockback + threat-drop bosses: elected backup tank retakes a loose
     // boss; punted tanks sprint back into melee.
-    for (char const* taunt : { "bwl broodlord backup taunt", "bwl firemaw backup taunt", "bwl flamegor backup taunt" })
+    for (char const* taunt : { "bwl broodlord backup taunt", "bwl firemaw backup taunt", "bwl flamegor backup taunt",
+                               "bwl chromaggus backup taunt" })
         triggers.push_back(new TriggerNode(taunt, { NextAction(taunt, ACTION_RAID + 1) }));
     for (char const* reentry : { "bwl broodlord reentry", "bwl firemaw reentry", "bwl flamegor reentry" })
         triggers.push_back(new TriggerNode(reentry, { NextAction(reentry, ACTION_RAID) }));
+
+    triggers.push_back(new TriggerNode("bwl nefarian door camp", { NextAction("bwl nefarian door camp", ACTION_RAID) }));
 
     triggers.push_back(new TriggerNode("often", {
         NextAction("bwl check onyxia scale cloak", ACTION_RAID) }));

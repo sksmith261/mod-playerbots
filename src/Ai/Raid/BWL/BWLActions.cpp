@@ -373,3 +373,16 @@ bool BwlEbonrocTauntAction::Execute(Event event)
     std::string const tauntAction = bot->getClass() == CLASS_DRUID ? "growl" : "taunt spell";
     return botAI->DoSpecificAction(tauntAction, event, true);
 }
+
+extern Position const NEFARIAN_DOOR_CAMPS[2];
+
+bool BwlNefarianDoorCampAction::Execute(Event /*event*/)
+{
+    int32 door = BlackwingLairHelpers::GetNefarianDoorAssignment(botAI, bot);
+    if (door < 0)
+        return false;
+
+    Position const& camp = NEFARIAN_DOOR_CAMPS[door];
+    return MoveNear(bot->GetMapId(), camp.GetPositionX(), camp.GetPositionY(), camp.GetPositionZ(), 10.0f,
+                    MovementPriority::MOVEMENT_COMBAT);
+}

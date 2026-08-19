@@ -14,6 +14,8 @@ public:
     {
         creators["bwl broodlord standoff"] = &RaidBwlActionContext::bwl_broodlord_standoff;
         creators["bwl broodlord backup taunt"] = &RaidBwlActionContext::bwl_broodlord_taunt;
+        creators["bwl chromaggus backup taunt"] = &RaidBwlActionContext::bwl_chromaggus_taunt;
+        creators["bwl nefarian door camp"] = &RaidBwlActionContext::bwl_nefarian_door_camp;
         creators["bwl firemaw backup taunt"] = &RaidBwlActionContext::bwl_firemaw_taunt;
         creators["bwl flamegor backup taunt"] = &RaidBwlActionContext::bwl_flamegor_taunt;
         creators["bwl broodlord reentry"] = &RaidBwlActionContext::bwl_broodlord_reentry;
@@ -38,6 +40,9 @@ public:
     }
 
 private:
+    static Action* bwl_chromaggus_taunt(PlayerbotAI* ai)
+    { return new RaidBackupTauntAction(ai, "bwl chromaggus backup taunt", "chromaggus"); }
+    static Action* bwl_nefarian_door_camp(PlayerbotAI* ai) { return new BwlNefarianDoorCampAction(ai); }
     static Action* bwl_broodlord_taunt(PlayerbotAI* ai)
     { return new RaidBackupTauntAction(ai, "bwl broodlord backup taunt", "broodlord lashlayer"); }
     static Action* bwl_firemaw_taunt(PlayerbotAI* ai)
