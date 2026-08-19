@@ -64,8 +64,15 @@ namespace RaidAq40
     constexpr float CTHUN_CENTER_X = -8578.65f;
     constexpr float CTHUN_CENTER_Y = 1985.85f;
     constexpr float CTHUN_CENTER_Z = 100.304f;
+    // Role rings: melee fight the eye from inside its 15y combat reach
+    // (model 15556 CombatReach = 15 — melee range is legal, as in vanilla);
+    // healers sit between rings so everyone is within heal range of the
+    // nearest healer; ranged cast from 30y (30 + 15 reach = in range).
+    constexpr float CTHUN_RING_MELEE_RADIUS = 14.0f;
+    constexpr float CTHUN_RING_HEALER_RADIUS = 20.0f;
     constexpr float CTHUN_RING_RADIUS = 30.0f;
     constexpr float CTHUN_RING_TOLERANCE = 4.0f;
+    constexpr float CTHUN_RING_HEALER_TOLERANCE = 8.0f;
 
     // Tentacles a bot may leave its ring slot to fight locally (they spawn
     // on top of players, i.e. on the ring itself).

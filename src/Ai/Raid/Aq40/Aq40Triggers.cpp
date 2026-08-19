@@ -16,19 +16,31 @@ bool Aq40InStomachTrigger::IsActive()
 
 bool RaidAq40::GetCthunRingSlot(PlayerbotAI* botAI, Player* bot, float& x, float& y, float& z)
 {
-    // Rank among living bot members in shared group iteration order — every
-    // bot computes the same roster, so slots never collide (same election
-    // pattern as the Nefarian door split).
+    // Rank among living bot members OF THE SAME ROLE in shared group
+    // iteration order — every bot computes the same roster, so slots never
+    // collide (the Nefarian door election, per ring). Three rings by role;
+    // each role spreads over its own full circle.
     Group* group = bot->GetGroup();
     if (!group)
         return false;
 
+    auto roleOf = [](Player* p)
+    {
+        if (PlayerbotAI::IsHeal(p))
+            return 1;
+        return PlayerbotAI::IsRanged(p) ? 2 : 0;
+    };
+
+    int const myRole = roleOf(bot);
     int32 myRank = -1;
     uint32 count = 0;
     for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
     {
         Player* member = itr->GetSource();
         if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
+            continue;
+
+        if (roleOf(member) != myRole)
             continue;
 
         if (member == bot)
@@ -40,9 +52,13 @@ bool RaidAq40::GetCthunRingSlot(PlayerbotAI* botAI, Player* bot, float& x, float
     if (myRank < 0)
         return false;
 
+    float const radius = myRole == 0 ? CTHUN_RING_MELEE_RADIUS
+                       : myRole == 1 ? CTHUN_RING_HEALER_RADIUS
+                                     : CTHUN_RING_RADIUS;
+
     float const angle = 2.0f * static_cast<float>(M_PI) * myRank / count;
-    x = CTHUN_CENTER_X + CTHUN_RING_RADIUS * std::cos(angle);
-    y = CTHUN_CENTER_Y + CTHUN_RING_RADIUS * std::sin(angle);
+    x = CTHUN_CENTER_X + radius * std::cos(angle);
+    y = CTHUN_CENTER_Y + radius * std::sin(angle);
     z = CTHUN_CENTER_Z;
     bot->UpdateAllowedPositionZ(x, y, z);
     return true;
@@ -82,7 +98,11 @@ bool Aq40CthunRingTrigger::IsActive()
     if (!RaidAq40::GetCthunRingSlot(botAI, bot, x, y, z))
         return false;
 
-    return bot->GetExactDist2d(x, y) > RaidAq40::CTHUN_RING_TOLERANCE;
+    // Healers roam further before the ring reclaims them: chasing a heal
+    // target off-slot must not fight the ring (the oscillation lesson).
+    float const tolerance = PlayerbotAI::IsHeal(bot) ? RaidAq40::CTHUN_RING_HEALER_TOLERANCE
+                                                     : RaidAq40::CTHUN_RING_TOLERANCE;
+    return bot->GetExactDist2d(x, y) > tolerance;
 }
 
 bool Aq40DarkGlareTrigger::IsActive()
