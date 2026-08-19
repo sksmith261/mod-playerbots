@@ -86,6 +86,7 @@ bool McRagnarosTankReentryTrigger::IsActive()
 // Ragnaros spawns at {838.31, -831.47} facing 2.199 rad toward the raid
 // platform (core RagnarosSummonPos); the camp anchor sits 35y along that
 // facing, on the rock.
+extern Position const RAGNAROS_RANGED_CAMP;
 Position const RAGNAROS_RANGED_CAMP = { 817.7f, -803.2f, -228.9f };
 
 bool McRagnarosRangedCampTrigger::IsActive()

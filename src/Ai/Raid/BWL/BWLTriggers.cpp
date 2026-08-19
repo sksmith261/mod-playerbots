@@ -156,6 +156,7 @@ bool BwlEbonrocShadowSwapTrigger::IsActive()
 }
 
 // Core boss_nefarian.cpp spawnerPositions.
+extern Position const NEFARIAN_DOOR_CAMPS[2];
 Position const NEFARIAN_DOOR_CAMPS[2] = {
     { -7599.32f, -1191.72f, 475.545f },
     { -7526.27f, -1135.04f, 473.445f },
