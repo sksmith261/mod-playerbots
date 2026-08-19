@@ -5,6 +5,12 @@
 
 void RaidAq40Strategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 {
+    // Generic ground-hazard escape at raid priority: the base engine's
+    // avoid-aoe (dynamic-object circles like Blizzard, trap GOs, trigger
+    // NPCs) exists but loses arbitration to rotations at default priority
+    // and is master-gated. In raids it outranks everything but survival.
+    triggers.push_back(new TriggerNode("have area debuff", { NextAction("avoid aoe", ACTION_RAID + 1) }));
+
     triggers.push_back(
         new TriggerNode("aq40 in stomach",
             { NextAction("aq40 exit stomach", ACTION_RAID) }));

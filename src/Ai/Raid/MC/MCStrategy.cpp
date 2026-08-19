@@ -6,6 +6,12 @@
 
 void RaidMcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 {
+    // Generic ground-hazard escape at raid priority: the base engine's
+    // avoid-aoe (dynamic-object circles like Blizzard, trap GOs, trigger
+    // NPCs) exists but loses arbitration to rotations at default priority
+    // and is master-gated. In raids it outranks everything but survival.
+    triggers.push_back(new TriggerNode("have area debuff", { NextAction("avoid aoe", ACTION_RAID + 1) }));
+
     // Ranged/healers stay out of Panic range (and off the moat lip).
     triggers.push_back(new TriggerNode("mc magmadar standoff", { NextAction("mc magmadar standoff", ACTION_RAID) }));
     triggers.push_back(new TriggerNode("mc geddon armageddon", { NextAction("mc geddon armageddon", ACTION_RAID + 1) }));
