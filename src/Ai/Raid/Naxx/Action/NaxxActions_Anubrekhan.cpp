@@ -79,12 +79,8 @@ bool AnubrekhanPositionAction::Execute(Event /*event*/)
     if (!boss)
         return false;
 
-    Spell* current = boss->GetCurrentSpell(CURRENT_GENERIC_SPELL);
-    bool const castingSwarm =
-        current && NaxxSpellIds::MatchesAnySpellId(current->GetSpellInfo(),
-            {NaxxSpellIds::LocustSwarm10, NaxxSpellIds::LocustSwarm10Alt, NaxxSpellIds::LocustSwarm25});
     // The old check treated ANY generic cast (Impale included) as the swarm.
-    bool inPhase = botAI->HasAura("locust swarm", boss) || castingSwarm;
+    bool const inPhase = NaxxHelpers::AnubrekhanSwarmActive(botAI, boss);
     if (inPhase)
     {
         if (botAI->IsMainTank(bot))
