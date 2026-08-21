@@ -127,7 +127,7 @@ bool LoathebSporeTrigger::IsActive()
     if (PlayerbotAI::IsTank(bot) || PlayerbotAI::IsHeal(bot))
         return false;
 
-    if (botAI->HasAura("fungal creep", bot))
+    if (NaxxHelpers::HasSporeBuff(botAI, bot))
         return false;
 
     if (!NaxxHelpers::IsSporeSoaker(botAI, bot))

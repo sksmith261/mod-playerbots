@@ -90,6 +90,16 @@ inline Unit* FaerlinaSacrificeTarget(PlayerbotAI* botAI, Unit* faerlina)
 }
 constexpr uint32 NPC_WEB_WRAP = 16486;
 
+// Spore 16286's on-death cast (smart_scripts): the soak buff. Matched by
+// id — the name differs by era write-up (Fungal Creep / Fungal Bloom).
+constexpr uint32 SPELL_SPORE_BUFF = 29232;
+
+inline bool HasSporeBuff(PlayerbotAI* botAI, Player* player)
+{
+    return player->HasAura(SPELL_SPORE_BUFF) || botAI->HasAura("fungal creep", player) ||
+           botAI->HasAura("fungal bloom", player);
+}
+
 // Noth's skeleton adds, both phases.
 inline bool IsNothAdd(PlayerbotAI* botAI, Unit* unit)
 {
@@ -151,8 +161,7 @@ inline bool IsSporeSoaker(PlayerbotAI* botAI, Player* bot)
         if (PlayerbotAI::IsTank(member) || PlayerbotAI::IsHeal(member))
             continue;
 
-        PlayerbotAI* memberAI = GET_PLAYERBOT_AI(member);
-        if (memberAI->HasAura("fungal creep", member))
+        if (HasSporeBuff(botAI, member))
             continue;
 
         if (member == bot)
