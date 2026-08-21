@@ -65,6 +65,34 @@ private:
     float distance;
 };
 
+class MaexxnaFreeWrappedAction : public AttackAction
+{
+public:
+    MaexxnaFreeWrappedAction(PlayerbotAI* ai) : AttackAction(ai, "maexxna free wrapped") {}
+    bool Execute(Event event) override;
+};
+
+class NothChooseTargetAction : public AttackAction
+{
+public:
+    NothChooseTargetAction(PlayerbotAI* ai) : AttackAction(ai, "noth choose target") {}
+    bool Execute(Event event) override;
+};
+
+class LoathebSporeSoakAction : public AttackAction
+{
+public:
+    LoathebSporeSoakAction(PlayerbotAI* ai) : AttackAction(ai, "loatheb spore soak") {}
+    bool Execute(Event event) override;
+};
+
+class GothikChooseTargetAction : public AttackAction
+{
+public:
+    GothikChooseTargetAction(PlayerbotAI* ai) : AttackAction(ai, "gothik choose target") {}
+    bool Execute(Event event) override;
+};
+
 class AnubrekhanSpreadAction : public MovementAction
 {
 public:
@@ -361,11 +389,11 @@ private:
     LoathebBossHelper helper;
 };
 
-//class PatchwerkRangedPositionAction : public MovementAction
-//{
-//public:
-//    PatchwerkRangedPositionAction(PlayerbotAI* ai) : MovementAction(ai, "patchwerk ranged position") {}
-//    bool Execute(Event event) override;
-//};
+class PatchwerkRangedPositionAction : public MovementAction
+{
+public:
+    PatchwerkRangedPositionAction(PlayerbotAI* ai) : MovementAction(ai, "patchwerk ranged position") {}
+    bool Execute(Event event) override;
+};
 
 #endif

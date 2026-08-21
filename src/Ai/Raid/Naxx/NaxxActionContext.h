@@ -23,6 +23,10 @@ public:
 
         creators["heigan dance"] = &RaidNaxxActionContext::heigan_dance;
         creators["anub'rekhan spread"] = &RaidNaxxActionContext::anubrekhan_spread;
+        creators["maexxna free wrapped"] = &RaidNaxxActionContext::maexxna_free_wrapped;
+        creators["noth choose target"] = &RaidNaxxActionContext::noth_choose_target;
+        creators["loatheb spore soak"] = &RaidNaxxActionContext::loatheb_spore_soak;
+        creators["gothik choose target"] = &RaidNaxxActionContext::gothik_choose_target;
         creators["faerlina worshipper duty"] = &RaidNaxxActionContext::faerlina_worshipper_duty;
         creators["faerlina sacrifice"] = &RaidNaxxActionContext::faerlina_sacrifice;
         //creators["heigan dance melee"] = &RaidNaxxActionContext::heigan_dance_melee;
@@ -52,7 +56,7 @@ public:
         creators["gluth position"] = &RaidNaxxActionContext::gluth_position;
         creators["gluth slowdown"] = &RaidNaxxActionContext::gluth_slowdown;
 
-        //creators["patchwerk ranged position"] = &RaidNaxxActionContext::patchwerk_ranged_position;
+        creators["patchwerk ranged position"] = &RaidNaxxActionContext::patchwerk_ranged_position;
 
         creators["loatheb position"] = &RaidNaxxActionContext::loatheb_position;
         creators["loatheb choose target"] = &RaidNaxxActionContext::loatheb_choose_target;
@@ -65,6 +69,10 @@ private:
     static Action* grobbulus_move_away(PlayerbotAI* ai) { return new GrobbulusMoveAwayAction(ai); }
     static Action* heigan_dance(PlayerbotAI* ai) { return new HeiganDanceAction(ai); }
     static Action* anubrekhan_spread(PlayerbotAI* ai) { return new AnubrekhanSpreadAction(ai); }
+    static Action* maexxna_free_wrapped(PlayerbotAI* ai) { return new MaexxnaFreeWrappedAction(ai); }
+    static Action* noth_choose_target(PlayerbotAI* ai) { return new NothChooseTargetAction(ai); }
+    static Action* loatheb_spore_soak(PlayerbotAI* ai) { return new LoathebSporeSoakAction(ai); }
+    static Action* gothik_choose_target(PlayerbotAI* ai) { return new GothikChooseTargetAction(ai); }
     static Action* faerlina_worshipper_duty(PlayerbotAI* ai) { return new FaerlinaWorshipperDutyAction(ai); }
     static Action* faerlina_sacrifice(PlayerbotAI* ai) { return new FaerlinaSacrificeAction(ai); }
     //static Action* heigan_dance_melee(PlayerbotAI* ai) { return new HeiganDanceMeleeAction(ai); }
@@ -93,7 +101,7 @@ private:
     static Action* gluth_choose_target(PlayerbotAI* ai) { return new GluthChooseTargetAction(ai); }
     static Action* gluth_position(PlayerbotAI* ai) { return new GluthPositionAction(ai); }
     static Action* gluth_slowdown(PlayerbotAI* ai) { return new GluthSlowdownAction(ai); }
-    //static Action* patchwerk_ranged_position(PlayerbotAI* ai) { return new PatchwerkRangedPositionAction(ai); }
+    static Action* patchwerk_ranged_position(PlayerbotAI* ai) { return new PatchwerkRangedPositionAction(ai); }
     static Action* loatheb_position(PlayerbotAI* ai) { return new LoathebPositionAction(ai); }
     static Action* loatheb_choose_target(PlayerbotAI* ai) { return new LoathebChooseTargetAction(ai); }
 };

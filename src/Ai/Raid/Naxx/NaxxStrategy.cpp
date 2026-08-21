@@ -69,18 +69,34 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         })
     );
 
+    // Wrapped raiders die on the wall unless someone shoots them down.
+    triggers.push_back(new TriggerNode("maexxna web wrap",
+        { NextAction("maexxna free wrapped", ACTION_RAID + 2) }
+    ));
+
+    // Noth the Plaguebringer — skeleton discipline, both phases.
+    triggers.push_back(new TriggerNode("noth",
+        { NextAction("noth choose target", ACTION_RAID + 1) }
+    ));
+
+    // Gothik the Harvester — fight-time wave priorities; the pre-pull side
+    // split is the raid leader's job (@group goto onto the dead side).
+    triggers.push_back(new TriggerNode("gothik",
+        { NextAction("gothik choose target", ACTION_RAID + 1) }
+    ));
+
     // Patchwerk
-    //triggers.push_back(new TriggerNode("patchwerk tank",
-    //    { NextAction("tank face", ACTION_RAID + 2) }
-    //));
+    triggers.push_back(new TriggerNode("patchwerk tank",
+        { NextAction("tank face", ACTION_RAID + 2) }
+    ));
 
-    //triggers.push_back(new TriggerNode("patchwerk ranged",
-    //    { NextAction("patchwerk ranged position", ACTION_RAID + 2) }
-    //));
+    triggers.push_back(new TriggerNode("patchwerk ranged",
+        { NextAction("patchwerk ranged position", ACTION_RAID + 2) }
+    ));
 
-    //triggers.push_back(new TriggerNode("patchwerk non-tank",
-    //    { NextAction("rear flank", ACTION_RAID + 1) }
-    //));
+    triggers.push_back(new TriggerNode("patchwerk non-tank",
+        { NextAction("rear flank", ACTION_RAID + 1) }
+    ));
 
     // Thaddius
     triggers.push_back(new TriggerNode("thaddius phase pet",
@@ -148,6 +164,11 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
             NextAction("loatheb choose target", ACTION_RAID + 1)
         })
     );
+
+    // Spore rotation: five unbuffed DPS at a time soak Fungal Creep.
+    triggers.push_back(new TriggerNode("loatheb spore",
+        { NextAction("loatheb spore soak", ACTION_RAID + 2) }
+    ));
 
 }
 

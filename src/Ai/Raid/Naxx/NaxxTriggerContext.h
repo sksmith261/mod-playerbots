@@ -21,6 +21,10 @@ public:
         creators["grobbulus cloud"] = &RaidNaxxTriggerContext::grobbulus_cloud;
         creators["heigan dance"] = &RaidNaxxTriggerContext::heigan_dance;
         creators["anub'rekhan spread"] = &RaidNaxxTriggerContext::anubrekhan_spread;
+        creators["maexxna web wrap"] = &RaidNaxxTriggerContext::maexxna_web_wrap;
+        creators["noth"] = &RaidNaxxTriggerContext::noth;
+        creators["loatheb spore"] = &RaidNaxxTriggerContext::loatheb_spore;
+        creators["gothik"] = &RaidNaxxTriggerContext::gothik;
         creators["faerlina worshipper duty"] = &RaidNaxxTriggerContext::faerlina_worshipper_duty;
         creators["faerlina frenzy"] = &RaidNaxxTriggerContext::faerlina_frenzy;
         //creators["heigan melee"] = &RaidNaxxTriggerContext::heigan_melee;
@@ -45,9 +49,9 @@ public:
         creators["anub'rekhan"] = &RaidNaxxTriggerContext::anubrekhan;
         creators["faerlina"] = &RaidNaxxTriggerContext::faerlina;
         creators["maexxna"] = &RaidNaxxTriggerContext::maexxna;
-        //creators["patchwerk tank"] = &RaidNaxxTriggerContext::patchwerk_tank;
-        //creators["patchwerk non-tank"] = &RaidNaxxTriggerContext::patchwerk_non_tank;
-        //creators["patchwerk ranged"] = &RaidNaxxTriggerContext::patchwerk_ranged;
+        creators["patchwerk tank"] = &RaidNaxxTriggerContext::patchwerk_tank;
+        creators["patchwerk non-tank"] = &RaidNaxxTriggerContext::patchwerk_non_tank;
+        creators["patchwerk ranged"] = &RaidNaxxTriggerContext::patchwerk_ranged;
 
         creators["gluth"] = &RaidNaxxTriggerContext::gluth;
         creators["gluth main tank mortal wound"] = &RaidNaxxTriggerContext::gluth_main_tank_mortal_wound;
@@ -62,6 +66,10 @@ private:
     static Trigger* grobbulus_cloud(PlayerbotAI* ai) { return new GrobbulusCloudTrigger(ai); }
     static Trigger* heigan_dance(PlayerbotAI* ai) { return new HeiganDanceTrigger(ai); }
     static Trigger* anubrekhan_spread(PlayerbotAI* ai) { return new AnubrekhanSpreadTrigger(ai); }
+    static Trigger* maexxna_web_wrap(PlayerbotAI* ai) { return new MaexxnaWebWrapTrigger(ai); }
+    static Trigger* noth(PlayerbotAI* ai) { return new NothTrigger(ai); }
+    static Trigger* loatheb_spore(PlayerbotAI* ai) { return new LoathebSporeTrigger(ai); }
+    static Trigger* gothik(PlayerbotAI* ai) { return new GothikTrigger(ai); }
     static Trigger* faerlina_worshipper_duty(PlayerbotAI* ai) { return new FaerlinaWorshipperDutyTrigger(ai); }
     static Trigger* faerlina_frenzy(PlayerbotAI* ai) { return new FaerlinaFrenzyTrigger(ai); }
     //static Trigger* heigan_melee(PlayerbotAI* ai) { return new HeiganMeleeTrigger(ai); }
@@ -83,9 +91,9 @@ private:
     static Trigger* anubrekhan(PlayerbotAI* ai) { return new AnubrekhanTrigger(ai); }
     static Trigger* faerlina(PlayerbotAI* ai) { return new FaerlinaTrigger(ai); }
     static Trigger* maexxna(PlayerbotAI* ai) { return new MaexxnaTrigger(ai); }
-    //static Trigger* patchwerk_tank(PlayerbotAI* ai) { return new PatchwerkTankTrigger(ai); }
-    //static Trigger* patchwerk_non_tank(PlayerbotAI* ai) { return new PatchwerkNonTankTrigger(ai); }
-    //static Trigger* patchwerk_ranged(PlayerbotAI* ai) { return new PatchwerkRangedTrigger(ai); }
+    static Trigger* patchwerk_tank(PlayerbotAI* ai) { return new PatchwerkTankTrigger(ai); }
+    static Trigger* patchwerk_non_tank(PlayerbotAI* ai) { return new PatchwerkNonTankTrigger(ai); }
+    static Trigger* patchwerk_ranged(PlayerbotAI* ai) { return new PatchwerkRangedTrigger(ai); }
     static Trigger* gluth(PlayerbotAI* ai) { return new GluthTrigger(ai); }
     static Trigger* gluth_main_tank_mortal_wound(PlayerbotAI* ai) { return new GluthMainTankMortalWoundTrigger(ai); }
     static Trigger* loatheb(PlayerbotAI* ai) { return new LoathebTrigger(ai); }

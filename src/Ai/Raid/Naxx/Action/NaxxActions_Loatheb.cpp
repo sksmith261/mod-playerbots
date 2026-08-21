@@ -1,4 +1,5 @@
 #include "NaxxActions.h"
+#include "NaxxBossHelper.h"
 
 #include "Playerbots.h"
 
@@ -52,4 +53,21 @@ bool LoathebChooseTargetAction::Execute(Event /*event*/)
         return false;
 
     return Attack(target);
+}
+
+bool LoathebSporeSoakAction::Execute(Event /*event*/)
+{
+    Unit* spore = NaxxHelpers::NearestLoathebSpore(botAI, bot);
+    if (!spore)
+        return false;
+
+    // Fungal Creep lands on those near the spore when it dies: stand on it
+    // first, then kill it.
+    if (bot->GetDistance(spore) > 4.0f)
+        return MoveNear(spore, 2.0f, MovementPriority::MOVEMENT_COMBAT);
+
+    if (AI_VALUE(Unit*, "current target") != spore)
+        return Attack(spore);
+
+    return false;
 }

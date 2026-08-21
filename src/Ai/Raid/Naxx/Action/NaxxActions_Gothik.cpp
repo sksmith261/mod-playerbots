@@ -1,3 +1,74 @@
 #include "NaxxActions.h"
 
-// Reserved for Gothik-specific actions.
+#include "NaxxBossHelper.h"
+#include "Playerbots.h"
+
+// Fight-time discipline only. The pre-pull live/dead side split is a raid
+// leader decision made with the ground-click tools (@group5-8 goto onto the
+// dead side); each side's bots then fight what engages them — threat-based
+// "attackers" never crosses the gate.
+bool GothikChooseTargetAction::Execute(Event /*event*/)
+{
+    Unit* gothik = AI_VALUE2(Unit*, "find target", "gothik the harvester");
+
+    // Phase two: he is down and attackable — burn the boss, adds die to cleave.
+    if (gothik && gothik->IsAlive() && !gothik->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE))
+    {
+        if (AI_VALUE(Unit*, "current target") != gothik)
+            return Attack(gothik);
+        return false;
+    }
+
+    std::vector<Unit*> adds;
+    for (auto const& guid : AI_VALUE(GuidVector, "attackers"))
+    {
+        Unit* unit = botAI->GetUnit(guid);
+        if (unit && unit->IsAlive() && NaxxHelpers::GothikAddRank(botAI, unit) > 0)
+            adds.push_back(unit);
+    }
+
+    if (adds.empty())
+        return false;
+
+    Unit* target = nullptr;
+    if (botAI->IsAssistTank(bot))
+    {
+        std::sort(adds.begin(), adds.end(),
+                  [](Unit* a, Unit* b) { return a->GetGUID() < b->GetGUID(); });
+        for (Unit* add : adds)
+        {
+            bool const tanked = add->GetVictim() && add->GetVictim()->ToPlayer() &&
+                                PlayerbotAI::IsTank(add->GetVictim()->ToPlayer());
+            if (!target)
+                target = add;
+            if (!tanked)
+            {
+                target = add;
+                break;
+            }
+        }
+    }
+    else
+    {
+        // Riders first, then death knights, then trainees; ties by health.
+        for (Unit* add : adds)
+        {
+            if (!target)
+            {
+                target = add;
+                continue;
+            }
+
+            int32 const rankNew = NaxxHelpers::GothikAddRank(botAI, add);
+            int32 const rankCur = NaxxHelpers::GothikAddRank(botAI, target);
+            if (rankNew > rankCur ||
+                (rankNew == rankCur && add->GetHealthPct() < target->GetHealthPct()))
+                target = add;
+        }
+    }
+
+    if (!target || AI_VALUE(Unit*, "current target") == target)
+        return false;
+
+    return Attack(target);
+}

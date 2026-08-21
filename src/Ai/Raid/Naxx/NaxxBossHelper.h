@@ -1,6 +1,7 @@
 #ifndef PLAYERBOTS_NAXXBOSSHELPER_H
 #define PLAYERBOTS_NAXXBOSSHELPER_H
 
+#include <algorithm>
 #include <string>
 
 #include "AiObject.h"
@@ -86,6 +87,82 @@ inline Unit* FaerlinaSacrificeTarget(PlayerbotAI* botAI, Unit* faerlina)
     }
 
     return best;
+}
+constexpr uint32 NPC_WEB_WRAP = 16486;
+
+// Noth's skeleton adds, both phases.
+inline bool IsNothAdd(PlayerbotAI* botAI, Unit* unit)
+{
+    return botAI->EqualLowercaseName(unit->GetName(), "plagued warrior") ||
+           botAI->EqualLowercaseName(unit->GetName(), "plagued champion") ||
+           botAI->EqualLowercaseName(unit->GetName(), "plagued guardian");
+}
+
+// Gothik wave adds; higher rank dies first. 0 = not a Gothik add.
+inline int32 GothikAddRank(PlayerbotAI* botAI, Unit* unit)
+{
+    std::string name = unit->GetName();
+    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+    if (name.find("rider") != std::string::npos && name.find("unrelenting") == 0)
+        return 3;
+    if (name == "spectral rider")
+        return 3;
+    if (name.find("death knight") != std::string::npos &&
+        (name.find("unrelenting") == 0 || name.find("spectral") == 0))
+        return 2;
+    if (name == "unrelenting trainee" || name == "spectral trainee" || name == "spectral horse")
+        return 1;
+    return 0;
+}
+
+// Loatheb: nearest live Spore (grid, legal — callers gate on Loatheb threat).
+inline Unit* NearestLoathebSpore(PlayerbotAI* botAI, Player* bot)
+{
+    Unit* best = nullptr;
+    for (auto const& guid : botAI->GetAiObjectContext()->GetValue<GuidVector>("nearest npcs")->Get())
+    {
+        Unit* unit = botAI->GetUnit(guid);
+        if (!unit || !unit->IsAlive() || !botAI->EqualLowercaseName(unit->GetName(), "spore"))
+            continue;
+
+        if (!best || bot->GetDistance(unit) < bot->GetDistance(best))
+            best = unit;
+    }
+
+    return best;
+}
+
+// The soak roster: the first five living DPS bots still missing Fungal
+// Creep, in shared group order — every bot computes the same five, and the
+// roster advances itself as buffs are gained (90s buff vs 13s spawns).
+inline bool IsSporeSoaker(PlayerbotAI* botAI, Player* bot)
+{
+    Group* group = bot->GetGroup();
+    if (!group)
+        return false;
+
+    uint32 count = 0;
+    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        Player* member = itr->GetSource();
+        if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
+            continue;
+
+        if (PlayerbotAI::IsTank(member) || PlayerbotAI::IsHeal(member))
+            continue;
+
+        PlayerbotAI* memberAI = GET_PLAYERBOT_AI(member);
+        if (memberAI->HasAura("fungal creep", member))
+            continue;
+
+        if (member == bot)
+            return true;
+
+        if (++count >= 5)
+            return false;
+    }
+
+    return false;
 }
 }  // namespace NaxxHelpers
 
@@ -496,7 +573,10 @@ public:
         {
             uint32 elapsed_ms = _combat_start_ms ? getMSTime() - _combat_start_ms : 0;
             // Interval: 24s - 15s - 15s - ...
-            posToGo = !(elapsed_ms <= 9000 || ((elapsed_ms - 9000) / 67500) % 2 == 0);
+            // Swap corners every 45s (~3-4 Mark applications at the ~12s
+            // cadence). Upstream's 9s offset + 67.5s half-period drifted far
+            // out of sync with the stacks it exists to shed.
+            posToGo = (elapsed_ms / 45000) % 2;
             if (botAI->IsAssistRangedDpsOfIndex(bot, 0) || (raid25 && botAI->IsAssistHealOfIndex(bot, 1)))
                 posToGo = 1 - posToGo;
         }
