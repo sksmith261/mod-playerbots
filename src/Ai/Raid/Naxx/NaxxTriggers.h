@@ -59,6 +59,27 @@ private:
     static constexpr uint32 CloudRotationDelayMs = 15000;
 };
 
+class AnubrekhanSpreadTrigger : public Trigger
+{
+public:
+    AnubrekhanSpreadTrigger(PlayerbotAI* ai) : Trigger(ai, "anub'rekhan spread") {}
+    bool IsActive() override;
+};
+
+class FaerlinaWorshipperDutyTrigger : public Trigger
+{
+public:
+    FaerlinaWorshipperDutyTrigger(PlayerbotAI* ai) : Trigger(ai, "faerlina worshipper duty") {}
+    bool IsActive() override;
+};
+
+class FaerlinaFrenzyTrigger : public Trigger
+{
+public:
+    FaerlinaFrenzyTrigger(PlayerbotAI* ai) : Trigger(ai, "faerlina frenzy") {}
+    bool IsActive() override;
+};
+
 // One dance trigger for everyone; the action decides platform vs floor.
 class HeiganDanceTrigger : public Trigger
 {

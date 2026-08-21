@@ -4,6 +4,7 @@
 #include "NaxxSpellIds.h"
 #include "Timer.h"
 #include "Trigger.h"
+#include "NaxxBossHelper.h"
 
 bool MutatingInjectionMeleeTrigger::IsActive()
 {
@@ -74,6 +75,42 @@ bool GrobbulusCloudTrigger::IsActive()
 
     last_cloud_ms = now;
     return true;
+}
+
+bool AnubrekhanSpreadTrigger::IsActive()
+{
+    Unit* boss = AI_VALUE2(Unit*, "find target", "anub'rekhan");
+    if (!boss || !boss->IsAlive())
+        return false;
+
+    if (!PlayerbotAI::IsRanged(bot) && !PlayerbotAI::IsHeal(bot))
+        return false;
+
+    // The swarm phase owns movement (MT kites the wall, raid gathers center).
+    if (NaxxHelpers::AnubrekhanSwarmActive(botAI, boss))
+        return false;
+
+    float x, y;
+    NaxxHelpers::AnubrekhanSpreadSlot(botAI, bot, x, y);
+    return bot->GetExactDist2d(x, y) > 5.0f;
+}
+
+bool FaerlinaWorshipperDutyTrigger::IsActive()
+{
+    if (!botAI->IsAssistTank(bot))
+        return false;
+
+    Unit* boss = AI_VALUE2(Unit*, "find target", "grand widow faerlina");
+    return boss && boss->IsAlive();
+}
+
+bool FaerlinaFrenzyTrigger::IsActive()
+{
+    Unit* boss = AI_VALUE2(Unit*, "find target", "grand widow faerlina");
+    if (!boss || !boss->IsAlive())
+        return false;
+
+    return botAI->HasAura("frenzy", boss);
 }
 
 bool HeiganDanceTrigger::IsActive()

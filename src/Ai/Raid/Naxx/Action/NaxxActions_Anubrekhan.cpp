@@ -3,6 +3,7 @@
 #include "NaxxActions.h"
 #include "NaxxSpellIds.h"
 #include "Spell.h"
+#include "NaxxBossHelper.h"
 
 bool AnubrekhanChooseTargetAction::Execute(Event /*event*/)
 {
@@ -61,6 +62,15 @@ bool AnubrekhanChooseTargetAction::Execute(Event /*event*/)
         return false;
 
     return Attack(target);
+}
+
+bool AnubrekhanSpreadAction::Execute(Event /*event*/)
+{
+    float x, y;
+    NaxxHelpers::AnubrekhanSpreadSlot(botAI, bot, x, y);
+    float z = bot->GetPositionZ();
+    bot->UpdateAllowedPositionZ(x, y, z);
+    return MoveInside(bot->GetMapId(), x, y, z, 3.0f, MovementPriority::MOVEMENT_COMBAT);
 }
 
 bool AnubrekhanPositionAction::Execute(Event /*event*/)

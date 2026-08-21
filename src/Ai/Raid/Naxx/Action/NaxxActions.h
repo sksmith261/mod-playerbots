@@ -65,6 +65,30 @@ private:
     float distance;
 };
 
+class AnubrekhanSpreadAction : public MovementAction
+{
+public:
+    AnubrekhanSpreadAction(PlayerbotAI* ai) : MovementAction(ai, "anub'rekhan spread") {}
+    bool Execute(Event event) override;
+};
+
+// Assist tanks each hold one worshipper (GUID-sorted roster, slot by
+// assist-tank index) and drag it into Widow's Embrace range of the boss.
+class FaerlinaWorshipperDutyAction : public AttackAction
+{
+public:
+    FaerlinaWorshipperDutyAction(PlayerbotAI* ai) : AttackAction(ai, "faerlina worshipper duty") {}
+    bool Execute(Event event) override;
+};
+
+// Frenzy is up: everyone burns the elected sacrifice worshipper.
+class FaerlinaSacrificeAction : public AttackAction
+{
+public:
+    FaerlinaSacrificeAction(PlayerbotAI* ai) : AttackAction(ai, "faerlina sacrifice") {}
+    bool Execute(Event event) override;
+};
+
 // Server-side safety dance. The reizan-core instance script mirrors
 // boss_heigan's section rotation and exposes the NEXT safe section via
 // GetData(DATA_HEIGAN_ERUPTION); this action just stands in it. The old

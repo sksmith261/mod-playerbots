@@ -21,6 +21,34 @@
 #include "Spell.h"
 #include "UseMeetingStoneAction.h"
 #include "WarriorActions.h"
+#include "NaxxBossHelper.h"
+
+float FaerlinaDisciplineMultiplier::GetValue(Action* action)
+{
+    if (!action)
+        return 1.0f;
+
+    if (PlayerbotAI::IsTank(bot) || PlayerbotAI::IsHeal(bot))
+        return 1.0f;
+
+    Unit* faerlina = AI_VALUE2(Unit*, "find target", "grand widow faerlina");
+    if (!faerlina || !faerlina->IsInCombat())
+        return 1.0f;
+
+    Unit* target = action->GetTarget();
+    if (!target)
+        return 1.0f;
+
+    bool const frenzied = botAI->HasAura("frenzy", faerlina);
+
+    if (!frenzied && botAI->EqualLowercaseName(target->GetName(), "naxxramas worshipper"))
+        return 0.0f;
+
+    if (frenzied && target == faerlina && NaxxHelpers::FaerlinaSacrificeTarget(botAI, faerlina))
+        return 0.0f;
+
+    return 1.0f;
+}
 
 float GrobbulusMultiplier::GetValue(Action* action)
 {

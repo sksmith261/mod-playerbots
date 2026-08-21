@@ -20,6 +20,75 @@
 
 const uint32 NAXX_MAP_ID = 533;
 
+#include <cmath>
+
+namespace NaxxHelpers
+{
+// Anub'Rekhan: single source of truth for "the swarm is happening" —
+// shared by the kite/center logic and the default spread so they can
+// never disagree about whose turn it is to own movement.
+inline bool AnubrekhanSwarmActive(PlayerbotAI* botAI, Unit* boss)
+{
+    if (botAI->HasAura("locust swarm", boss))
+        return true;
+
+    if (Spell* spell = boss->GetCurrentSpell(CURRENT_GENERIC_SPELL))
+        if (NaxxSpellIds::MatchesAnySpellId(spell->GetSpellInfo(),
+                {NaxxSpellIds::LocustSwarm10, NaxxSpellIds::LocustSwarm10Alt, NaxxSpellIds::LocustSwarm25}))
+            return true;
+
+    return false;
+}
+
+// Assigned half-circle on the west side of Anub'Rekhan's room (his spawn
+// is east of the ring center) for ranged and healers outside the swarm.
+inline void AnubrekhanSpreadSlot(PlayerbotAI* botAI, Player* bot, float& x, float& y)
+{
+    float const centerX = 3272.49f, centerY = -3476.27f;
+    int32 slot = botAI->GetGroupSlotIndex(bot);
+    if (slot < 0)
+        slot = 0;
+
+    float const radius = PlayerbotAI::IsHeal(bot) ? 20.0f : 26.0f;
+    float const angle = static_cast<float>(M_PI) + (slot - 20) * 0.025f * static_cast<float>(M_PI);
+    x = centerX + radius * std::cos(angle);
+    y = centerY + radius * std::sin(angle);
+}
+
+// Faerlina: live worshippers, GUID-sorted so every bot sees one roster.
+inline std::vector<Unit*> FaerlinaWorshippers(PlayerbotAI* botAI)
+{
+    std::vector<Unit*> list;
+    for (auto const& guid : botAI->GetAiObjectContext()->GetValue<GuidVector>("attackers")->Get())
+    {
+        Unit* unit = botAI->GetUnit(guid);
+        if (unit && unit->IsAlive() && botAI->EqualLowercaseName(unit->GetName(), "naxxramas worshipper"))
+            list.push_back(unit);
+    }
+
+    std::sort(list.begin(), list.end(), [](Unit* a, Unit* b) { return a->GetGUID() < b->GetGUID(); });
+    return list;
+}
+
+// The worshipper to burn during Frenzy: lowest health among those close
+// enough to Faerlina for Widow's Embrace to land on death (SmartAI casts
+// it from the corpse; give it generous range margin).
+inline Unit* FaerlinaSacrificeTarget(PlayerbotAI* botAI, Unit* faerlina)
+{
+    Unit* best = nullptr;
+    for (Unit* worshipper : FaerlinaWorshippers(botAI))
+    {
+        if (worshipper->GetDistance(faerlina) > 30.0f)
+            continue;
+
+        if (!best || worshipper->GetHealthPct() < best->GetHealthPct())
+            best = worshipper;
+    }
+
+    return best;
+}
+}  // namespace NaxxHelpers
+
 template <class BossAiType>
 class GenericBossHelper : public AiObject
 {

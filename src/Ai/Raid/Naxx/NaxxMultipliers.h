@@ -5,6 +5,18 @@
 #include "Multiplier.h"
 #include "NaxxBossHelper.h"
 
+// Worshipper discipline: outside Frenzy, DPS may not touch worshippers
+// (their deaths are the Frenzy dispels — spending them early wipes the
+// raid later); during Frenzy with a sacrifice available, DPS may not
+// touch Faerlina (the sacrifice action hands them the worshipper the
+// same tick, so nothing freezes). Tanks and healers exempt.
+class FaerlinaDisciplineMultiplier : public Multiplier
+{
+public:
+    FaerlinaDisciplineMultiplier(PlayerbotAI* botAI) : Multiplier(botAI, "faerlina discipline") {}
+    float GetValue(Action* action) override;
+};
+
 class GrobbulusMultiplier : public Multiplier
 {
 public:

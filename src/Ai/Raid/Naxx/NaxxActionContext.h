@@ -22,6 +22,9 @@ public:
         creators["grobbulus move away"] = &RaidNaxxActionContext::grobbulus_move_away;
 
         creators["heigan dance"] = &RaidNaxxActionContext::heigan_dance;
+        creators["anub'rekhan spread"] = &RaidNaxxActionContext::anubrekhan_spread;
+        creators["faerlina worshipper duty"] = &RaidNaxxActionContext::faerlina_worshipper_duty;
+        creators["faerlina sacrifice"] = &RaidNaxxActionContext::faerlina_sacrifice;
         //creators["heigan dance melee"] = &RaidNaxxActionContext::heigan_dance_melee;
         //creators["heigan dance ranged"] = &RaidNaxxActionContext::heigan_dance_ranged;
         creators["thaddius attack nearest pet"] = &RaidNaxxActionContext::thaddius_attack_nearest_pet;
@@ -61,6 +64,9 @@ private:
     static Action* grobbulus_move_center(PlayerbotAI* ai) { return new GrobbulusMoveCenterAction(ai); }
     static Action* grobbulus_move_away(PlayerbotAI* ai) { return new GrobbulusMoveAwayAction(ai); }
     static Action* heigan_dance(PlayerbotAI* ai) { return new HeiganDanceAction(ai); }
+    static Action* anubrekhan_spread(PlayerbotAI* ai) { return new AnubrekhanSpreadAction(ai); }
+    static Action* faerlina_worshipper_duty(PlayerbotAI* ai) { return new FaerlinaWorshipperDutyAction(ai); }
+    static Action* faerlina_sacrifice(PlayerbotAI* ai) { return new FaerlinaSacrificeAction(ai); }
     //static Action* heigan_dance_melee(PlayerbotAI* ai) { return new HeiganDanceMeleeAction(ai); }
     //static Action* heigan_dance_ranged(PlayerbotAI* ai) { return new HeiganDanceRangedAction(ai); }
     static Action* thaddius_attack_nearest_pet(PlayerbotAI* ai) { return new ThaddiusAttackNearestPetAction(ai); }

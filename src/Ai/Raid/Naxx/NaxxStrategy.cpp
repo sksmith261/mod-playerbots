@@ -41,9 +41,23 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
           NextAction("anub'rekhan choose target", ACTION_RAID) }
     ));
 
-     // Grand Widow Faerlina
+    // Default posture between swarms; the swarm logic above outranks it.
+    triggers.push_back(new TriggerNode("anub'rekhan spread",
+        { NextAction("anub'rekhan spread", ACTION_RAID) }
+    ));
+
+     // Grand Widow Faerlina — preserve worshippers, hold them at the boss,
+     // burn one on Frenzy (Widow's Embrace casts from its corpse).
      triggers.push_back(new TriggerNode("faerlina",
         { NextAction("avoid aoe", ACTION_RAID + 1) }
+    ));
+
+    triggers.push_back(new TriggerNode("faerlina worshipper duty",
+        { NextAction("faerlina worshipper duty", ACTION_RAID + 1) }
+    ));
+
+    triggers.push_back(new TriggerNode("faerlina frenzy",
+        { NextAction("faerlina sacrifice", ACTION_RAID + 2) }
     ));
 
     // Maexxna
@@ -140,6 +154,7 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 void RaidNaxxStrategy::InitMultipliers(std::vector<Multiplier*>& multipliers)
 {
     multipliers.push_back(new GrobbulusMultiplier(botAI));
+    multipliers.push_back(new FaerlinaDisciplineMultiplier(botAI));
     //multipliers.push_back(new HeiganDanceMultiplier(botAI));
     multipliers.push_back(new LoathebGenericMultiplier(botAI));
     multipliers.push_back(new ThaddiusGenericMultiplier(botAI));
