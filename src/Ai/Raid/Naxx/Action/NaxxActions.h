@@ -56,6 +56,18 @@ private:
     float distance;
 };
 
+// Server-side safety dance. The reizan-core instance script mirrors
+// boss_heigan's section rotation and exposes the NEXT safe section via
+// GetData(DATA_HEIGAN_ERUPTION); this action just stands in it. The old
+// (commented) implementation guessed sections by watching Heigan's cast
+// state, which never fires — eruptions are instance-driven GO casts.
+class HeiganDanceAction : public MovementAction
+{
+public:
+    HeiganDanceAction(PlayerbotAI* ai) : MovementAction(ai, "heigan dance") {}
+    bool Execute(Event event) override;
+};
+
 //class HeiganDanceAction : public MovementAction
 //{
 //public:

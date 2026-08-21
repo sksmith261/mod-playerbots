@@ -59,6 +59,14 @@ private:
     static constexpr uint32 CloudRotationDelayMs = 15000;
 };
 
+// One dance trigger for everyone; the action decides platform vs floor.
+class HeiganDanceTrigger : public Trigger
+{
+public:
+    HeiganDanceTrigger(PlayerbotAI* ai) : Trigger(ai, "heigan dance") {}
+    bool IsActive() override;
+};
+
 //class HeiganMeleeTrigger : public Trigger
 //{
 //public:

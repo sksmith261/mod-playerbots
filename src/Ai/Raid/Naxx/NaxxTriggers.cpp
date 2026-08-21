@@ -76,6 +76,12 @@ bool GrobbulusCloudTrigger::IsActive()
     return true;
 }
 
+bool HeiganDanceTrigger::IsActive()
+{
+    Unit* boss = AI_VALUE2(Unit*, "find target", "heigan the unclean");
+    return boss && boss->IsAlive();
+}
+
 //bool HeiganMeleeTrigger::IsActive()
 //{
 //    Unit* heigan = AI_VALUE2(Unit*, "find target", "heigan the unclean");

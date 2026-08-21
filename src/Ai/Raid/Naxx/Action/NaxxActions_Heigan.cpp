@@ -1,8 +1,59 @@
 #include "Playerbots.h"
 #include "NaxxActions.h"
+#include "InstanceScript.h"
 #include "NaxxSpellIds.h"
 #include "Spell.h"
 #include "Timer.h"
+
+bool HeiganDanceAction::Execute(Event /*event*/)
+{
+    // Floor standing spots, one per eruption section 0..3 (from the old
+    // implementation — geometry unchanged), plus the ranged platform.
+    static std::pair<float, float> const sectionPoints[4] = {
+        {2794.88f, -3668.12f},
+        {2775.49f, -3674.43f},
+        {2762.30f, -3684.59f},
+        {2755.99f, -3703.96f},
+    };
+    static std::pair<float, float> const platform = {2794.26f, -3706.67f};
+    static float const platformZ = 276.54f;
+
+    Unit* boss = AI_VALUE2(Unit*, "find target", "heigan the unclean");
+    if (!boss || !boss->IsAlive())
+        return false;
+
+    // Fast dance: Heigan teleports onto his platform and clouds it —
+    // everyone must be on the floor dancing.
+    bool const fastPhase = boss->IsWithinDist2d(platform.first, platform.second, 12.0f);
+
+    if (!fastPhase && botAI->IsRanged(bot))
+    {
+        // Slow phase: casters and healers camp the platform; there are no
+        // eruption gameobjects up there, so it is safe the entire phase.
+        if (bot->GetDistance2d(platform.first, platform.second) < 5.0f)
+            return false;
+
+        return MoveInside(bot->GetMapId(), platform.first, platform.second, platformZ, 2.0f,
+                          MovementPriority::MOVEMENT_COMBAT);
+    }
+
+    // DATA_HEIGAN_ERUPTION (naxxramas.h: 300) — reizan-core returns the
+    // NEXT safe section here; 0 pre-fight matches the first wave.
+    InstanceScript* instance = bot->GetInstanceScript();
+    uint32 safe = instance ? instance->GetData(300) : 0;
+    if (safe > 3)
+        safe = 0;
+
+    float const x = sectionPoints[safe].first;
+    float const y = sectionPoints[safe].second;
+    if (bot->GetDistance2d(x, y) < 6.0f)
+        return false;
+
+    if (fastPhase)
+        botAI->InterruptSpell();
+
+    return MoveInside(bot->GetMapId(), x, y, bot->GetPositionZ(), 4.0f, MovementPriority::MOVEMENT_COMBAT);
+}
 
 //bool HeiganDanceAction::CalculateSafe()
 //{

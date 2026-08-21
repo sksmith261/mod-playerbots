@@ -21,14 +21,10 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         { NextAction("rotate grobbulus", ACTION_RAID + 1) }
     ));
 
-    // Heigan the Unclean
-    //triggers.push_back(new TriggerNode("heigan melee",
-    //    { NextAction("heigan dance melee", ACTION_RAID + 1) }
-    //));
-
-    //triggers.push_back(new TriggerNode("heigan ranged",
-    //    { NextAction("heigan dance ranged", ACTION_RAID + 1) }
-    //));
+    // Heigan the Unclean — above avoid-aoe: the dance IS the aoe answer.
+    triggers.push_back(new TriggerNode("heigan dance",
+        { NextAction("heigan dance", ACTION_RAID + 2) }
+    ));
 
     // Kel'Thuzad
     triggers.push_back(

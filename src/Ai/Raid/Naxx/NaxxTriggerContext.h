@@ -19,6 +19,7 @@ public:
         creators["mutating injection ranged"] = &RaidNaxxTriggerContext::mutating_injection_ranged;
         creators["mutating injection removed"] = &RaidNaxxTriggerContext::mutating_injection_removed;
         creators["grobbulus cloud"] = &RaidNaxxTriggerContext::grobbulus_cloud;
+        creators["heigan dance"] = &RaidNaxxTriggerContext::heigan_dance;
         //creators["heigan melee"] = &RaidNaxxTriggerContext::heigan_melee;
         //creators["heigan ranged"] = &RaidNaxxTriggerContext::heigan_ranged;
 
@@ -56,6 +57,7 @@ private:
     static Trigger* mutating_injection_ranged(PlayerbotAI* ai) { return new MutatingInjectionRangedTrigger(ai); }
     static Trigger* mutating_injection_removed(PlayerbotAI* ai) { return new MutatingInjectionRemovedTrigger(ai); }
     static Trigger* grobbulus_cloud(PlayerbotAI* ai) { return new GrobbulusCloudTrigger(ai); }
+    static Trigger* heigan_dance(PlayerbotAI* ai) { return new HeiganDanceTrigger(ai); }
     //static Trigger* heigan_melee(PlayerbotAI* ai) { return new HeiganMeleeTrigger(ai); }
     //static Trigger* heigan_ranged(PlayerbotAI* ai) { return new HeiganRangedTrigger(ai); }
 
