@@ -1,6 +1,8 @@
 #include "ObjectGuid.h"
 #include "Playerbots.h"
 #include "NaxxActions.h"
+#include "NaxxSpellIds.h"
+#include "Spell.h"
 
 bool AnubrekhanChooseTargetAction::Execute(Event /*event*/)
 {
@@ -29,11 +31,20 @@ bool AnubrekhanChooseTargetAction::Execute(Event /*event*/)
         {
             if (botAI->IsAssistTank(bot))
             {
+                // First untanked guard wins; the old loop inspected the
+                // current pick's victim and could settle on a tanked one.
                 for (Unit* t : target_guards)
                 {
-                    if (target == nullptr || (target->GetVictim() && target->GetVictim()->ToPlayer() &&
-                                              botAI->IsTank(target->GetVictim()->ToPlayer())))
+                    if (!target)
                         target = t;
+
+                    bool const tanked = t->GetVictim() && t->GetVictim()->ToPlayer() &&
+                                        botAI->IsTank(t->GetVictim()->ToPlayer());
+                    if (!tanked)
+                    {
+                        target = t;
+                        break;
+                    }
                 }
             }
             else
@@ -58,7 +69,12 @@ bool AnubrekhanPositionAction::Execute(Event /*event*/)
     if (!boss)
         return false;
 
-    bool inPhase = botAI->HasAura("locust swarm", boss) || boss->GetCurrentSpell(CURRENT_GENERIC_SPELL);
+    Spell* current = boss->GetCurrentSpell(CURRENT_GENERIC_SPELL);
+    bool const castingSwarm =
+        current && NaxxSpellIds::MatchesAnySpellId(current->GetSpellInfo(),
+            {NaxxSpellIds::LocustSwarm10, NaxxSpellIds::LocustSwarm10Alt, NaxxSpellIds::LocustSwarm25});
+    // The old check treated ANY generic cast (Impale included) as the swarm.
+    bool inPhase = botAI->HasAura("locust swarm", boss) || castingSwarm;
     if (inPhase)
     {
         if (botAI->IsMainTank(bot))

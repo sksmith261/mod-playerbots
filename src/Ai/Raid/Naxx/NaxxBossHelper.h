@@ -266,7 +266,9 @@ private:
 class GluthBossHelper : public AiObject
 {
 public:
-    const std::pair<float, float> mainTankPos25 = {3331.48f, -3109.06f};
+    const std::pair<float, float> mainTankPos25 = /* Reizan: upstream's 25-man spot was 67y off Gluth's platform and the
+   MT walked into the alcove every pull; use the verified platform spot
+   (same as 10-man). */ {3278.29f, -3162.06f};
     const std::pair<float, float> mainTankPos10 = {3278.29f, -3162.06f};
     const std::pair<float, float> beforeDecimatePos = {3267.34f, -3175.68f};
     const std::pair<float, float> leftSlowDownPos = {3290.68f, -3141.65f};
@@ -383,7 +385,15 @@ public:
 
         if (!_sir)
         {
-            _sir = AI_VALUE2(Unit*, "find target", "sir zeliek");
+            // Anchor on ANY surviving horseman — keying on Zeliek alone
+            // froze all boss logic the moment he died mid-fight.
+            for (char const* name :
+                 {"sir zeliek", "thane korth'azz", "lady blaumeux", "baron rivendare", "highlord mograine"})
+            {
+                _sir = AI_VALUE2(Unit*, "find target", name);
+                if (_sir)
+                    break;
+            }
             if (!_sir)
                 return false;
         }

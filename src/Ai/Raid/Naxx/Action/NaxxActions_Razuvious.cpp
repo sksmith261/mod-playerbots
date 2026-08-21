@@ -4,6 +4,7 @@
 #include "PlayerbotAIConfig.h"
 #include "Playerbots.h"
 #include "SharedDefines.h"
+#include <algorithm>
 
 namespace
 {
@@ -111,17 +112,27 @@ bool RazuviousUseObedienceCrystalAction::Execute(Event /*event*/)
         else
         {
             GuidVector attackers = context->GetValue<GuidVector>("attackers")->Get();
-            Unit* target = nullptr;
+            std::vector<Unit*> understudies;
             for (auto i = attackers.begin(); i != attackers.end(); ++i)
             {
                 Unit* unit = botAI->GetUnit(*i);
-                if (!unit)
+                if (!unit || !unit->IsAlive() || unit->GetCharmerGUID())
                     continue;
                 if (botAI->EqualLowercaseName(unit->GetName(), "death knight understudy"))
-                {
-                    target = unit;
-                    break;
-                }
+                    understudies.push_back(unit);
+            }
+            // Deterministic one-per-priest assignment (GUID-sorted roster,
+            // slot by priest class index) — the old first-match break sent
+            // every priest to mind control the same understudy.
+            Unit* target = nullptr;
+            if (!understudies.empty())
+            {
+                std::sort(understudies.begin(), understudies.end(),
+                          [](Unit* a, Unit* b) { return a->GetGUID() < b->GetGUID(); });
+                int32 priestIndex = botAI->GetClassIndex(bot, CLASS_PRIEST);
+                if (priestIndex < 0)
+                    priestIndex = 0;
+                target = understudies[uint32(priestIndex) % understudies.size()];
             }
             if (target)
             {

@@ -40,6 +40,10 @@ bool GluthChooseTargetAction::Execute(Event /*event*/)
                     target = t;
             }
         }
+
+        // No kiteable zombie in reach: help on the boss instead of idling.
+        if (!target)
+            target = target_boss;
     }
     else if (botAI->GetClassIndex(bot, CLASS_HUNTER) == 0 || botAI->GetClassIndex(bot, CLASS_HUNTER) == 1)
     {

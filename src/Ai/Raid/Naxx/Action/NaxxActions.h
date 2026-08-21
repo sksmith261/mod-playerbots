@@ -41,6 +41,15 @@ class GrobbulusMoveCenterAction : public MoveInsideAction
 {
 public:
     GrobbulusMoveCenterAction(PlayerbotAI* ai) : MoveInsideAction(ai, 3281.23f, -3310.38f, 5.0f) {}
+
+    // Base MoveInsideAction moves at MOVEMENT_NORMAL, which loses to
+    // in-flight moves and the body-pull guard's veto. Walking back to the
+    // raid after Mutating Injection is a mechanic move: COMBAT priority.
+    bool Execute(Event event) override
+    {
+        return MoveInside(bot->GetMapId(), x, y, bot->GetPositionZ(), distance,
+                          MovementPriority::MOVEMENT_COMBAT);
+    }
 };
 
 class GrobbulusMoveAwayAction : public MovementAction

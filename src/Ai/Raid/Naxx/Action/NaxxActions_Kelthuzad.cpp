@@ -93,7 +93,12 @@ bool KelthuzadChooseTargetAction::Execute(Event /*event*/)
             break;
         }
     }
-    if (context->GetValue<Unit*>("current target")->Get() == target)
+    // The 30y-of-center and spell-range filters can empty the whole list
+    // (e.g. a melee bot running back in) — never idle, fall back to KT.
+    if (!target)
+        target = AI_VALUE2(Unit*, "find target", "kel'thuzad");
+
+    if (!target || context->GetValue<Unit*>("current target")->Get() == target)
         return false;
 
     if (target_kelthuzad && target == target_kelthuzad)
@@ -130,16 +135,13 @@ bool KelthuzadPositionAction::Execute(Event /*event*/)
             else if (botAI->IsRanged(bot))
             {
                 uint32 index = botAI->GetRangedIndex(bot);
-                if (index < 8)
-                {
-                    distance = 20.0f;
-                    angle = index * M_PI / 4;
-                }
-                else
-                {
-                    distance = 32.0f;
-                    angle = (index - 8) * M_PI / 4;
-                }
+                // Three staggered rings of 8 spokes each; with 40 bots the
+                // old two-ring code stacked every index past 15 on top of
+                // ring two — Shadow Fissure and Frost Blast punish that.
+                static float const ringRadius[3] = {20.0f, 26.0f, 32.0f};
+                uint32 const ring = (index / 8) % 3;
+                distance = ringRadius[ring];
+                angle = (index % 8) * M_PI / 4 + ring * M_PI / 8;
                 float dx, dy;
                 dx = helper.center.first + cos(angle) * distance;
                 dy = helper.center.second + sin(angle) * distance;
