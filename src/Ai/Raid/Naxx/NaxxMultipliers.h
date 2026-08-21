@@ -17,6 +17,17 @@ public:
     float GetValue(Action* action) override;
 };
 
+// Gothik phase one: he is attackable on his balcony but hitting him up
+// there is wasted damage — zero anything aimed at him while he is above
+// the floor. The wave adds are handed out by the choose-target action;
+// between waves an idle stance is the correct posture.
+class GothikBalconyMultiplier : public Multiplier
+{
+public:
+    GothikBalconyMultiplier(PlayerbotAI* botAI) : Multiplier(botAI, "gothik balcony") {}
+    float GetValue(Action* action) override;
+};
+
 class GrobbulusMultiplier : public Multiplier
 {
 public:

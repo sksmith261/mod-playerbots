@@ -176,6 +176,7 @@ void RaidNaxxStrategy::InitMultipliers(std::vector<Multiplier*>& multipliers)
 {
     multipliers.push_back(new GrobbulusMultiplier(botAI));
     multipliers.push_back(new FaerlinaDisciplineMultiplier(botAI));
+    multipliers.push_back(new GothikBalconyMultiplier(botAI));
     //multipliers.push_back(new HeiganDanceMultiplier(botAI));
     multipliers.push_back(new LoathebGenericMultiplier(botAI));
     multipliers.push_back(new ThaddiusGenericMultiplier(botAI));

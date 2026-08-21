@@ -23,6 +23,21 @@
 #include "WarriorActions.h"
 #include "NaxxBossHelper.h"
 
+float GothikBalconyMultiplier::GetValue(Action* action)
+{
+    if (!action)
+        return 1.0f;
+
+    Unit* gothik = AI_VALUE2(Unit*, "find target", "gothik the harvester");
+    if (!gothik || !gothik->IsAlive() || gothik->GetPositionZ() < 280.0f)
+        return 1.0f;
+
+    if (action->GetTarget() != gothik)
+        return 1.0f;
+
+    return 0.0f;
+}
+
 float FaerlinaDisciplineMultiplier::GetValue(Action* action)
 {
     if (!action)

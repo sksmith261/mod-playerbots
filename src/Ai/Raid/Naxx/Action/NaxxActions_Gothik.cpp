@@ -11,8 +11,15 @@ bool GothikChooseTargetAction::Execute(Event /*event*/)
 {
     Unit* gothik = AI_VALUE2(Unit*, "find target", "gothik the harvester");
 
-    // Phase two: he is down and attackable — burn the boss, adds die to cleave.
-    if (gothik && gothik->IsAlive() && !gothik->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE))
+    // Phase split by altitude: the balcony is z~285, the floor z~268, and
+    // the core leaves him ATTACKABLE up there (SetImmuneToPC(false)) — so
+    // an attackability check cannot distinguish the phases, and the raid
+    // was observed wasting the whole of phase one plinking him on the
+    // platform. He is only a real target once he has come down.
+    bool const onBalcony = gothik && gothik->GetPositionZ() > 280.0f;
+
+    // Phase two: he is down — burn the boss, adds die to cleave.
+    if (gothik && gothik->IsAlive() && !onBalcony)
     {
         if (AI_VALUE(Unit*, "current target") != gothik)
             return Attack(gothik);
