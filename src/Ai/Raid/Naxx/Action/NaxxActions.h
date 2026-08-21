@@ -65,6 +65,22 @@ private:
     float distance;
 };
 
+// Stack-driven pair rotation for the whole raid. Front team (tanks and
+// melee) rotates between Thane and Baron's corner stations; back team
+// (ranged and healers) between Lady and Sir's. A bot swaps sides when its
+// own stack of its current side's Mark reaches 3 — the debuff is the
+// clock, so nothing drifts. Side parity comes from a shared-order
+// election; the flip state lives in the action object.
+class FourHorsemenDutyAction : public AttackAction
+{
+public:
+    FourHorsemenDutyAction(PlayerbotAI* ai) : AttackAction(ai, "four horsemen duty") {}
+    bool Execute(Event event) override;
+
+private:
+    bool flipped = false;
+};
+
 class MaexxnaFreeWrappedAction : public AttackAction
 {
 public:

@@ -124,13 +124,12 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         { NextAction("razuvious target", ACTION_RAID + 1) }
     ));
 
-    // four horsemen
-    triggers.push_back(new TriggerNode("four horsemen attractors",
-        { NextAction("four horsemen attract alternatively", ACTION_RAID + 1) }
-    ));
-
-    triggers.push_back(new TriggerNode("four horsemen except attractors",
-        { NextAction("four horsemen attack in order", ACTION_RAID + 1) }
+    // Four Horsemen: one duty action for the whole raid — stack-driven
+    // pair rotation (front: Thane/Baron, back: Lady/Sir). Replaces the
+    // attracter model (4 lone bots who never attacked) and its drifting
+    // timer rotation.
+    triggers.push_back(new TriggerNode("four horsemen duty",
+        { NextAction("four horsemen duty", ACTION_RAID + 1) }
     ));
 
     // sapphiron

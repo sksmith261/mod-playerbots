@@ -234,6 +234,8 @@ bool RazuviousNontankTrigger::IsActive()
     return helper.UpdateBossAI() && !(bot->getClass() == CLASS_PRIEST);
 }
 
+bool FourHorsemenDutyTrigger::IsActive() { return helper.UpdateBossAI(); }
+
 bool FourHorsemenAttractorsTrigger::IsActive()
 {
     if (!helper.UpdateBossAI())

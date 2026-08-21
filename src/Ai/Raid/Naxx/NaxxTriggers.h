@@ -243,6 +243,16 @@ private:
     ThaddiusBossHelper helper;
 };
 
+class FourHorsemenDutyTrigger : public Trigger
+{
+public:
+    FourHorsemenDutyTrigger(PlayerbotAI* ai) : Trigger(ai, "four horsemen duty"), helper(ai) {}
+    bool IsActive() override;
+
+private:
+    FourHorsemenBossHelper helper;
+};
+
 class FourHorsemenAttractorsTrigger : public Trigger
 {
 public:

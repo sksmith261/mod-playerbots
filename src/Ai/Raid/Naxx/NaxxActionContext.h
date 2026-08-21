@@ -27,6 +27,7 @@ public:
         creators["noth choose target"] = &RaidNaxxActionContext::noth_choose_target;
         creators["loatheb spore soak"] = &RaidNaxxActionContext::loatheb_spore_soak;
         creators["gothik choose target"] = &RaidNaxxActionContext::gothik_choose_target;
+        creators["four horsemen duty"] = &RaidNaxxActionContext::four_horsemen_duty;
         creators["faerlina worshipper duty"] = &RaidNaxxActionContext::faerlina_worshipper_duty;
         creators["faerlina sacrifice"] = &RaidNaxxActionContext::faerlina_sacrifice;
         //creators["heigan dance melee"] = &RaidNaxxActionContext::heigan_dance_melee;
@@ -73,6 +74,7 @@ private:
     static Action* noth_choose_target(PlayerbotAI* ai) { return new NothChooseTargetAction(ai); }
     static Action* loatheb_spore_soak(PlayerbotAI* ai) { return new LoathebSporeSoakAction(ai); }
     static Action* gothik_choose_target(PlayerbotAI* ai) { return new GothikChooseTargetAction(ai); }
+    static Action* four_horsemen_duty(PlayerbotAI* ai) { return new FourHorsemenDutyAction(ai); }
     static Action* faerlina_worshipper_duty(PlayerbotAI* ai) { return new FaerlinaWorshipperDutyAction(ai); }
     static Action* faerlina_sacrifice(PlayerbotAI* ai) { return new FaerlinaSacrificeAction(ai); }
     //static Action* heigan_dance_melee(PlayerbotAI* ai) { return new HeiganDanceMeleeAction(ai); }
