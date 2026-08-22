@@ -21,7 +21,10 @@ bool ThaddiusAttackNearestPetAction::isUseful()
 
 bool ThaddiusAttackNearestPetAction::Execute(Event /*event*/)
 {
-    Unit* target = helper.GetAssignedPet(bot);
+    // Tanks follow the pet they currently hold (Magnetic Pull reassigns
+    // them every 20s); everyone else keeps their static assignment, which
+    // is what keeps the raid evenly split from the pull onward.
+    Unit* target = PlayerbotAI::IsTank(bot) ? helper.GetTankPet(bot) : helper.GetAssignedPet(bot);
     if (!target)
         return false;
 

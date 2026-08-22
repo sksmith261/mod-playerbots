@@ -659,8 +659,13 @@ protected:
 class ThaddiusBossHelper : public AiObject
 {
 public:
-    const std::pair<float, float> tankPosFeugen = {3522.94f, -3002.60f};
-    const std::pair<float, float> tankPosStalagg = {3436.14f, -2919.98f};
+    // Tesla tether: a pet more than 28y from its spawn breaks its coil link
+    // and the coil shocks random raiders for ~4.4k every 1.5s. The pet walks
+    // to whoever tanks it, so these sit close to the spawns (Stalagg
+    // 3450.45/-2931.42, Feugen 3508.14/-2988.65) — same direction as the old
+    // spots, ~7y out instead of ~19y, leaving the tether budget untouched.
+    const std::pair<float, float> tankPosFeugen = {3514.06f, -2994.23f};
+    const std::pair<float, float> tankPosStalagg = {3444.73f, -2926.84f};
     const std::pair<float, float> rangedPosFeugen = {3500.45f, -2997.92f};
     const std::pair<float, float> rangedPosStalagg = {3441.01f, -2942.04f};
     const float tankPosZ = 312.61f;
@@ -748,9 +753,32 @@ public:
         return (rank % 2 == 0) ? stalagg : feugen;
     }
 
+    // The pet this bot is actually tanking right now. Stalagg's Magnetic
+    // Pull swaps the two tanks every 20s (teleport + threat transfer), so a
+    // tank's static assignment goes stale mid-fight; whatever he holds is
+    // his, or he drags it across the room and snaps the tether.
+    Unit* GetHeldPet(Player* forBot)
+    {
+        if (stalagg && stalagg->IsAlive() && stalagg->GetVictim() == forBot)
+            return stalagg;
+
+        if (feugen && feugen->IsAlive() && feugen->GetVictim() == forBot)
+            return feugen;
+
+        return nullptr;
+    }
+
+    Unit* GetTankPet(Player* forBot)
+    {
+        if (Unit* held = GetHeldPet(forBot))
+            return held;
+
+        return GetAssignedPet(forBot);
+    }
+
     std::pair<float, float> PetPhaseGetPosForTank()
     {
-        if (GetAssignedPet(bot) == feugen)
+        if (GetTankPet(bot) == feugen)
             return tankPosFeugen;
 
         return tankPosStalagg;
