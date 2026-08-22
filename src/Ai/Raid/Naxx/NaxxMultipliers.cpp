@@ -180,10 +180,14 @@ float ThaddiusGenericMultiplier::GetValue(Action* action)
     if (dynamic_cast<CombatFormationMoveAction*>(action))
         return 0.0f;
     // pet phase
+    // ReachPartyMemberToHeal deliberately NOT zeroed here (upstream did):
+    // with the raid split across two platforms, a healer whose lowest-health
+    // target stands on the far side was blocked from ever closing to heal
+    // range and simply stood there. Crossing is safe in the pet phase —
+    // there are no marks or polarity to violate.
     if (helper.IsPhasePet() &&
         (dynamic_cast<DpsAssistAction*>(action) || dynamic_cast<TankAssistAction*>(action) ||
-         dynamic_cast<CastDebuffSpellOnAttackerAction*>(action) ||
-         dynamic_cast<ReachPartyMemberToHealAction*>(action) || dynamic_cast<BuffOnMainTankAction*>(action)))
+         dynamic_cast<CastDebuffSpellOnAttackerAction*>(action) || dynamic_cast<BuffOnMainTankAction*>(action)))
     {
         return 0.0f;
     }

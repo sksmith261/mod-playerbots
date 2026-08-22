@@ -25,6 +25,19 @@ bool ThaddiusAttackNearestPetAction::Execute(Event /*event*/)
     if (!target)
         return false;
 
+    // Healers never receive an attack order here — being told to Attack
+    // the pet made the approach movement fight their ranged positioning
+    // (the observed wandering). They take their platform spot and let the
+    // heal engine work.
+    if (botAI->IsHeal(bot))
+    {
+        std::pair<float, float> posForRanged = helper.PetPhaseGetPosForRanged();
+        if (bot->GetExactDist2d(posForRanged.first, posForRanged.second) < 6.0f)
+            return false;
+        return MoveTo(533, posForRanged.first, posForRanged.second, helper.tankPosZ, false, false, false, false,
+                      MovementPriority::MOVEMENT_COMBAT);
+    }
+
     if (!bot->IsWithinLOSInMap(target))
         return MoveTo(target, 0, MovementPriority::MOVEMENT_COMBAT);
 
