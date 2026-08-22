@@ -147,13 +147,17 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         { NextAction("four horsemen duty", ACTION_RAID + 1) }
     ));
 
-    // sapphiron
+    // Sapphiron — the raid plan owns both phases: ground positioning and
+    // damage, and the air phase where each bot is dealt an ice block to
+    // break line of sight behind. The old ground/flight pair derived all of
+    // that per bot, which meant a bot holding no threat on her (most of
+    // them, most of the time) simply did nothing.
     triggers.push_back(new TriggerNode("sapphiron ground",
-        { NextAction("sapphiron ground position", ACTION_RAID + 1) }
+        { NextAction("sapphiron plan", ACTION_RAID + 2) }
     ));
 
     triggers.push_back(new TriggerNode("sapphiron flight",
-        { NextAction("sapphiron flight position", ACTION_RAID + 1) }
+        { NextAction("sapphiron plan", ACTION_RAID + 2) }
     ));
 
     // Gluth

@@ -3,6 +3,8 @@
 #include <algorithm>
 
 #include "NaxxBossHelper.h"
+#include "GameObject.h"
+#include "ObjectAccessor.h"
 #include "Playerbots.h"
 #include "Timer.h"
 
@@ -217,6 +219,121 @@ bool NaxxRaidPlans::BuildFourHorsemen(Player* bot, Group* group, RaidPlan& plan)
     // melee of Zeliek.
     for (uint32 i = 0; i < melee.size(); ++i)
         assignRotating(melee[i], (i % 2) ? 1u : 0u, (i % 2) ? 0u : 1u, RAID_DUTY_DAMAGE);
+
+    return true;
+}
+
+// ---------------------------------------------------------------------------
+// Sapphiron
+//
+// Two phases with completely different jobs. On the ground she is tanked and
+// the raid spreads — spread matters more than it looks, because the ice
+// blocks of the next air phase form wherever people are standing, so a raid
+// stacked on the ground has no cover a moment later. In the air she icebolts
+// several raiders, drops an ice block gameobject on each, and breathes: every
+// bot not encased has to put one of those blocks between itself and her.
+//
+// Both halves are coordination problems — who is encased, which block each
+// bot uses — which is exactly what the plan is for. Sapphiron holds threat on
+// almost nobody, so resolving her per-bot was never going to work either.
+// ---------------------------------------------------------------------------
+namespace
+{
+constexpr uint32 GO_ICE_BLOCK = 181247;
+
+// Her spawn. Positions are derived from it rather than hardcoded, so nothing
+// can sit off the floor the way the old fixed coordinates could.
+constexpr float SAPP_X = 3522.39f;
+constexpr float SAPP_Y = -5236.78f;
+
+// Ring radius for ranged and healers. Wide enough to spread the ice blocks
+// around her, inside spell range of the middle.
+constexpr float SAPP_RING = 26.0f;
+}  // namespace
+
+bool NaxxRaidPlans::BuildSapphiron(Player* bot, Group* group, RaidPlan& plan)
+{
+    PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot);
+    if (!botAI || bot->GetMapId() != NAXX_MAP_ID || !bot->IsInCombat())
+        return false;
+
+    // One resolution for the whole group: threat first, grid otherwise.
+    Unit* sapphiron = AI_VALUE2(Unit*, "find target", "sapphiron");
+    if (!sapphiron)
+        for (auto const& guid : AI_VALUE(GuidVector, "possible targets no los"))
+        {
+            Unit* unit = botAI->GetUnit(guid);
+            if (unit && botAI->EqualLowercaseName(unit->GetName(), "sapphiron"))
+            {
+                sapphiron = unit;
+                break;
+            }
+        }
+
+    if (!sapphiron || !sapphiron->IsAlive())
+        return false;
+
+    plan.assignments.clear();
+    plan.encounter = RAID_ENCOUNTER_SAPPHIRON;
+
+    if (!plan.engagedMs)
+        plan.engagedMs = getMSTime();
+
+    // The script lifts her with SetDisableGravity(true) and lands her with
+    // false, so her own movement state is the phase — no guessing from
+    // heights or timers.
+    bool const airborne = sapphiron->HasUnitMovementFlag(MOVEMENTFLAG_DISABLE_GRAVITY);
+    plan.phase = airborne ? 2u : 1u;
+
+    // Ice blocks are gameobjects dropped on each icebolted raider.
+    std::vector<ObjectGuid> blocks;
+    if (airborne)
+    {
+        std::list<GameObject*> found;
+        bot->GetGameObjectListWithEntryInGrid(found, GO_ICE_BLOCK, 120.0f);
+        for (GameObject* block : found)
+            if (block && block->isSpawned())
+                blocks.push_back(block->GetGUID());
+
+        std::sort(blocks.begin(), blocks.end());
+    }
+
+    uint32 slot = 0, hideSlot = 0;
+    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        Player* member = itr->GetSource();
+        if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
+            continue;
+
+        if (airborne)
+        {
+            // Encased bots are already safe and cannot act; everyone else is
+            // dealt a block, spread evenly so one is not sheltering thirty.
+            if (member->HasAura(28522) || member->HasAura(28526))
+            {
+                plan.assignments[member->GetGUID()] = {RAID_DUTY_HIDE, 0, ObjectGuid::Empty};
+                continue;
+            }
+
+            ObjectGuid cover = blocks.empty() ? ObjectGuid::Empty : blocks[hideSlot++ % blocks.size()];
+            plan.assignments[member->GetGUID()] = {RAID_DUTY_HIDE, 0, cover};
+            continue;
+        }
+
+        // Ground phase. Tanks hold her essentially on her spawn so she does
+        // not get walked around the room; everyone else takes a slot on a
+        // ring, which both spreads the raid and scatters the ice blocks that
+        // the next air phase will build out of them.
+        if (PlayerbotAI::IsTank(member))
+        {
+            plan.assignments[member->GetGUID()] = {RAID_DUTY_TANK, 0, sapphiron->GetGUID()};
+            continue;
+        }
+
+        uint8 const duty = PlayerbotAI::IsHeal(member) ? RAID_DUTY_HEAL : RAID_DUTY_DAMAGE;
+        bool const ranged = PlayerbotAI::IsRanged(member) || PlayerbotAI::IsHeal(member);
+        plan.assignments[member->GetGUID()] = {duty, ranged ? ++slot : 0u, sapphiron->GetGUID()};
+    }
 
     return true;
 }

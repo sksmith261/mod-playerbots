@@ -47,7 +47,8 @@ void RaidDirector::Tick(Player* bot)
     // who holds what, and when that changes. They receive the plan carrying
     // its previous assignments so decisions can persist rather than being
     // re-derived from a world the previous decision just altered.
-    if (!NaxxRaidPlans::BuildFourHorsemen(bot, group, plan))
+    if (!NaxxRaidPlans::BuildFourHorsemen(bot, group, plan) &&
+        !NaxxRaidPlans::BuildSapphiron(bot, group, plan))
     {
         plan.encounter = RAID_ENCOUNTER_NONE;
         plan.phase = 0;
@@ -121,14 +122,14 @@ std::string RaidDirector::Describe(Player* bot)
     if (!plan)
         return "No raid plan is running for this group.";
 
-    static char const* dutyName[] = {"idle", "tank", "reserve", "damage", "heal"};
+    static char const* dutyName[] = {"idle", "tank", "reserve", "damage", "heal", "hide"};
 
-    uint32 counts[5] = {};
+    uint32 counts[6] = {};
     std::string lines;
 
     for (auto const& [guid, assignment] : plan->assignments)
     {
-        if (assignment.duty < 5)
+        if (assignment.duty < 6)
             ++counts[assignment.duty];
 
         // Tanks and reserves are the interesting rows: everything that has
@@ -145,5 +146,6 @@ std::string RaidDirector::Describe(Player* bot)
            " — " + std::to_string(counts[RAID_DUTY_TANK]) + " tank, " +
            std::to_string(counts[RAID_DUTY_RESERVE]) + " reserve, " +
            std::to_string(counts[RAID_DUTY_DAMAGE]) + " damage, " +
-           std::to_string(counts[RAID_DUTY_HEAL]) + " heal\n" + lines;
+           std::to_string(counts[RAID_DUTY_HEAL]) + " heal, " +
+           std::to_string(counts[RAID_DUTY_HIDE]) + " hiding\n" + lines;
 }

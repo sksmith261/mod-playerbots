@@ -301,6 +301,15 @@ protected:
 //     position") {} virtual bool Execute(Event event);
 // };
 
+// Carries out the raid plan's Sapphiron assignment (ground positioning and
+// damage, or taking cover behind an assigned ice block in the air phase).
+class SapphironPlanAction : public AttackAction
+{
+public:
+    SapphironPlanAction(PlayerbotAI* ai) : AttackAction(ai, "sapphiron plan") {}
+    bool Execute(Event event) override;
+};
+
 class SapphironGroundPositionAction : public MovementAction
 {
 public:

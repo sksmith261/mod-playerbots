@@ -12,6 +12,11 @@ namespace NaxxRaidPlans
     // Receives the plan with its previous assignments intact so holds and
     // camps can persist across ticks.
     bool BuildFourHorsemen(Player* bot, Group* group, RaidPlan& plan);
+
+    // Returns true while Sapphiron is engaged. Phase 1 is the ground fight,
+    // phase 2 the air phase, where every bot is given an ice block to break
+    // line of sight behind.
+    bool BuildSapphiron(Player* bot, Group* group, RaidPlan& plan);
 }
 
 #endif

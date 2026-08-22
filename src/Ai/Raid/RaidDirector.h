@@ -44,12 +44,14 @@ enum RaidDuty : uint8
     RAID_DUTY_RESERVE,   // rotated off, shedding stacks, must not re-engage
     RAID_DUTY_DAMAGE,
     RAID_DUTY_HEAL,
+    RAID_DUTY_HIDE,      // break line of sight behind the assigned object
 };
 
 enum RaidEncounterId : uint32
 {
     RAID_ENCOUNTER_NONE = 0,
     RAID_ENCOUNTER_FOUR_HORSEMEN,
+    RAID_ENCOUNTER_SAPPHIRON,
 };
 
 struct RaidAssignment
