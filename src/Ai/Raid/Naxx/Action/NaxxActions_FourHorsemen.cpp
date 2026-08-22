@@ -100,6 +100,41 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
         }
     };
 
+    // Pets build threat on whatever they hit, and every Mark halves the
+    // tank's, so one loose pet is enough to peel a horseman off its camp
+    // and drag it across the room. Pets are held during the opening and
+    // then kept strictly on their owner's own horseman. Covers hunter and
+    // warlock pets, water elementals, ghouls and other guardians alike.
+    auto commandPets = [&](Unit* target)
+    {
+        for (Unit* controlled : bot->m_Controlled)
+        {
+            Creature* pet = controlled ? controlled->ToCreature() : nullptr;
+            if (!pet || !pet->IsAlive())
+                continue;
+
+            CharmInfo* charm = pet->GetCharmInfo();
+
+            if (!target)
+            {
+                pet->AttackStop();
+                pet->SetReactState(REACT_PASSIVE);
+                if (charm)
+                    charm->SetIsCommandAttack(false);
+                continue;
+            }
+
+            pet->SetReactState(REACT_DEFENSIVE);
+            if (pet->GetVictim() != target)
+            {
+                if (charm)
+                    charm->SetIsCommandAttack(true);
+                if (pet->AI())
+                    pet->AI()->AttackStart(target);
+            }
+        }
+    };
+
     auto moveTo2d = [&](float x, float y, float tolerance) -> bool
     {
         if (bot->GetExactDist2d(x, y) <= tolerance)
@@ -141,6 +176,8 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
                 taunt(boss);
             }
 
+            commandPets(boss);
+
             if (moveTo2d(mine.x, mine.y, 4.0f))
                 return true;
 
@@ -171,6 +208,8 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
         Aura* mark = bot->GetAura(mine.markId);
         if (mark && mark->GetStackAmount() > 0)
         {
+            commandPets(nullptr);  // nothing follows us to the middle
+
             if (moveTo2d(FH_SAFE_X, FH_SAFE_Y, 5.0f))
                 return true;
 
@@ -250,7 +289,12 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
     // Opening seconds: take the camp, but do not touch the bosses until
     // the tanks have them parked and threatened.
     if (helper.InPullGrace())
+    {
+        commandPets(nullptr);
         return false;
+    }
+
+    commandPets(boss);
 
     if (AI_VALUE(Unit*, "current target") != boss)
         return Attack(boss);
