@@ -106,7 +106,7 @@ inline HorsemanSpec const* FourHorsemenSpecs()
         {"thane korth'azz",   nullptr,           28832, 2542.9f, -3015.0f},  // Meteor: stack to split it
         {"highlord mograine", "baron rivendare", 28834, 2583.9f, -2971.6f},  // Unholy Shadow: nothing special
         {"lady blaumeux",     nullptr,           28833, 2469.4f, -2947.6f},  // Void Zone: keep moving
-        {"sir zeliek",        nullptr,           28835, 2517.8f, -2896.6f},  // Holy Wrath: ranged, spread wide
+        {"sir zeliek",        nullptr,           28835, 2514.57f, -2899.91f}, // Holy Wrath: ranged, spread wide
     };
     return specs;
 }
@@ -117,6 +117,23 @@ inline HorsemanSpec const* FourHorsemenSpecs()
 constexpr float FH_SAFE_X = 2528.5f;
 constexpr float FH_SAFE_Y = -2957.7f;
 constexpr uint32 FH_SWAP_STACKS = 4;
+
+inline bool IsHorseman(PlayerbotAI* botAI, Unit* unit)
+{
+    if (!unit)
+        return false;
+
+    for (uint32 i = 0; i < 4; ++i)
+    {
+        HorsemanSpec const& spec = FourHorsemenSpecs()[i];
+        if (botAI->EqualLowercaseName(unit->GetName(), spec.name))
+            return true;
+        if (spec.altName && botAI->EqualLowercaseName(unit->GetName(), spec.altName))
+            return true;
+    }
+
+    return false;
+}
 
 inline Unit* ResolveHorseman(PlayerbotAI* botAI, HorsemanSpec const& spec)
 {
@@ -770,6 +787,15 @@ public:
         _combat_start_ms = 0;
         posToGo = 0;
     }
+    // Damage is held for the opening seconds so four tanks can pull four
+    // horsemen out to four camps and build real threat. Marks halve tank
+    // threat constantly, so a raid that opens up mid-drag rips them loose
+    // and they end up piled in the middle.
+    bool InPullGrace() const
+    {
+        return _combat_start_ms != 0 && getMSTime() - _combat_start_ms < 10000;
+    }
+
     bool IsAttracter(Player* bot)
     {
         Difficulty diff = bot->GetRaidDifficulty();

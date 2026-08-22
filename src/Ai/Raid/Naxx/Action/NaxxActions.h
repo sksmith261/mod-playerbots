@@ -74,10 +74,11 @@ private:
 class FourHorsemenDutyAction : public AttackAction
 {
 public:
-    FourHorsemenDutyAction(PlayerbotAI* ai) : AttackAction(ai, "four horsemen duty") {}
+    FourHorsemenDutyAction(PlayerbotAI* ai) : AttackAction(ai, "four horsemen duty"), helper(ai) {}
     bool Execute(Event event) override;
 
 private:
+    FourHorsemenBossHelper helper;
     bool flipped = false;
 };
 

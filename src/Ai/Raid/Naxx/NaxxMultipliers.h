@@ -110,10 +110,13 @@ public:
 class FourHorsemenGenericMultiplier : public Multiplier
 {
 public:
-    FourHorsemenGenericMultiplier(PlayerbotAI* ai) : Multiplier(ai, "four horsemen generic") {}
+    FourHorsemenGenericMultiplier(PlayerbotAI* ai) : Multiplier(ai, "four horsemen generic"), helper(ai) {}
 
 public:
     virtual float GetValue(Action* action);
+
+private:
+    FourHorsemenBossHelper helper;
 };
 
 // class GothikGenericMultiplier : public Multiplier

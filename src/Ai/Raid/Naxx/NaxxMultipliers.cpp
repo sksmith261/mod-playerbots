@@ -323,9 +323,21 @@ float AnubrekhanGenericMultiplier::GetValue(Action* action)
 
 float FourHorsemenGenericMultiplier::GetValue(Action* action)
 {
-    Unit* boss = AI_VALUE2(Unit*, "find target", "sir zeliek");
-    if (!boss)
+    if (!action || !helper.UpdateBossAI())
         return 1.0f;
+
+    // Opening grace: nothing aimed at a horseman lands until the tanks
+    // have all four parked. Tanks are unaffected in practice — their taunt
+    // is cast directly and their auto-attack is not an action — so they
+    // still establish threat while the raid holds.
+    if (helper.InPullGrace())
+    {
+        Unit* target = action->GetTarget();
+        if (target && NaxxHelpers::IsHorseman(botAI, target))
+            return 0.0f;
+
+        return 1.0f;  // and no threat-neglect until the hold is over
+    }
 
     context->GetValue<bool>("neglect threat")->Set(true);
     if ((dynamic_cast<DpsAssistAction*>(action) || dynamic_cast<TankAssistAction*>(action)))

@@ -61,6 +61,11 @@ bool FourHorsemenAttackInOrderAction::Execute(Event /*event*/)
 
 bool FourHorsemenDutyAction::Execute(Event /*event*/)
 {
+    // Drives this action's own copy of the encounter clock (the trigger
+    // holds a separate instance), which the opening damage hold reads.
+    if (!helper.UpdateBossAI())
+        return false;
+
     using namespace NaxxHelpers;
     HorsemanSpec const* specs = FourHorsemenSpecs();
 
@@ -104,19 +109,19 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
             // Marks halve threat on every application, so holding one of
             // these is continuous taunt work. Engage first, position after
             // — walking to the camp first leaves the boss where it stood.
+            // The camp is where this horseman lives for the whole fight,
+            // so the tank anchors there and does NOT chase. Lost threat is
+            // answered with a taunt from the camp; only a boss dragged out
+            // of taunt range is worth walking to.
             if (boss->GetVictim() != bot)
             {
-                if (!bot->IsWithinMeleeRange(boss))
-                    return MoveNear(boss, 3.0f, MovementPriority::MOVEMENT_COMBAT);
+                if (bot->GetDistance(boss) > 25.0f)
+                    return MoveNear(boss, 20.0f, MovementPriority::MOVEMENT_COMBAT);
 
                 taunt(boss);
-                if (AI_VALUE(Unit*, "current target") != boss)
-                    return Attack(boss);
-
-                return false;
             }
 
-            if (moveTo2d(mine.x, mine.y, 6.0f))
+            if (moveTo2d(mine.x, mine.y, 4.0f))
                 return true;
 
             if (AI_VALUE(Unit*, "current target") != boss)
@@ -221,6 +226,11 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
 
     if (PlayerbotAI::IsHeal(bot))
         return false;  // in position; the heal engine owns the rest
+
+    // Opening seconds: take the camp, but do not touch the bosses until
+    // the tanks have them parked and threatened.
+    if (helper.InPullGrace())
+        return false;
 
     if (AI_VALUE(Unit*, "current target") != boss)
         return Attack(boss);
