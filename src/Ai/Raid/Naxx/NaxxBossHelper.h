@@ -740,6 +740,32 @@ public:
         if (!feugenAlive)
             return stalagg;
 
+        // Has the raid already taken sides? Count living bots parked near
+        // each pet. If BOTH camps are meaningfully populated, the leader
+        // pre-positioned (or the fight is already running), so honour where
+        // people actually stand — otherwise a manual split with goto/sweep
+        // gets shuffled away by the parity rule below and everyone sprints
+        // across the room at the pull. A clump means nobody has split yet,
+        // and parity divides it. Every bot counts the same roster, so all
+        // forty reach the same verdict.
+        uint32 nearStalagg = 0, nearFeugen = 0, total = 0;
+        if (Group* group = forBot->GetGroup())
+            for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+            {
+                Player* member = itr->GetSource();
+                if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
+                    continue;
+
+                ++total;
+                if (member->GetDistance(stalagg) < 40.0f)
+                    ++nearStalagg;
+                else if (member->GetDistance(feugen) < 40.0f)
+                    ++nearFeugen;
+            }
+
+        if (total >= 4 && nearStalagg * 4 >= total && nearFeugen * 4 >= total)
+            return forBot->GetDistance(stalagg) < forBot->GetDistance(feugen) ? stalagg : feugen;
+
         if (botAI->IsMainTank(forBot))
             return stalagg;
         if (PlayerbotAI::IsAssistTankOfIndex(forBot, 0))
