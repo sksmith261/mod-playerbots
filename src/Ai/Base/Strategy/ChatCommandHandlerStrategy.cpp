@@ -7,6 +7,7 @@
 #include "ChatCommandHandlerStrategy.h"
 
 #include "PullStrategy.h"
+#include "RaidBossScripts.h"
 
 class ChatCommandActionNodeFactoryInternal : public NamedObjectFactory<ActionNode>
 {
@@ -193,4 +194,7 @@ void ChatCommandHandlerStrategy::InitMultipliers(std::vector<Multiplier*>& multi
     // Rides the always-on chat strategy so every bot holds fire while a
     // group member's ranged pull is bringing a mob home.
     multipliers.push_back(new GroupPullHoldMultiplier(botAI));
+
+    // Encounter AI outranks manual holds once a raid fight is under way.
+    multipliers.push_back(new RaidCommandOverrideMultiplier(botAI));
 }

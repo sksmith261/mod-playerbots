@@ -9,6 +9,8 @@
 #include "Event.h"
 #include "GameObject.h"
 #include "GenericSpellActions.h"
+#include "FollowActions.h"
+#include "PositionAction.h"
 #include "Group.h"
 #include "Playerbots.h"
 #include "RtiTargetValue.h"
@@ -409,6 +411,27 @@ bool RaidMoveFromGroundEffectAction::Execute(Event /*event*/)
     // Any direction out of the patch works; FleePosition picks a safe nearby
     // spot away from where the bot is standing.
     return FleePosition(bot->GetPosition(), 8.0f);
+}
+
+float RaidCommandOverrideMultiplier::GetValue(Action* action)
+{
+    if (!action || !bot->IsInCombat())
+        return 1.0f;
+
+    Map* map = bot->GetMap();
+    if (!map || !map->IsRaid())
+        return 1.0f;
+
+    if (!IsRaidGroupInCombat(bot))
+        return 1.0f;
+
+    // Holds and follow only. Rotations, heals and every raid action are
+    // untouched, and combat movement still works, so nothing can freeze.
+    if (dynamic_cast<ReturnToStayPositionAction*>(action) || dynamic_cast<ReturnAction*>(action) ||
+        dynamic_cast<FollowAction*>(action))
+        return 0.0f;
+
+    return 1.0f;
 }
 
 float RaidDispelUrgencyMultiplier::GetValue(Action* action)

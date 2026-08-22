@@ -278,6 +278,24 @@ public:
 // ret/prot paladins) treat cleansing party members as more important than
 // their rotation. Healers are left alone so they keep triaging heals vs
 // dispels normally.
+// Manual positioning commands are staging tools. Once a raid encounter is
+// actually running, the scripted AI owns movement — otherwise the two
+// fight each other every tick: the raid action puts a bot on its station
+// and then returns false ("already there"), which lets the lower-priority
+// hold (ACTION_MOVE) drag it straight back to the clicked spot or to the
+// master. The visible result is bots that ignore the encounter whenever a
+// goto/sweep/stay/follow has been issued.
+//
+// Suppressed only while in raid combat, so pre-pull staging still works
+// exactly as before — which matters, because the Thaddius and Gothik
+// splits depend on it.
+class RaidCommandOverrideMultiplier : public Multiplier
+{
+public:
+    RaidCommandOverrideMultiplier(PlayerbotAI* botAI) : Multiplier(botAI, "raid command override") {}
+    float GetValue(Action* action) override;
+};
+
 class RaidDispelUrgencyMultiplier : public Multiplier
 {
 public:
