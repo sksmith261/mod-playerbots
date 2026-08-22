@@ -202,6 +202,21 @@ public:
     bool IsActive() override;
 };
 
+// Leash guard: this bot holds a pet and that pet has wandered off its
+// spawn. Catches every way a pet can get dragged — a healer crossing
+// platforms after inheriting aggro, a low-health bot fleeing with the pet
+// attached, a tank dying and the pet chasing whoever is left — long
+// before the 28y coil tether snaps.
+class ThaddiusTetherTrigger : public Trigger
+{
+public:
+    ThaddiusTetherTrigger(PlayerbotAI* ai) : Trigger(ai, "thaddius tether"), helper(ai) {}
+    bool IsActive() override;
+
+private:
+    ThaddiusBossHelper helper;
+};
+
 class ThaddiusPhasePetTrigger : public Trigger
 {
 public:

@@ -194,3 +194,26 @@ bool ThaddiusMovePolarityAction::Execute(Event /*event*/)
 
     return MoveTo(bot->GetMapId(), x, y, z, false, false, false, false, MovementPriority::MOVEMENT_COMBAT);
 }
+
+bool ThaddiusTetherAction::Execute(Event /*event*/)
+{
+    Unit* pet = helper.GetHeldPet(bot);
+    if (!pet)
+        return false;
+
+    Creature* creature = pet->ToCreature();
+    if (!creature)
+        return false;
+
+    // Walk back to the pet's spawn; it follows its aggro home with us.
+    Position const& home = creature->GetHomePosition();
+    float x = home.GetPositionX();
+    float y = home.GetPositionY();
+    float z = home.GetPositionZ();
+
+    if (bot->GetExactDist2d(x, y) < 7.0f)
+        return false;
+
+    bot->UpdateAllowedPositionZ(x, y, z);
+    return MoveNear(bot->GetMapId(), x, y, z, 6.0f, MovementPriority::MOVEMENT_COMBAT);
+}

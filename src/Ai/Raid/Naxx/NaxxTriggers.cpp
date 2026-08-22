@@ -352,6 +352,24 @@ bool PatchwerkNonTankTrigger::IsActive()
 
 bool LoathebTrigger::IsActive() { return helper.UpdateBossAI(); }
 
+bool ThaddiusTetherTrigger::IsActive()
+{
+    if (!helper.UpdateBossAI() || !helper.IsPhasePet())
+        return false;
+
+    Unit* pet = helper.GetHeldPet(bot);
+    if (!pet)
+        return false;
+
+    Creature* creature = pet->ToCreature();
+    if (!creature)
+        return false;
+
+    // 12y of the 28y budget: correct early, never race the break.
+    Position const& home = creature->GetHomePosition();
+    return creature->GetExactDist2d(home.GetPositionX(), home.GetPositionY()) > 12.0f;
+}
+
 bool ThaddiusPhasePetTrigger::IsActive()
 {
     if (!helper.UpdateBossAI())

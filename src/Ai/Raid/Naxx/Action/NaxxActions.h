@@ -196,6 +196,16 @@ public:
 //    virtual bool Execute(Event event);
 //};
 
+class ThaddiusTetherAction : public MovementAction
+{
+public:
+    ThaddiusTetherAction(PlayerbotAI* ai) : MovementAction(ai, "thaddius tether"), helper(ai) {}
+    bool Execute(Event event) override;
+
+private:
+    ThaddiusBossHelper helper;
+};
+
 class ThaddiusAttackNearestPetAction : public AttackAction
 {
 public:

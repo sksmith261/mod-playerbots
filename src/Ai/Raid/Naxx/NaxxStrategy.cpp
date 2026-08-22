@@ -98,6 +98,12 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         { NextAction("rear flank", ACTION_RAID + 1) }
     ));
 
+    // Thaddius — leash guard outranks all other movement: a dragged pet
+    // snaps its coil tether and the coil shreds the raid.
+    triggers.push_back(new TriggerNode("thaddius tether",
+        { NextAction("thaddius tether", ACTION_RAID + 3) }
+    ));
+
     // Thaddius
     triggers.push_back(new TriggerNode("thaddius phase pet",
         { NextAction("thaddius attack nearest pet", ACTION_RAID + 1) }

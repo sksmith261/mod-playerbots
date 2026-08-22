@@ -26,6 +26,7 @@ public:
         creators["loatheb spore"] = &RaidNaxxTriggerContext::loatheb_spore;
         creators["gothik"] = &RaidNaxxTriggerContext::gothik;
         creators["four horsemen duty"] = &RaidNaxxTriggerContext::four_horsemen_duty;
+        creators["thaddius tether"] = &RaidNaxxTriggerContext::thaddius_tether;
         creators["faerlina worshipper duty"] = &RaidNaxxTriggerContext::faerlina_worshipper_duty;
         creators["faerlina frenzy"] = &RaidNaxxTriggerContext::faerlina_frenzy;
         //creators["heigan melee"] = &RaidNaxxTriggerContext::heigan_melee;
@@ -72,6 +73,7 @@ private:
     static Trigger* loatheb_spore(PlayerbotAI* ai) { return new LoathebSporeTrigger(ai); }
     static Trigger* gothik(PlayerbotAI* ai) { return new GothikTrigger(ai); }
     static Trigger* four_horsemen_duty(PlayerbotAI* ai) { return new FourHorsemenDutyTrigger(ai); }
+    static Trigger* thaddius_tether(PlayerbotAI* ai) { return new ThaddiusTetherTrigger(ai); }
     static Trigger* faerlina_worshipper_duty(PlayerbotAI* ai) { return new FaerlinaWorshipperDutyTrigger(ai); }
     static Trigger* faerlina_frenzy(PlayerbotAI* ai) { return new FaerlinaFrenzyTrigger(ai); }
     //static Trigger* heigan_melee(PlayerbotAI* ai) { return new HeiganMeleeTrigger(ai); }
