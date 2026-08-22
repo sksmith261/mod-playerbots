@@ -17,6 +17,16 @@ namespace NaxxRaidPlans
     // phase 2 the air phase, where every bot is given an ice block to break
     // line of sight behind.
     bool BuildSapphiron(Player* bot, Group* group, RaidPlan& plan);
+
+    // Baseline plan for every other Naxxramas boss: tanks on the boss,
+    // melee in, ranged and healers on a ring sized per encounter. Gives
+    // every fight shared perception and a readable plan without thirteen
+    // bespoke builders; the specialist actions still run above it.
+    bool BuildGeneric(Player* bot, Group* group, RaidPlan& plan);
+
+    // Ring radius the generic builder chose for this encounter, so the
+    // executing action does not need its own copy of the table.
+    float GenericRing(std::string const& label);
 }
 
 #endif

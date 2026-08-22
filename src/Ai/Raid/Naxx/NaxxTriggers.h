@@ -62,6 +62,18 @@ private:
 
 // Deliberately trivial: in combat, in a raid map. Anything cleverer would
 // reintroduce the per-bot perception problem the director exists to remove.
+// Any Naxx encounter the director recognised generically.
+class NaxxPlanTrigger : public Trigger
+{
+public:
+    NaxxPlanTrigger(PlayerbotAI* ai) : Trigger(ai, "naxx plan") {}
+    bool IsActive() override
+    {
+        RaidPlan const* plan = RaidDirector::Get(bot);
+        return plan && plan->encounter == RAID_ENCOUNTER_NAXX_GENERIC && plan->For(bot->GetGUID());
+    }
+};
+
 class RaidDirectorTrigger : public Trigger
 {
 public:

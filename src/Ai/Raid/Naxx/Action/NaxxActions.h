@@ -303,6 +303,14 @@ protected:
 
 // Carries out the raid plan's Sapphiron assignment (ground positioning and
 // damage, or taking cover behind an assigned ice block in the air phase).
+// Baseline execution for Naxx bosses with no bespoke handling.
+class NaxxPlanAction : public AttackAction
+{
+public:
+    NaxxPlanAction(PlayerbotAI* ai) : AttackAction(ai, "naxx plan") {}
+    bool Execute(Event event) override;
+};
+
 class SapphironPlanAction : public AttackAction
 {
 public:

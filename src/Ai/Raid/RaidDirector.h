@@ -52,6 +52,7 @@ enum RaidEncounterId : uint32
     RAID_ENCOUNTER_NONE = 0,
     RAID_ENCOUNTER_FOUR_HORSEMEN,
     RAID_ENCOUNTER_SAPPHIRON,
+    RAID_ENCOUNTER_NAXX_GENERIC,   // any other Naxxramas boss
 };
 
 struct RaidAssignment
@@ -67,6 +68,7 @@ struct RaidPlan
     uint32 phase = 0;        // encounter-defined; 1 is always the opening hold
     uint32 updatedMs = 0;
     uint32 engagedMs = 0;    // when this encounter was first seen in combat
+    std::string label;       // boss name, for the readout
     std::unordered_map<ObjectGuid, RaidAssignment> assignments;
 
     RaidAssignment const* For(ObjectGuid guid) const

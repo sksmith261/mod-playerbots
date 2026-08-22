@@ -72,6 +72,7 @@ bool NaxxRaidPlans::BuildFourHorsemen(Player* bot, Group* group, RaidPlan& plan)
     std::unordered_map<ObjectGuid, RaidAssignment> const previous = plan.assignments;
     plan.assignments.clear();
     plan.encounter = RAID_ENCOUNTER_FOUR_HORSEMEN;
+    plan.label = "Four Horsemen";
 
     if (!plan.engagedMs)
         plan.engagedMs = getMSTime();
@@ -278,6 +279,7 @@ bool NaxxRaidPlans::BuildSapphiron(Player* bot, Group* group, RaidPlan& plan)
 
     plan.assignments.clear();
     plan.encounter = RAID_ENCOUNTER_SAPPHIRON;
+    plan.label = "Sapphiron";
 
     if (!plan.engagedMs)
         plan.engagedMs = getMSTime();
@@ -339,4 +341,137 @@ bool NaxxRaidPlans::BuildSapphiron(Player* bot, Group* group, RaidPlan& plan)
     }
 
     return true;
+}
+
+// ---------------------------------------------------------------------------
+// Every other Naxxramas boss
+//
+// One builder, a table of per-encounter numbers. The value here is not clever
+// positioning — the specialist actions above still own the dances, the
+// kiting, the side splits — it is that every fight now has ONE resolved boss
+// and ONE assignment list, instead of forty bots each asking their own threat
+// list what is happening. That was the defect behind Thaddius, Gothik and the
+// Horsemen alike, and it applies to all of these equally.
+//
+// ring == 0 means the encounter's own logic owns positioning entirely, so the
+// plan is built for perception and observability and nothing is moved.
+// ---------------------------------------------------------------------------
+namespace
+{
+struct NaxxEncounterSpec
+{
+    char const* name;
+    char const* label;
+    float ring;        // ranged/healer ring radius; 0 leaves positioning alone
+    bool meleeStack;   // melee pile onto the boss rather than flanking
+};
+
+NaxxEncounterSpec const NAXX_ENCOUNTERS[] = {
+    // Spider wing
+    {"anub'rekhan",           "Anub'Rekhan",    25.0f, false},
+    {"grand widow faerlina",  "Faerlina",       20.0f, false},
+    {"maexxna",               "Maexxna",        20.0f, false},
+    // Plague wing — Heigan's dance owns every position in that room
+    {"noth the plaguebringer","Noth",           25.0f, false},
+    {"heigan the unclean",    "Heigan",          0.0f, false},
+    {"loatheb",               "Loatheb",        20.0f, false},
+    // Military wing — Gothik's side discipline owns positioning
+    {"instructor razuvious",  "Razuvious",      25.0f, false},
+    {"gothik the harvester",  "Gothik",          0.0f, false},
+    // Construct wing — Gluth kiting and Thaddius platforms own theirs
+    {"patchwerk",             "Patchwerk",      15.0f, true},
+    {"grobbulus",             "Grobbulus",      30.0f, false},
+    {"gluth",                 "Gluth",           0.0f, false},
+    {"thaddius",              "Thaddius",        0.0f, false},
+    // Frostwyrm
+    {"kel'thuzad",            "Kel'Thuzad",     30.0f, false},
+};
+}  // namespace
+
+bool NaxxRaidPlans::BuildGeneric(Player* bot, Group* group, RaidPlan& plan)
+{
+    PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot);
+    if (!botAI || bot->GetMapId() != NAXX_MAP_ID || !bot->IsInCombat())
+        return false;
+
+    // Resolved once for the group: threat first, then a grid sweep, so a bot
+    // that has not yet struck anything still knows which fight it is in.
+    Unit* boss = nullptr;
+    NaxxEncounterSpec const* spec = nullptr;
+
+    for (NaxxEncounterSpec const& candidate : NAXX_ENCOUNTERS)
+    {
+        boss = botAI->GetAiObjectContext()->GetValue<Unit*>("find target", candidate.name)->Get();
+        if (boss && boss->IsAlive())
+        {
+            spec = &candidate;
+            break;
+        }
+        boss = nullptr;
+    }
+
+    if (!boss)
+        for (auto const& guid :
+             botAI->GetAiObjectContext()->GetValue<GuidVector>("possible targets no los")->Get())
+        {
+            Unit* unit = botAI->GetUnit(guid);
+            if (!unit || !unit->IsAlive())
+                continue;
+
+            for (NaxxEncounterSpec const& candidate : NAXX_ENCOUNTERS)
+                if (botAI->EqualLowercaseName(unit->GetName(), candidate.name))
+                {
+                    boss = unit;
+                    spec = &candidate;
+                    break;
+                }
+
+            if (boss)
+                break;
+        }
+
+    if (!boss || !spec)
+        return false;
+
+    plan.assignments.clear();
+    plan.encounter = RAID_ENCOUNTER_NAXX_GENERIC;
+    plan.label = spec->label;
+
+    if (!plan.engagedMs)
+        plan.engagedMs = getMSTime();
+
+    plan.phase = 1;
+
+    uint32 ringSlot = 0;
+    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        Player* member = itr->GetSource();
+        if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
+            continue;
+
+        if (PlayerbotAI::IsTank(member))
+        {
+            plan.assignments[member->GetGUID()] = {RAID_DUTY_TANK, 0, boss->GetGUID()};
+            continue;
+        }
+
+        bool const ranged = PlayerbotAI::IsRanged(member) || PlayerbotAI::IsHeal(member);
+        uint8 const duty = PlayerbotAI::IsHeal(member) ? RAID_DUTY_HEAL : RAID_DUTY_DAMAGE;
+
+        // Camp 0 means "no assigned spot": melee, and everyone on encounters
+        // whose own logic owns positioning.
+        uint32 const camp = (ranged && spec->ring > 0.0f) ? ++ringSlot : 0u;
+        plan.assignments[member->GetGUID()] = {duty, camp, boss->GetGUID()};
+    }
+
+    return true;
+}
+
+float NaxxRaidPlans::GenericRing(std::string const& label)
+{
+    for (NaxxEncounterSpec const& spec : NAXX_ENCOUNTERS)
+        if (label == spec.label)
+            return spec.ring;
+
+    return 0.0f;
 }

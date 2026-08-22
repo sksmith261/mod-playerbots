@@ -48,11 +48,13 @@ void RaidDirector::Tick(Player* bot)
     // its previous assignments so decisions can persist rather than being
     // re-derived from a world the previous decision just altered.
     if (!NaxxRaidPlans::BuildFourHorsemen(bot, group, plan) &&
-        !NaxxRaidPlans::BuildSapphiron(bot, group, plan))
+        !NaxxRaidPlans::BuildSapphiron(bot, group, plan) &&
+        !NaxxRaidPlans::BuildGeneric(bot, group, plan))
     {
         plan.encounter = RAID_ENCOUNTER_NONE;
         plan.phase = 0;
         plan.engagedMs = 0;
+        plan.label.clear();
         plan.assignments.clear();
     }
 
@@ -168,7 +170,8 @@ std::string RaidDirector::Describe(Player* bot)
                  dutyName[assignment.duty] + " camp " + std::to_string(assignment.camp) + "\n";
     }
 
-    return "Encounter " + std::to_string(plan->encounter) + ", phase " + std::to_string(plan->phase) +
+    return (plan->label.empty() ? std::string("Encounter") : plan->label) +
+           ", phase " + std::to_string(plan->phase) +
            " — " + std::to_string(counts[RAID_DUTY_TANK]) + " tank, " +
            std::to_string(counts[RAID_DUTY_RESERVE]) + " reserve, " +
            std::to_string(counts[RAID_DUTY_DAMAGE]) + " damage, " +

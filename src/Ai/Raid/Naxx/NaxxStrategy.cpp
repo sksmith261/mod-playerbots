@@ -9,6 +9,10 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     // it to read.
     triggers.push_back(new TriggerNode("raid director", { NextAction("raid director tick", 1.0f) }));
 
+    // Baseline for every boss without bespoke handling. Deliberately below
+    // ACTION_RAID so the dances, kiting and side splits always win.
+    triggers.push_back(new TriggerNode("naxx plan", { NextAction("naxx plan", ACTION_RAID - 3) }));
+
     // Generic ground-hazard escape. Naxx had none wired at all, so Blaumeux's
     // Void Zones, Grobbulus' clouds and every other dynamic-object pool were
     // simply stood in.
