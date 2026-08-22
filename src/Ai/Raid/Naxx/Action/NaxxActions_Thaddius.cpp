@@ -113,18 +113,14 @@ bool ThaddiusMovePolarityAction::isUseful()
 bool ThaddiusMovePolarityAction::Execute(Event /*event*/)
 {
     std::vector<std::pair<float, float>> position = {
-        // left melee
+        // left melee (negative) — bounded by melee reach on the boss
         {3508.29f, -2920.12f},
-        // left ranged
-        {3501.72f, -2913.36f},
-        // right melee
+        // left ranged (negative) — pushed wide: 40 bodies need separation
+        {3499.50f, -2915.90f},
+        // right melee (positive)
         {3519.74f, -2931.69f},
-        // right ranged
-        {3524.32f, -2936.26f},
-        // center melee
-        {3512.19f, -2928.58f},
-        // center ranged
-        {3504.68f, -2936.68f},
+        // right ranged (positive)
+        {3524.90f, -2941.30f},
     };
     uint32 idx;
     if (NaxxSpellIds::HasAnyAura(bot,
@@ -141,7 +137,12 @@ bool ThaddiusMovePolarityAction::Execute(Event /*event*/)
     }
     else
     {
-        idx = 2;
+        // Chargeless = the strip-gap inside each Polarity Shift (old charges
+        // removed an instant before new ones land) or the pre-shift opener.
+        // Upstream dashed everyone to a CENTER spot here, collapsing both
+        // clusters through each other every 30 seconds — hold instead; the
+        // new charge arrives within the second and sorts us properly.
+        return false;
     }
     idx = idx * 2 + botAI->IsRanged(bot);
     return MoveTo(bot->GetMapId(), position[idx].first, position[idx].second, bot->GetPositionZ(), false, false, false, false, MovementPriority::MOVEMENT_COMBAT);
