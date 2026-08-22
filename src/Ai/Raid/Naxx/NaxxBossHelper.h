@@ -201,11 +201,12 @@ inline bool CanHoldHorseman(Player* p)
 
 inline std::vector<Player*> FourHorsemenTankPool(Player* bot)
 {
-    // Promotion order: real tanks, death knights, warriors, paladins,
-    // druids. Warriors and druids need a shift first (Defensive Stance,
-    // Bear Form) before they can taunt at all, which the taunt helper
-    // handles — a wasted tick each time, but plate and a real mitigation
-    // kit are worth more here than a paladin's stance-free taunt.
+    // Promotion order: real tanks, death knights, paladins, warriors,
+    // druids. Death knights and paladins taunt as they stand; warriors and
+    // druids must shift into Defensive Stance or Bear Form first, which the
+    // taunt helper handles but which costs a tick on every re-taunt — and
+    // on this fight re-taunting is constant, because each Mark halves the
+    // tank's threat.
     std::vector<Player*> real, deathKnights, warriors, paladins, druids;
     if (Group* group = bot->GetGroup())
         for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
@@ -227,8 +228,8 @@ inline std::vector<Player*> FourHorsemenTankPool(Player* bot)
         }
 
     real.insert(real.end(), deathKnights.begin(), deathKnights.end());
-    real.insert(real.end(), warriors.begin(), warriors.end());
     real.insert(real.end(), paladins.begin(), paladins.end());
+    real.insert(real.end(), warriors.begin(), warriors.end());
     real.insert(real.end(), druids.begin(), druids.end());
     if (real.size() > 8)
         real.resize(8);
