@@ -464,6 +464,24 @@ AiPlayerbot.DropObsoleteQuests = 1
 # Auto add dungeon/raid strategies when entering the instance if implemented
 AiPlayerbot.ApplyInstanceStrategies = 1
 
+#
+#    AiPlayerbot.RaidDirector
+#        Description: Builds one shared plan per group on supported raid
+#                     encounters — who tanks what, which camp each bot holds,
+#                     when to rotate — instead of every bot deriving it alone
+#                     from its own threat list. Read it in game with the
+#                     'raidplan' chat command.
+#
+#                     Turning this off is a safety valve: the encounters it
+#                     drives fall back to plain combat AI and lose their
+#                     coordination entirely, so leave it on unless the plans
+#                     are actively misbehaving.
+#        Default:     1 - Enabled
+#                     0 - Disabled
+#
+
+AiPlayerbot.RaidDirector = 1
+
 # Enable auto avoid aoe strategy
 # Default: 1 (enabled)
 AiPlayerbot.AutoAvoidAoe = 1

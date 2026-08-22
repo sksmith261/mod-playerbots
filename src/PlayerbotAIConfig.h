@@ -265,6 +265,7 @@ public:
     std::string combatStrategies, nonCombatStrategies;
     std::string randomBotCombatStrategies, randomBotNonCombatStrategies;
     bool applyInstanceStrategies;
+    bool raidDirector;
     uint32 randomBotMinLevel, randomBotMaxLevel;
     float randomChangeMultiplier;
 

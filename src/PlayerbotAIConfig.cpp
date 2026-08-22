@@ -437,6 +437,7 @@ bool PlayerbotAIConfig::Initialize()
     combatStrategies = sConfigMgr->GetOption<std::string>("AiPlayerbot.CombatStrategies", "");
     nonCombatStrategies = sConfigMgr->GetOption<std::string>("AiPlayerbot.NonCombatStrategies", "");
     applyInstanceStrategies = sConfigMgr->GetOption<bool>("AiPlayerbot.ApplyInstanceStrategies", true);
+    raidDirector = sConfigMgr->GetOption<bool>("AiPlayerbot.RaidDirector", true);
 
     commandPrefix = sConfigMgr->GetOption<std::string>("AiPlayerbot.CommandPrefix", "");
     commandSeparator = sConfigMgr->GetOption<std::string>("AiPlayerbot.CommandSeparator", "\\\\");

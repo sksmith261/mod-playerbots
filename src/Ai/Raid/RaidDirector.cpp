@@ -37,6 +37,20 @@ void RaidDirector::Tick(Player* bot)
     uint32 const now = getMSTime();
     RaidPlan& plan = s_plans[group->GetGUID()];
 
+    // Kill switch. Turning this off drops the raid to plain combat AI on the
+    // encounters the director drives — it is a safety valve, not a
+    // preference, so leave it on unless the plans are actively misbehaving.
+    if (!sPlayerbotAIConfig.raidDirector)
+    {
+        plan.encounter = RAID_ENCOUNTER_NONE;
+        plan.phase = 0;
+        plan.engagedMs = 0;
+        plan.label.clear();
+        plan.assignments.clear();
+        plan.updatedMs = now;
+        return;
+    }
+
     // Whoever gets here first inside the window does the work for everyone.
     if (plan.updatedMs && now - plan.updatedMs < REBUILD_INTERVAL_MS)
         return;
@@ -133,6 +147,9 @@ std::string RaidDirector::Describe(Player* bot)
         // "No plan" has several very different causes, and guessing between
         // them from outside the server is exactly the round trip this
         // command exists to avoid.
+        if (!sPlayerbotAIConfig.raidDirector)
+            return "No raid plan: the director is disabled (AiPlayerbot.RaidDirector = 0).";
+
         if (!bot->GetGroup())
             return "No raid plan: I am not in a group.";
 
