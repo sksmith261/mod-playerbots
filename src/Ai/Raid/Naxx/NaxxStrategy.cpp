@@ -4,6 +4,11 @@
 
 void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 {
+    // Generic ground-hazard escape. Naxx had none wired at all, so Blaumeux's
+    // Void Zones, Grobbulus' clouds and every other dynamic-object pool were
+    // simply stood in.
+    triggers.push_back(new TriggerNode("have area debuff", { NextAction("avoid aoe", ACTION_RAID + 1) }));
+
     // Grobbulus
     triggers.push_back(new TriggerNode("mutating injection melee",
         { NextAction("grobbulus move away", ACTION_RAID + 2) }

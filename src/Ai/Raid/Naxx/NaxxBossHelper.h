@@ -88,6 +88,112 @@ inline Unit* FaerlinaSacrificeTarget(PlayerbotAI* botAI, Unit* faerlina)
 
     return best;
 }
+// ---- Four Horsemen ----------------------------------------------------
+// One camp per horseman, taken from the corner waypoints of the same
+// physical room. Each horseman's Mark is an aura pulsed over roughly 45y,
+// so camps this far apart mean a raider only ever collects one kind.
+struct HorsemanSpec
+{
+    char const* name;
+    char const* altName;   // IP renames Rivendare to Highlord Mograine
+    uint32 markId;
+    float x, y;
+};
+
+inline HorsemanSpec const* FourHorsemenSpecs()
+{
+    static HorsemanSpec const specs[4] = {
+        {"thane korth'azz",   nullptr,           28832, 2542.9f, -3015.0f},  // Meteor: stack to split it
+        {"highlord mograine", "baron rivendare", 28834, 2583.9f, -2971.6f},  // Unholy Shadow: nothing special
+        {"lady blaumeux",     nullptr,           28833, 2469.4f, -2947.6f},  // Void Zone: keep moving
+        {"sir zeliek",        nullptr,           28835, 2517.8f, -2896.6f},  // Holy Wrath: ranged, spread wide
+    };
+    return specs;
+}
+
+// Centroid of the four camps: 57-62y from every one of them, so it sits
+// outside all four Mark radii at once. This is where a tank rotated off
+// its horseman waits for its stacks to fall away.
+constexpr float FH_SAFE_X = 2528.5f;
+constexpr float FH_SAFE_Y = -2957.7f;
+constexpr uint32 FH_SWAP_STACKS = 4;
+
+inline Unit* ResolveHorseman(PlayerbotAI* botAI, HorsemanSpec const& spec)
+{
+    Unit* unit = botAI->GetAiObjectContext()->GetValue<Unit*>("find target", spec.name)->Get();
+    if (!unit && spec.altName)
+        unit = botAI->GetAiObjectContext()->GetValue<Unit*>("find target", spec.altName)->Get();
+
+    return (unit && unit->IsAlive()) ? unit : nullptr;
+}
+
+// Anyone who can hold a boss — dedicated tanks first, then damage specs of
+// the classes that can: three real tanks cannot cover four horsemen, so
+// the pool is padded with promotable damage until it reaches eight, which
+// is two per horseman and therefore one swap partner each.
+inline bool CanHoldHorseman(Player* p)
+{
+    if (PlayerbotAI::IsTank(p))
+        return true;
+
+    switch (p->getClass())
+    {
+        case CLASS_WARRIOR:
+        case CLASS_PALADIN:
+        case CLASS_DRUID:
+        case CLASS_DEATH_KNIGHT:
+            return true;
+        default:
+            return false;
+    }
+}
+
+inline std::vector<Player*> FourHorsemenTankPool(Player* bot)
+{
+    std::vector<Player*> real, promoted;
+    if (Group* group = bot->GetGroup())
+        for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+        {
+            Player* member = itr->GetSource();
+            if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member) || !CanHoldHorseman(member))
+                continue;
+
+            (PlayerbotAI::IsTank(member) ? real : promoted).push_back(member);
+        }
+
+    real.insert(real.end(), promoted.begin(), promoted.end());
+    if (real.size() > 8)
+        real.resize(8);
+
+    return real;
+}
+
+// Pool slots k and k+4 share horseman k. Whichever of the two is under the
+// swap threshold holds it; if both are over, the lighter one does.
+inline Player* FourHorsemenActiveTank(std::vector<Player*> const& pool, uint32 slot, uint32 markId)
+{
+    Player* best = nullptr;
+    uint32 bestStacks = 0;
+
+    for (uint32 i = slot; i < pool.size(); i += 4)
+    {
+        Player* candidate = pool[i];
+        Aura* mark = candidate->GetAura(markId);
+        uint32 const stacks = mark ? mark->GetStackAmount() : 0;
+
+        if (stacks < FH_SWAP_STACKS)
+            return candidate;
+
+        if (!best || stacks < bestStacks)
+        {
+            best = candidate;
+            bestStacks = stacks;
+        }
+    }
+
+    return best;
+}
+
 constexpr uint32 NPC_WEB_WRAP = 16486;
 
 // Web Wraps by NAME: the wotlk entry is 16486 but IP's naxx-40 clones use
@@ -625,6 +731,32 @@ public:
                 if (_sir)
                     break;
             }
+
+            // Threat only shows what this bot personally fights, and most
+            // of the raid holds none of the four. Same failure that left
+            // Thaddius inert: fall back to a grid scan so everyone agrees
+            // the encounter is running.
+            if (!_sir && bot->IsInCombat())
+            {
+                for (auto const& guid : AI_VALUE(GuidVector, "possible targets no los"))
+                {
+                    Unit* unit = botAI->GetUnit(guid);
+                    if (!unit || !unit->IsAlive())
+                        continue;
+
+                    for (char const* name : {"sir zeliek", "thane korth'azz", "lady blaumeux",
+                                             "baron rivendare", "highlord mograine"})
+                        if (botAI->EqualLowercaseName(unit->GetName(), name))
+                        {
+                            _sir = unit;
+                            break;
+                        }
+
+                    if (_sir)
+                        break;
+                }
+            }
+
             if (!_sir)
                 return false;
         }

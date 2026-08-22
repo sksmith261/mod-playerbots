@@ -61,33 +61,8 @@ bool FourHorsemenAttackInOrderAction::Execute(Event /*event*/)
 
 bool FourHorsemenDutyAction::Execute(Event /*event*/)
 {
-    // Corner stations = the four quadrants of the chamber. IP's horsemen
-    // do not walk to them on their own (that script has no waypoints), so
-    // the tanks drag them out; separating them is what keeps a raider from
-    // collecting all four Marks at once.
-    struct Side
-    {
-        char const* name;
-        char const* altName;
-        uint32 markId;
-        float x, y;
-    };
-    static Side const front[2] = {
-        {"thane korth'azz", nullptr, 28832, 2542.9f, -3015.0f},
-        {"highlord mograine", "baron rivendare", 28834, 2583.9f, -2971.6f},
-    };
-    static Side const back[2] = {
-        {"lady blaumeux", nullptr, 28833, 2469.4f, -2947.6f},
-        {"sir zeliek", nullptr, 28835, 2517.8f, -2896.6f},
-    };
-
-    auto resolve = [&](Side const& side) -> Unit*
-    {
-        Unit* unit = AI_VALUE2(Unit*, "find target", side.name);
-        if (!unit && side.altName)
-            unit = AI_VALUE2(Unit*, "find target", side.altName);
-        return (unit && unit->IsAlive()) ? unit : nullptr;
-    };
+    using namespace NaxxHelpers;
+    HorsemanSpec const* specs = FourHorsemenSpecs();
 
     auto taunt = [&](Unit* target)
     {
@@ -100,72 +75,81 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
         }
     };
 
-    bool const rangedSide = PlayerbotAI::IsRanged(bot) || PlayerbotAI::IsHeal(bot);
-
-    // ---- Tanks: one horseman each, held for the whole fight ----
-    // Every Mark halves its target's threat (boss_four_horsemen_40.cpp:
-    // SpellHitTarget -> DoModifyThreatByPercent(-50)), so holding one of
-    // these is continuous taunt work, not a single pull. Tanks therefore do
-    // not join the stack rotation — they stay on their boss.
-    int32 slot = -1;
-    if (PlayerbotAI::IsTank(bot))
+    auto moveTo2d = [&](float x, float y, float tolerance) -> bool
     {
-        if (botAI->IsMainTank(bot))
-            slot = 0;
-        else if (PlayerbotAI::IsAssistTankOfIndex(bot, 0))
-            slot = 1;
-        else if (PlayerbotAI::IsAssistTankOfIndex(bot, 1))
-            slot = 2;
-        else if (PlayerbotAI::IsAssistTankOfIndex(bot, 2))
-            slot = 3;
-    }
+        if (bot->GetExactDist2d(x, y) <= tolerance)
+            return false;
 
-    if (slot >= 0)
+        float z = bot->GetPositionZ();
+        bot->UpdateAllowedPositionZ(x, y, z);
+        return MoveInside(bot->GetMapId(), x, y, z, tolerance * 0.75f, MovementPriority::MOVEMENT_COMBAT);
+    };
+
+    // ---- Tank pool: eight deep, two per horseman -----------------------
+    std::vector<Player*> const pool = FourHorsemenTankPool(bot);
+    int32 myPoolIndex = -1;
+    for (uint32 i = 0; i < pool.size(); ++i)
+        if (pool[i] == bot)
+            myPoolIndex = int32(i);
+
+    if (myPoolIndex >= 0)
     {
-        Side const& mine = slot < 2 ? front[slot] : back[slot - 2];
-        Unit* boss = resolve(mine);
-        if (!boss)
-            return false;  // mine is dead: the rest of the raid mops up
+        uint32 const slot = uint32(myPoolIndex) % 4;
+        HorsemanSpec const& mine = specs[slot];
+        Unit* boss = ResolveHorseman(botAI, mine);
+        Player* active = FourHorsemenActiveTank(pool, slot, mine.markId);
 
-        // Not holding it? Get on it and taunt. Position comes second —
-        // walking to the station first (the old order) left the tank in an
-        // empty corner while the boss stayed where it stood, which is
-        // exactly the "runs to the corner but never holds aggro" report.
-        if (boss->GetVictim() != bot)
+        if (boss && active == bot)
         {
-            if (!bot->IsWithinMeleeRange(boss))
-                return MoveNear(boss, 3.0f, MovementPriority::MOVEMENT_COMBAT);
+            // Marks halve threat on every application, so holding one of
+            // these is continuous taunt work. Engage first, position after
+            // — walking to the camp first leaves the boss where it stood.
+            if (boss->GetVictim() != bot)
+            {
+                if (!bot->IsWithinMeleeRange(boss))
+                    return MoveNear(boss, 3.0f, MovementPriority::MOVEMENT_COMBAT);
 
-            taunt(boss);
+                taunt(boss);
+                if (AI_VALUE(Unit*, "current target") != boss)
+                    return Attack(boss);
+
+                return false;
+            }
+
+            if (moveTo2d(mine.x, mine.y, 6.0f))
+                return true;
+
             if (AI_VALUE(Unit*, "current target") != boss)
                 return Attack(boss);
 
             return false;
         }
 
-        // Holding it: walk to the station and it follows.
-        if (bot->GetExactDist2d(mine.x, mine.y) > 6.0f)
+        // Rotated off. Wait in the middle — the one place outside all four
+        // Mark radii — until the stacks time out, then rejoin as damage.
+        Aura* mark = bot->GetAura(mine.markId);
+        if (mark && mark->GetStackAmount() > 0)
         {
-            float x = mine.x, y = mine.y, z = bot->GetPositionZ();
-            bot->UpdateAllowedPositionZ(x, y, z);
-            return MoveInside(bot->GetMapId(), x, y, z, 4.0f, MovementPriority::MOVEMENT_COMBAT);
+            if (moveTo2d(FH_SAFE_X, FH_SAFE_Y, 5.0f))
+                return true;
+
+            return false;  // parked and shedding stacks: do not pull anything
         }
-
-        if (AI_VALUE(Unit*, "current target") != boss)
-            return Attack(boss);
-
-        return false;
     }
 
-    // ---- Everyone else: stack-driven rotation between their pair ----
-    Side const* sides = rangedSide ? back : front;
+    // ---- Everyone else: one camp per role ------------------------------
+    // Melee take Korth'azz and Mograine; ranged and healers take Blaumeux
+    // and Zeliek, because Holy Wrath chains through anyone in melee of him.
+    bool const rangedSide = PlayerbotAI::IsRanged(bot) || PlayerbotAI::IsHeal(bot);
+    uint32 const slotA = rangedSide ? 2u : 0u;
+    uint32 const slotB = rangedSide ? 3u : 1u;
 
     uint32 rank = 0;
     if (Group* group = bot->GetGroup())
         for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
         {
             Player* member = itr->GetSource();
-            if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member) || PlayerbotAI::IsTank(member))
+            if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
                 continue;
 
             bool const memberRanged = PlayerbotAI::IsRanged(member) || PlayerbotAI::IsHeal(member);
@@ -178,40 +162,49 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
             ++rank;
         }
 
-    // The Mark is the clock: three stacks of this side's mark means cross.
-    uint32 side = (rank + (flipped ? 1 : 0)) % 2;
-    if (Aura* mark = bot->GetAura(sides[side].markId))
-        if (mark->GetStackAmount() >= 3)
-        {
-            flipped = !flipped;
-            side = (side + 1) % 2;
-        }
+    uint32 slot = (rank % 2) ? slotB : slotA;
 
-    Unit* boss = resolve(sides[side]);
+    // The Mark is the rotation clock: three stacks and cross to the pair
+    // partner, where the other mark builds while this one decays.
+    if (Aura* mark = bot->GetAura(specs[slot].markId))
+        if (mark->GetStackAmount() >= 3)
+            slot = (slot == slotA) ? slotB : slotA;
+
+    Unit* boss = ResolveHorseman(botAI, specs[slot]);
     if (!boss)
     {
-        side = (side + 1) % 2;
-        boss = resolve(sides[side]);
+        slot = (slot == slotA) ? slotB : slotA;
+        boss = ResolveHorseman(botAI, specs[slot]);
         if (!boss)
             return false;
     }
 
-    // Stand off the station toward the room centre so casters keep range.
-    float const cx = 2525.0f, cy = -2955.0f;
-    float dx = cx - sides[side].x, dy = cy - sides[side].y;
-    float const len = std::sqrt(dx * dx + dy * dy);
-    float px = sides[side].x + dx / len * 10.0f;
-    float py = sides[side].y + dy / len * 10.0f;
+    HorsemanSpec const& camp = specs[slot];
+    float x = camp.x, y = camp.y;
 
-    if (bot->GetExactDist2d(px, py) > 8.0f)
+    if (slot == 0)
     {
-        float z = bot->GetPositionZ();
-        bot->UpdateAllowedPositionZ(px, py, z);
-        return MoveInside(bot->GetMapId(), px, py, z, 4.0f, MovementPriority::MOVEMENT_COMBAT);
+        // Korth'azz: Meteor splits its damage between everyone it lands on,
+        // so this camp stacks on one point rather than spreading.
+        if (moveTo2d(x, y, 3.0f))
+            return true;
+    }
+    else
+    {
+        // Everyone else spreads: Void Zones need room to step out of, and
+        // Holy Wrath jumps between raiders standing close together, so
+        // Zeliek's camp spreads twice as wide as the rest.
+        float const spacing = (slot == 3) ? 12.0f : 6.0f;
+        float const angle = float(rank / 2 % 6) * (float(M_PI) / 3.0f);
+        x += spacing * std::cos(angle);
+        y += spacing * std::sin(angle);
+
+        if (moveTo2d(x, y, 4.0f))
+            return true;
     }
 
     if (PlayerbotAI::IsHeal(bot))
-        return false;  // positioned; the heal engine owns the rest
+        return false;  // in position; the heal engine owns the rest
 
     if (AI_VALUE(Unit*, "current target") != boss)
         return Attack(boss);
