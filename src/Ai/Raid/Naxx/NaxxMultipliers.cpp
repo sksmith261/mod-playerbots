@@ -339,7 +339,11 @@ float FourHorsemenGenericMultiplier::GetValue(Action* action)
         return 1.0f;  // and no threat-neglect until the hold is over
     }
 
-    context->GetValue<bool>("neglect threat")->Set(true);
+    // Upstream forced "neglect threat" here, telling every bot to ignore
+    // threat entirely. On the one fight where Marks halve tank threat every
+    // application — and where one of the four is held by a promoted damage
+    // spec — that guarantees the damage rips bosses off their camps. Bots
+    // now respect threat and throttle instead.
     if ((dynamic_cast<DpsAssistAction*>(action) || dynamic_cast<TankAssistAction*>(action)))
         return 0.0f;
 

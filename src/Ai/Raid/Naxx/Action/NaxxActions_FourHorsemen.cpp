@@ -154,7 +154,14 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
 
     if (myPoolIndex >= 0)
     {
-        uint32 const slot = uint32(myPoolIndex) % 4;
+        // Pool order is real tanks first, so pool index maps to horseman
+        // through this table rather than directly: with three real tanks
+        // they cover Korth'azz, Mograine and Zeliek, and the promoted
+        // damage spec — in damage gear, with damage health — gets Blaumeux,
+        // who only casts. Sending it to Zeliek instead put the weakest tank
+        // in melee of the one boss whose Holy Wrath chains through melee.
+        static uint32 const slotForPoolIndex[4] = {0u, 1u, 3u, 2u};
+        uint32 const slot = slotForPoolIndex[uint32(myPoolIndex) % 4];
         HorsemanSpec const& mine = specs[slot];
         Unit* boss = ResolveHorseman(botAI, mine);
         Player* active = FourHorsemenActiveTank(pool, slot, mine.markId);
@@ -337,7 +344,10 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
         return false;
     }
 
-    commandPets(boss);
+    // Zeliek's camp is ranged only, and pets are melee. Sending them in
+    // feeds Holy Wrath and piles threat onto the most fragile tank in the
+    // raid, so they sit this camp out.
+    commandPets(slot == 3 ? nullptr : boss);
 
     if (AI_VALUE(Unit*, "current target") != boss)
         return Attack(boss);
