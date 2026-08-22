@@ -7,7 +7,11 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     // Generic ground-hazard escape. Naxx had none wired at all, so Blaumeux's
     // Void Zones, Grobbulus' clouds and every other dynamic-object pool were
     // simply stood in.
-    triggers.push_back(new TriggerNode("have area debuff", { NextAction("avoid aoe", ACTION_RAID + 1) }));
+    // Above the encounter actions, not level with them: Blaumeux drops her
+    // Void Zone on her own tank, and at equal priority the camp anchor kept
+    // dragging that tank back into it. Standing in a pool is never the
+    // right answer, so escaping always wins.
+    triggers.push_back(new TriggerNode("have area debuff", { NextAction("avoid aoe", ACTION_RAID + 2) }));
 
     // Grobbulus
     triggers.push_back(new TriggerNode("mutating injection melee",
@@ -28,7 +32,7 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 
     // Heigan the Unclean — above avoid-aoe: the dance IS the aoe answer.
     triggers.push_back(new TriggerNode("heigan dance",
-        { NextAction("heigan dance", ACTION_RAID + 2) }
+        { NextAction("heigan dance", ACTION_RAID + 3) }
     ));
 
     // Kel'Thuzad

@@ -105,7 +105,7 @@ inline HorsemanSpec const* FourHorsemenSpecs()
     static HorsemanSpec const specs[4] = {
         {"thane korth'azz",   nullptr,           28832, 2542.9f, -3015.0f},  // Meteor: stack to split it
         {"highlord mograine", "baron rivendare", 28834, 2583.9f, -2971.6f},  // Unholy Shadow: nothing special
-        {"lady blaumeux",     nullptr,           28833, 2469.4f, -2947.6f},  // Void Zone: keep moving
+        {"lady blaumeux",     nullptr,           28833, 2471.76f, -2948.9f}, // Void Zone: keep moving
         {"sir zeliek",        nullptr,           28835, 2514.57f, -2899.91f}, // Holy Wrath: ranged, spread wide
     };
     return specs;
@@ -178,6 +178,14 @@ inline bool CanHoldHorseman(Player* p)
 {
     if (PlayerbotAI::IsTank(p))
         return true;
+
+    // Never conscript a healer. Paladin and druid are both on the list
+    // below, so holy and restoration specs were being promoted — handed a
+    // horseman to hold in healing gear, and taken off healing at the same
+    // time. With three real tanks the first promotion lands on Blaumeux,
+    // which is exactly where this kept going wrong.
+    if (PlayerbotAI::IsHeal(p))
+        return false;
 
     switch (p->getClass())
     {
