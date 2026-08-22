@@ -22,6 +22,17 @@ protected:
     bool Attack(Unit* target, bool with_pet = true);
 };
 
+// "engage": start the encounter without the master having to pull it.
+// Each bot picks the boss nearest ITSELF rather than one shared target, so
+// a raid already split across two camps engages both at once.
+class EngageAction : public AttackAction
+{
+public:
+    EngageAction(PlayerbotAI* botAI, std::string const name = "engage") : AttackAction(botAI, name) {}
+
+    bool Execute(Event event) override;
+};
+
 class AttackMyTargetAction : public AttackAction
 {
 public:

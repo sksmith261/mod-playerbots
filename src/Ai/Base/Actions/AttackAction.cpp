@@ -30,6 +30,35 @@ bool AttackAction::Execute(Event /*event*/)
     return Attack(target);
 }
 
+bool EngageAction::Execute(Event /*event*/)
+{
+    // Deliberate order from the master, so a grid search that reaches an
+    // idle creature is the point here rather than the body-pull hazard the
+    // routine-movement guard exists to prevent.
+    Unit* best = nullptr;
+    for (auto const& guid : AI_VALUE(GuidVector, "possible targets no los"))
+    {
+        Unit* unit = botAI->GetUnit(guid);
+        if (!unit || !unit->IsAlive())
+            continue;
+
+        Creature* creature = unit->ToCreature();
+        if (!creature || !creature->isWorldBoss())
+            continue;
+
+        if (!bot->IsHostileTo(creature))
+            continue;
+
+        if (!best || bot->GetDistance(creature) < bot->GetDistance(best))
+            best = creature;
+    }
+
+    if (!best)
+        return false;
+
+    return Attack(best);
+}
+
 bool AttackMyTargetAction::Execute(Event /*event*/)
 {
     Player* master = GetMaster();
