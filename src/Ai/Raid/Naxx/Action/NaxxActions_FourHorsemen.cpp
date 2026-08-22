@@ -1,5 +1,6 @@
 #include "NaxxActions.h"
 #include "NaxxBossHelper.h"
+#include "RaidDirector.h"
 
 #include "Playerbots.h"
 
@@ -59,21 +60,25 @@ bool FourHorsemenAttackInOrderAction::Execute(Event /*event*/)
     return false;
 }
 
+// The decisions — which camp, which boss, tank or reserve — all live in the
+// raid plan now. This action only carries them out.
 bool FourHorsemenDutyAction::Execute(Event /*event*/)
 {
-    // Drives this action's own copy of the encounter clock (the trigger
-    // holds a separate instance), which the opening damage hold reads.
-    if (!helper.UpdateBossAI())
+    using namespace NaxxHelpers;
+
+    RaidDirector::Tick(bot);
+    RaidPlan const* plan = RaidDirector::Get(bot);
+    if (!plan || plan->encounter != RAID_ENCOUNTER_FOUR_HORSEMEN)
         return false;
 
-    using namespace NaxxHelpers;
-    HorsemanSpec const* specs = FourHorsemenSpecs();
+    RaidAssignment const* mine = plan->For(bot->GetGUID());
+    if (!mine || mine->duty == RAID_DUTY_NONE)
+        return false;
 
-    // A promoted damage spec cannot simply taunt: a warrior's Taunt needs
-    // Defensive Stance and a druid's Growl needs Bear Form. Without the
-    // shift the cast silently fails, the horseman is never pulled, and it
-    // sits at its spawn for the whole fight — which is precisely what
-    // happened to Zeliek, whose tank is the first promoted damage bot.
+    HorsemanSpec const* specs = FourHorsemenSpecs();
+    HorsemanSpec const& camp = specs[mine->camp];
+    Unit* boss = mine->target ? ObjectAccessor::GetUnit(*bot, mine->target) : nullptr;
+
     auto taunt = [&](Unit* target)
     {
         switch (bot->getClass())
@@ -100,11 +105,19 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
         }
     };
 
-    // Pets build threat on whatever they hit, and every Mark halves the
-    // tank's, so one loose pet is enough to peel a horseman off its camp
-    // and drag it across the room. Pets are held during the opening and
-    // then kept strictly on their owner's own horseman. Covers hunter and
-    // warlock pets, water elementals, ghouls and other guardians alike.
+    auto moveTo2d = [&](float x, float y, float tolerance) -> bool
+    {
+        if (bot->GetExactDist2d(x, y) <= tolerance)
+            return false;
+
+        float z = bot->GetPositionZ();
+        bot->UpdateAllowedPositionZ(x, y, z);
+        return MoveInside(bot->GetMapId(), x, y, z, tolerance * 0.75f, MovementPriority::MOVEMENT_COMBAT);
+    };
+
+    // Pets build threat wherever they are sent, and every Mark halves the
+    // tank's, so a pet loose in the wrong camp peels a horseman. They go
+    // strictly where their owner goes, or nowhere.
     auto commandPets = [&](Unit* target)
     {
         for (Unit* controlled : bot->m_Controlled)
@@ -114,7 +127,6 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
                 continue;
 
             CharmInfo* charm = pet->GetCharmInfo();
-
             if (!target)
             {
                 pet->AttackStop();
@@ -135,81 +147,15 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
         }
     };
 
-    auto moveTo2d = [&](float x, float y, float tolerance) -> bool
+    // ---- Reserve: rotated off, shedding stacks ---------------------------
+    if (mine->duty == RAID_DUTY_RESERVE)
     {
-        if (bot->GetExactDist2d(x, y) <= tolerance)
-            return false;
-
-        float z = bot->GetPositionZ();
-        bot->UpdateAllowedPositionZ(x, y, z);
-        return MoveInside(bot->GetMapId(), x, y, z, tolerance * 0.75f, MovementPriority::MOVEMENT_COMBAT);
-    };
-
-    // ---- Tank pool: eight deep, two per horseman -----------------------
-    std::vector<Player*> const pool = FourHorsemenTankPool(bot);
-    int32 myPoolIndex = -1;
-    for (uint32 i = 0; i < pool.size(); ++i)
-        if (pool[i] == bot)
-            myPoolIndex = int32(i);
-
-    if (myPoolIndex >= 0)
-    {
-        // Pool order is real tanks first, so pool index maps to horseman
-        // through this table rather than directly: with three real tanks
-        // they cover Korth'azz, Mograine and Zeliek, and the promoted
-        // damage spec — in damage gear, with damage health — gets Blaumeux,
-        // who only casts. Sending it to Zeliek instead put the weakest tank
-        // in melee of the one boss whose Holy Wrath chains through melee.
-        static uint32 const slotForPoolIndex[4] = {0u, 1u, 3u, 2u};
-        uint32 const poolGroup = uint32(myPoolIndex) % 4;
-        uint32 const slot = slotForPoolIndex[poolGroup];
-        HorsemanSpec const& mine = specs[slot];
-        Unit* boss = ResolveHorseman(botAI, mine);
-
-        // Elect among the POOL GROUP (indices poolGroup and poolGroup+4),
-        // not the horseman slot. Once the two stopped being the same number
-        // this election looked at a different pair than the one that had
-        // actually been assigned here, so every tank concluded it was the
-        // reserve and walked to the safe spot, leaving all four horsemen
-        // unheld.
-        Player* active = FourHorsemenActiveTank(pool, poolGroup, mine.markId, boss);
-
-        if (boss && active == bot)
-        {
-            // Marks halve threat on every application, so holding one of
-            // these is continuous taunt work. Engage first, position after
-            // — walking to the camp first leaves the boss where it stood.
-            // The camp is where this horseman lives for the whole fight,
-            // so the tank anchors there and does NOT chase. Lost threat is
-            // answered with a taunt from the camp; only a boss dragged out
-            // of taunt range is worth walking to.
-            if (boss->GetVictim() != bot)
-            {
-                if (bot->GetDistance(boss) > 25.0f)
-                    return MoveNear(boss, 20.0f, MovementPriority::MOVEMENT_COMBAT);
-
-                taunt(boss);
-            }
-
-            commandPets(boss);
-
-            if (moveTo2d(mine.x, mine.y, 4.0f))
-                return true;
-
-            if (AI_VALUE(Unit*, "current target") != boss)
-                return Attack(boss);
-
-            return false;
-        }
-
-        // Rotated off — but the handoff has to COMPLETE before leaving.
-        // Walking to the middle while the boss is still on us drags it
-        // there and merges it with the other three, which wrecks the whole
-        // fight. Hold the camp, keep it pinned, and let the partner taunt
-        // it away first.
+        // Never walk out while the boss is still on us — it follows, and the
+        // camps collapse into the middle. Hold until the relief has taunted.
         if (boss && boss->GetVictim() == bot)
         {
-            if (moveTo2d(mine.x, mine.y, 6.0f))
+            commandPets(boss);
+            if (moveTo2d(camp.x, camp.y, 6.0f))
                 return true;
 
             if (AI_VALUE(Unit*, "current target") != boss)
@@ -218,160 +164,80 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
             return false;
         }
 
-        // Aggro is genuinely off us now: park in the middle until the
-        // stacks expire, then rejoin as damage.
-        Aura* mark = bot->GetAura(mine.markId);
-        if (mark && mark->GetStackAmount() > 0)
-        {
-            commandPets(nullptr);  // nothing follows us to the middle
+        commandPets(nullptr);
+        moveTo2d(FH_SAFE_X, FH_SAFE_Y, 5.0f);
 
-            moveTo2d(FH_SAFE_X, FH_SAFE_Y, 5.0f);
-
-            // Hold the tick even once parked. Returning false here handed
-            // the bot to the generic combat AI, which promptly sent it back
-            // to the horseman it had just been relieved of — undoing the
-            // rotation and dragging the boss along behind it.
-            return true;
-        }
+        // Hold the tick even once parked: yielding hands the bot to the
+        // generic combat AI, which sends it straight back to the horseman it
+        // was just relieved of.
+        return true;
     }
 
-    // ---- Everyone else: one camp per role ------------------------------
-    // Melee take Korth'azz and Mograine; ranged and healers take Blaumeux
-    // and Zeliek, because Holy Wrath chains through anyone in melee of him.
-    bool const isHealer = PlayerbotAI::IsHeal(bot);
-    bool const rangedSide = PlayerbotAI::IsRanged(bot) || isHealer;
-
-    // Rank among bots of the same kind. Healers are counted as their own
-    // group so they can be spread independently of the damage split.
-    uint32 rank = 0;
-    if (Group* group = bot->GetGroup())
-        for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
-        {
-            Player* member = itr->GetSource();
-            if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
-                continue;
-
-            bool const memberHealer = PlayerbotAI::IsHeal(member);
-            if (memberHealer != isHealer)
-                continue;
-
-            if (!isHealer)
-            {
-                bool const memberRanged = PlayerbotAI::IsRanged(member) || memberHealer;
-                if (memberRanged != rangedSide)
-                    continue;
-            }
-
-            if (member == bot)
-                break;
-
-            ++rank;
-        }
-
-    // Camp geometry, measured: Korth'azz-Mograine is 60y and Blaumeux-
-    // Zeliek 66y (the short sides), Korth'azz-Blaumeux and Mograine-Zeliek
-    // are 100y (the long sides), and Korth'azz-Zeliek / Mograine-Blaumeux
-    // are 117-119y (the diagonals). Perimeter order is therefore
-    // Korth'azz, Mograine, Zeliek, Blaumeux.
-    static uint32 const ring[4] = {0u, 1u, 3u, 2u};
-    static uint32 const diagonal[4] = {3u, 2u, 1u, 0u};
-
-    uint32 slotA, slotB;
-    if (isHealer)
+    // ---- Tank: anchor the camp, taunt from it ----------------------------
+    if (mine->duty == RAID_DUTY_TANK)
     {
-        // Healers rotate clockwise — one camp round the perimeter. Stepping
-        // through raw slot indices instead sent half of them across a 117y
-        // diagonal, roughly seventeen seconds out of position and gathering
-        // marks the whole way, which is what was killing them.
-        uint32 const r = rank % 4;
-        slotA = ring[r];
-        slotB = ring[(r + 1) % 4];
-    }
-    else if (rangedSide)
-    {
-        // Ranged damage rotates diagonally: the long way, which drops a
-        // mark completely rather than trading it for a neighbour's.
-        slotA = (rank % 2) ? 3u : 2u;
-        slotB = diagonal[slotA];
-    }
-    else
-    {
-        // Melee cannot enter Zeliek's camp at all — Holy Wrath chains
-        // through anyone in melee — so they alternate between the only two
-        // camps that can hold them, which is also the shortest hop.
-        slotA = (rank % 2) ? 1u : 0u;
-        slotB = slotA == 0u ? 1u : 0u;
-    }
-
-    // The camp is a commitment, not a re-derivation. Deciding it from
-    // whichever camp happened to be nearer meant that crossing the midpoint
-    // flipped the answer to the destination — whose mark is still high on a
-    // return trip — so bots turned round in open ground and ping-ponged
-    // between camps. Remembering the choice makes the journey atomic: while
-    // travelling to a camp the mark being watched is that camp's, which is
-    // low precisely because the bot is not there yet.
-    if (assignedCamp != slotA && assignedCamp != slotB)
-        assignedCamp = slotA;
-
-    // The Mark is the rotation clock: at the threshold, cross to the pair
-    // partner, where the other mark builds while this one decays.
-    if (Aura* mark = bot->GetAura(specs[assignedCamp].markId))
-        if (mark->GetStackAmount() >= NaxxHelpers::FH_SWAP_STACKS)
-            assignedCamp = (assignedCamp == slotA) ? slotB : slotA;
-
-    uint32 slot = assignedCamp;
-
-    Unit* boss = ResolveHorseman(botAI, specs[slot]);
-    if (!boss)
-    {
-        slot = (slot == slotA) ? slotB : slotA;
-        boss = ResolveHorseman(botAI, specs[slot]);
         if (!boss)
             return false;
+
+        if (boss->GetVictim() != bot)
+        {
+            if (bot->GetDistance(boss) > 25.0f)
+                return MoveNear(boss, 20.0f, MovementPriority::MOVEMENT_COMBAT);
+
+            taunt(boss);
+        }
+
+        commandPets(boss);
+
+        if (moveTo2d(camp.x, camp.y, 4.0f))
+            return true;
+
+        if (AI_VALUE(Unit*, "current target") != boss)
+            return Attack(boss);
+
+        return false;
     }
 
-    HorsemanSpec const& camp = specs[slot];
-    float x = camp.x, y = camp.y;
-
-    if (slot == 0)
+    // ---- Damage and healers ---------------------------------------------
+    if (mine->camp == 0)
     {
-        // Korth'azz: Meteor splits its damage between everyone it lands on,
+        // Korth'azz: Meteor splits its damage across everyone it lands on,
         // so this camp stacks on one point rather than spreading.
-        if (moveTo2d(x, y, 3.0f))
+        if (moveTo2d(camp.x, camp.y, 3.0f))
             return true;
     }
     else
     {
-        // Everyone else spreads: Void Zones need room to step out of, and
-        // Holy Wrath jumps between raiders standing close together, so
-        // Zeliek's camp spreads twice as wide as the rest.
-        float const spacing = (slot == 3) ? 12.0f : 6.0f;
-        float const angle = float(rank / 2 % 6) * (float(M_PI) / 3.0f);
-        x += spacing * std::cos(angle);
-        y += spacing * std::sin(angle);
+        // Void Zones need room to step out of, and Holy Wrath jumps between
+        // raiders standing close, so Zeliek's camp spreads twice as wide.
+        uint32 seat = 0;
+        for (auto const& [guid, assignment] : plan->assignments)
+            if (assignment.camp == mine->camp && guid < bot->GetGUID())
+                ++seat;
 
-        if (moveTo2d(x, y, 4.0f))
+        float const spacing = (mine->camp == 3) ? 12.0f : 6.0f;
+        float const angle = float(seat % 6) * (float(M_PI) / 3.0f);
+
+        if (moveTo2d(camp.x + spacing * std::cos(angle), camp.y + spacing * std::sin(angle), 4.0f))
             return true;
     }
 
-    if (PlayerbotAI::IsHeal(bot))
+    if (mine->duty == RAID_DUTY_HEAL)
         return false;  // in position; the heal engine owns the rest
 
-    // Opening seconds: take the camp, but do not touch the bosses until
-    // the tanks have them parked and threatened.
-    if (helper.InPullGrace())
+    // Opening phase: hold the camp, but nothing touches a boss until the
+    // tanks have all four parked and threatened.
+    if (plan->phase == 1)
     {
         commandPets(nullptr);
         return false;
     }
 
-    // Zeliek's camp is ranged only, and pets are melee. Sending them in
-    // feeds Holy Wrath and piles threat onto the most fragile tank in the
-    // raid, so they sit this camp out.
-    commandPets(slot == 3 ? nullptr : boss);
+    // Zeliek's camp is ranged only, and pets are melee.
+    commandPets(mine->camp == 3 ? nullptr : boss);
 
-    if (AI_VALUE(Unit*, "current target") != boss)
-        return Attack(boss);
+    if (!boss || AI_VALUE(Unit*, "current target") == boss)
+        return false;
 
-    return false;
+    return Attack(boss);
 }

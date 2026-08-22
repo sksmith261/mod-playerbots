@@ -79,10 +79,6 @@ public:
 
 private:
     FourHorsemenBossHelper helper;
-
-    // Which camp this bot is committed to, remembered between ticks.
-    // 4 means unset; it re-seeds whenever the bot's pair changes.
-    uint32 assignedCamp = 4;
 };
 
 class MaexxnaFreeWrappedAction : public AttackAction

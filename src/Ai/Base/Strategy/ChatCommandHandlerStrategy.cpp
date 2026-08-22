@@ -137,6 +137,7 @@ ChatCommandHandlerStrategy::ChatCommandHandlerStrategy(PlayerbotAI* botAI) : Pas
     supported.push_back("position");
     supported.push_back("summon");
     supported.push_back("engage");
+    supported.push_back("raidplan");
     supported.push_back("who");
     supported.push_back("save mana");
     supported.push_back("formation");
