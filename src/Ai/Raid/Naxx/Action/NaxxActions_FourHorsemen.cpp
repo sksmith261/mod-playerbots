@@ -225,10 +225,13 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
         {
             commandPets(nullptr);  // nothing follows us to the middle
 
-            if (moveTo2d(FH_SAFE_X, FH_SAFE_Y, 5.0f))
-                return true;
+            moveTo2d(FH_SAFE_X, FH_SAFE_Y, 5.0f);
 
-            return false;  // parked and shedding stacks: do not pull anything
+            // Hold the tick even once parked. Returning false here handed
+            // the bot to the generic combat AI, which promptly sent it back
+            // to the horseman it had just been relieved of — undoing the
+            // rotation and dragging the boss along behind it.
+            return true;
         }
     }
 
@@ -300,20 +303,23 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
         slotB = slotA == 0u ? 1u : 0u;
     }
 
-    // Which camp am I actually standing in? Anchoring this to slotA meant
-    // only slotA's mark was ever examined: a bot parked at its partner camp
-    // accumulated that mark unchecked — five, six stacks — and snapped back
-    // the instant the slotA mark lapsed, regardless of what it was carrying.
-    uint32 slot = bot->GetExactDist2d(specs[slotA].x, specs[slotA].y) <=
-                          bot->GetExactDist2d(specs[slotB].x, specs[slotB].y)
-                      ? slotA
-                      : slotB;
+    // The camp is a commitment, not a re-derivation. Deciding it from
+    // whichever camp happened to be nearer meant that crossing the midpoint
+    // flipped the answer to the destination — whose mark is still high on a
+    // return trip — so bots turned round in open ground and ping-ponged
+    // between camps. Remembering the choice makes the journey atomic: while
+    // travelling to a camp the mark being watched is that camp's, which is
+    // low precisely because the bot is not there yet.
+    if (assignedCamp != slotA && assignedCamp != slotB)
+        assignedCamp = slotA;
 
     // The Mark is the rotation clock: at the threshold, cross to the pair
     // partner, where the other mark builds while this one decays.
-    if (Aura* mark = bot->GetAura(specs[slot].markId))
+    if (Aura* mark = bot->GetAura(specs[assignedCamp].markId))
         if (mark->GetStackAmount() >= NaxxHelpers::FH_SWAP_STACKS)
-            slot = (slot == slotA) ? slotB : slotA;
+            assignedCamp = (assignedCamp == slotA) ? slotB : slotA;
+
+    uint32 slot = assignedCamp;
 
     Unit* boss = ResolveHorseman(botAI, specs[slot]);
     if (!boss)
