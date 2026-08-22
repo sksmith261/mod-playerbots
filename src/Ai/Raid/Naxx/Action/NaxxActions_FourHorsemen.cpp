@@ -161,10 +161,18 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
         // who only casts. Sending it to Zeliek instead put the weakest tank
         // in melee of the one boss whose Holy Wrath chains through melee.
         static uint32 const slotForPoolIndex[4] = {0u, 1u, 3u, 2u};
-        uint32 const slot = slotForPoolIndex[uint32(myPoolIndex) % 4];
+        uint32 const poolGroup = uint32(myPoolIndex) % 4;
+        uint32 const slot = slotForPoolIndex[poolGroup];
         HorsemanSpec const& mine = specs[slot];
         Unit* boss = ResolveHorseman(botAI, mine);
-        Player* active = FourHorsemenActiveTank(pool, slot, mine.markId);
+
+        // Elect among the POOL GROUP (indices poolGroup and poolGroup+4),
+        // not the horseman slot. Once the two stopped being the same number
+        // this election looked at a different pair than the one that had
+        // actually been assigned here, so every tank concluded it was the
+        // reserve and walked to the safe spot, leaving all four horsemen
+        // unheld.
+        Player* active = FourHorsemenActiveTank(pool, poolGroup, mine.markId);
 
         if (boss && active == bot)
         {
