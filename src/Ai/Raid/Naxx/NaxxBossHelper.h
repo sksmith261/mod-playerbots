@@ -201,14 +201,12 @@ inline bool CanHoldHorseman(Player* p)
 
 inline std::vector<Player*> FourHorsemenTankPool(Player* bot)
 {
-    // Order matters. Real tanks first, then death knights — they are the
-    // best off-tanks available here: plate, Dark Command works in any
-    // spec or presence, and a damage-spec DK still has the mitigation to
-    // survive holding a horseman. Paladins come next (Hand of Reckoning
-    // also needs no stance), and warriors and druids last, since they must
-    // shift into Defensive Stance or Bear Form before they can taunt at
-    // all.
-    std::vector<Player*> real, deathKnights, paladins, shiftPromote;
+    // Promotion order: real tanks, death knights, warriors, paladins,
+    // druids. Warriors and druids need a shift first (Defensive Stance,
+    // Bear Form) before they can taunt at all, which the taunt helper
+    // handles — a wasted tick each time, but plate and a real mitigation
+    // kit are worth more here than a paladin's stance-free taunt.
+    std::vector<Player*> real, deathKnights, warriors, paladins, druids;
     if (Group* group = bot->GetGroup())
         for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
         {
@@ -218,17 +216,20 @@ inline std::vector<Player*> FourHorsemenTankPool(Player* bot)
 
             if (PlayerbotAI::IsTank(member))
                 real.push_back(member);
-            else if (member->getClass() == CLASS_DEATH_KNIGHT)
-                deathKnights.push_back(member);
-            else if (member->getClass() == CLASS_PALADIN)
-                paladins.push_back(member);
             else
-                shiftPromote.push_back(member);
+                switch (member->getClass())
+                {
+                    case CLASS_DEATH_KNIGHT: deathKnights.push_back(member); break;
+                    case CLASS_WARRIOR:      warriors.push_back(member);     break;
+                    case CLASS_PALADIN:      paladins.push_back(member);     break;
+                    default:                 druids.push_back(member);       break;
+                }
         }
 
     real.insert(real.end(), deathKnights.begin(), deathKnights.end());
+    real.insert(real.end(), warriors.begin(), warriors.end());
     real.insert(real.end(), paladins.begin(), paladins.end());
-    real.insert(real.end(), shiftPromote.begin(), shiftPromote.end());
+    real.insert(real.end(), druids.begin(), druids.end());
     if (real.size() > 8)
         real.resize(8);
 
