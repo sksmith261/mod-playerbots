@@ -1,4 +1,5 @@
 #include "NaxxTriggers.h"
+#include "RaidDirector.h"
 
 #include "Playerbots.h"
 #include "NaxxSpellIds.h"
@@ -236,7 +237,11 @@ bool RazuviousNontankTrigger::IsActive()
     return helper.UpdateBossAI() && !(bot->getClass() == CLASS_PRIEST);
 }
 
-bool FourHorsemenDutyTrigger::IsActive() { return helper.UpdateBossAI(); }
+bool FourHorsemenDutyTrigger::IsActive()
+{
+    RaidPlan const* plan = RaidDirector::Get(bot);
+    return plan && plan->encounter == RAID_ENCOUNTER_FOUR_HORSEMEN && plan->For(bot->GetGUID());
+}
 
 bool FourHorsemenAttractorsTrigger::IsActive()
 {
@@ -256,18 +261,17 @@ bool FourHorsemenExceptAttractorsTrigger::IsActive()
 
 bool SapphironGroundTrigger::IsActive()
 {
-    if (!helper.UpdateBossAI())
-        return false;
-
-    return helper.IsPhaseGround();
+    // Reads the plan rather than this bot's threat list. Sapphiron holds
+    // threat on almost nobody, so the old check left most of the raid with
+    // no Sapphiron behaviour at all.
+    RaidPlan const* plan = RaidDirector::Get(bot);
+    return plan && plan->encounter == RAID_ENCOUNTER_SAPPHIRON && plan->For(bot->GetGUID());
 }
 
 bool SapphironFlightTrigger::IsActive()
 {
-    if (!helper.UpdateBossAI())
-        return false;
-
-    return helper.IsPhaseFlight();
+    RaidPlan const* plan = RaidDirector::Get(bot);
+    return plan && plan->encounter == RAID_ENCOUNTER_SAPPHIRON && plan->For(bot->GetGUID());
 }
 
 bool GluthTrigger::IsActive() { return helper.UpdateBossAI(); }

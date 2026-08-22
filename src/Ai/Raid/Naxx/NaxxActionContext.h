@@ -10,6 +10,7 @@
 #include "Action.h"
 #include "NamedObjectContext.h"
 #include "NaxxActions.h"
+#include "RaidDirector.h"
 
 class RaidNaxxActionContext : public NamedObjectContext<Action>
 {
@@ -29,6 +30,7 @@ public:
         creators["gothik choose target"] = &RaidNaxxActionContext::gothik_choose_target;
         creators["four horsemen duty"] = &RaidNaxxActionContext::four_horsemen_duty;
         creators["sapphiron plan"] = &RaidNaxxActionContext::sapphiron_plan;
+        creators["raid director tick"] = &RaidNaxxActionContext::raid_director_tick;
         creators["thaddius tether"] = &RaidNaxxActionContext::thaddius_tether;
         creators["faerlina worshipper duty"] = &RaidNaxxActionContext::faerlina_worshipper_duty;
         creators["faerlina sacrifice"] = &RaidNaxxActionContext::faerlina_sacrifice;
@@ -78,6 +80,7 @@ private:
     static Action* gothik_choose_target(PlayerbotAI* ai) { return new GothikChooseTargetAction(ai); }
     static Action* four_horsemen_duty(PlayerbotAI* ai) { return new FourHorsemenDutyAction(ai); }
     static Action* sapphiron_plan(PlayerbotAI* ai) { return new SapphironPlanAction(ai); }
+    static Action* raid_director_tick(PlayerbotAI* ai) { return new RaidDirectorTickAction(ai); }
     static Action* thaddius_tether(PlayerbotAI* ai) { return new ThaddiusTetherAction(ai); }
     static Action* faerlina_worshipper_duty(PlayerbotAI* ai) { return new FaerlinaWorshipperDutyAction(ai); }
     static Action* faerlina_sacrifice(PlayerbotAI* ai) { return new FaerlinaSacrificeAction(ai); }

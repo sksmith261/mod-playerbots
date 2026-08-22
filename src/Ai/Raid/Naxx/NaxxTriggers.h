@@ -6,6 +6,7 @@
 #include "GenericTriggers.h"
 #include "PlayerbotAIConfig.h"
 #include "NaxxBossHelper.h"
+#include "RaidDirector.h"
 #include "Trigger.h"
 
 class MutatingInjectionTrigger : public HasAuraTrigger
@@ -57,6 +58,19 @@ public:
 private:
     uint32 last_cloud_ms;
     static constexpr uint32 CloudRotationDelayMs = 15000;
+};
+
+// Deliberately trivial: in combat, in a raid map. Anything cleverer would
+// reintroduce the per-bot perception problem the director exists to remove.
+class RaidDirectorTrigger : public Trigger
+{
+public:
+    RaidDirectorTrigger(PlayerbotAI* ai) : Trigger(ai, "raid director") {}
+    bool IsActive() override
+    {
+        Map* map = bot->GetMap();
+        return bot->IsInCombat() && map && map->IsRaid();
+    }
 };
 
 class MaexxnaWebWrapTrigger : public Trigger

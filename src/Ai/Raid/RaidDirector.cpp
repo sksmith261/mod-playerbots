@@ -75,6 +75,12 @@ RaidPlan const* RaidDirector::Get(Player* bot)
     return &it->second;
 }
 
+bool RaidDirectorTickAction::Execute(Event /*event*/)
+{
+    RaidDirector::Tick(bot);
+    return false;  // never consumes the tick; it only keeps the plan fresh
+}
+
 bool RaidPlanAction::Execute(Event /*event*/)
 {
     // The command reaches every bot in the group; only the first living one

@@ -76,6 +76,18 @@ struct RaidPlan
     }
 };
 
+// Drives the director. This must not be gated on anything a single bot can
+// fail to perceive: the whole point is to escape per-bot threat lookups, so
+// hanging the rebuild off an encounter trigger that itself needs threat
+// leaves the plan permanently unbuilt.
+class RaidDirectorTickAction : public Action
+{
+public:
+    RaidDirectorTickAction(PlayerbotAI* botAI, std::string const name = "raid director tick")
+        : Action(botAI, name) {}
+    bool Execute(Event event) override;
+};
+
 // `raidplan` in party or raid chat: prints what the director decided.
 // Everything that has gone wrong on a coordinated fight so far has been
 // plainly visible in this table, and invisible from watching the bots.

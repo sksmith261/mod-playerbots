@@ -4,6 +4,11 @@
 
 void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 {
+    // Keeps the raid plan fresh. Lowest priority in the list — it never
+    // consumes a tick, it only ensures the plan exists for everything above
+    // it to read.
+    triggers.push_back(new TriggerNode("raid director", { NextAction("raid director tick", 1.0f) }));
+
     // Generic ground-hazard escape. Naxx had none wired at all, so Blaumeux's
     // Void Zones, Grobbulus' clouds and every other dynamic-object pool were
     // simply stood in.
