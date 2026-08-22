@@ -684,6 +684,30 @@ public:
         feugen = AI_VALUE2(Unit*, "find target", "feugen");
         stalagg = AI_VALUE2(Unit*, "find target", "stalagg");
 
+        // "find target" only sees what THIS bot personally holds threat on.
+        // A healer before its first heal, a bot that just rezzed, anyone who
+        // dropped off a pet's threat list — all of them saw no pets, decided
+        // the pet phase was over, and ran for Thaddius's platform, straight
+        // across the slime. It also silently disabled their leash guard, so
+        // a tank in that state dragged its pet into the pool with it.
+        //
+        // Phase state must not be a per-bot opinion: fall back to a grid
+        // scan so all forty agree. In-combat only, so it cannot body-pull.
+        if (bot->IsInCombat() && (!feugen || !stalagg))
+        {
+            for (auto const& guid : AI_VALUE(GuidVector, "possible targets no los"))
+            {
+                Unit* unit = botAI->GetUnit(guid);
+                if (!unit || !unit->IsAlive())
+                    continue;
+
+                if (!feugen && botAI->EqualLowercaseName(unit->GetName(), "feugen"))
+                    feugen = unit;
+                else if (!stalagg && botAI->EqualLowercaseName(unit->GetName(), "stalagg"))
+                    stalagg = unit;
+            }
+        }
+
         // The pets anchor the whole first phase: Thaddius holds no threat
         // while Stalagg and Feugen live, so gating on resolving HIM made
         // every trigger, tank split, and the death-sync multiplier inert
