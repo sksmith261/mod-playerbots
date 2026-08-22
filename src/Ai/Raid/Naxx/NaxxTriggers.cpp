@@ -96,7 +96,7 @@ bool MaexxnaWebWrapTrigger::IsActive()
         return false;
 
     // Grid search is legal here: gated on the boss being on our threat list.
-    return bot->FindNearestCreature(NaxxHelpers::NPC_WEB_WRAP, 120.0f) != nullptr;
+    return !NaxxHelpers::MaexxnaWebWraps(botAI, bot).empty();
 }
 
 bool NothTrigger::IsActive()
@@ -218,19 +218,17 @@ bool HeiganDanceTrigger::IsActive()
 
 bool RazuviousTankTrigger::IsActive()
 {
-    Difficulty diff = bot->GetRaidDifficulty();
-    if (diff == RAID_DIFFICULTY_10MAN_NORMAL)
-        return helper.UpdateBossAI() && botAI->IsTank(bot);
-
+    // Reizan runs IP's naxx-40: the vanilla mechanic (priests mind control
+    // the Understudies; obedience crystals do not exist there). The raid's
+    // nominal difficulty says nothing about which version this is, so the
+    // priest path is unconditional — the wotlk 10-man crystal path was
+    // unreachable-by-design here and its grid/spawn-id code was broken
+    // anyway (audit).
     return helper.UpdateBossAI() && bot->getClass() == CLASS_PRIEST;
 }
 
 bool RazuviousNontankTrigger::IsActive()
 {
-    Difficulty diff = bot->GetRaidDifficulty();
-    if (diff == RAID_DIFFICULTY_10MAN_NORMAL)
-        return helper.UpdateBossAI() && !(botAI->IsTank(bot));
-
     return helper.UpdateBossAI() && !(bot->getClass() == CLASS_PRIEST);
 }
 

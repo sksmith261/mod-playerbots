@@ -90,6 +90,22 @@ inline Unit* FaerlinaSacrificeTarget(PlayerbotAI* botAI, Unit* faerlina)
 }
 constexpr uint32 NPC_WEB_WRAP = 16486;
 
+// Web Wraps by NAME: the wotlk entry is 16486 but IP's naxx-40 clones use
+// offset entries — name-keyed search covers both versions.
+inline std::vector<Unit*> MaexxnaWebWraps(PlayerbotAI* botAI, Player* bot)
+{
+    std::vector<Unit*> wraps;
+    for (auto const& guid : botAI->GetAiObjectContext()->GetValue<GuidVector>("nearest npcs")->Get())
+    {
+        Unit* unit = botAI->GetUnit(guid);
+        if (unit && unit->IsAlive() && botAI->EqualLowercaseName(unit->GetName(), "web wrap"))
+            wraps.push_back(unit);
+    }
+
+    std::sort(wraps.begin(), wraps.end(), [](Unit* a, Unit* b) { return a->GetGUID() < b->GetGUID(); });
+    return wraps;
+}
+
 // Spore 16286's on-death cast (smart_scripts): the soak buff. Matched by
 // id — the name differs by era write-up (Fungal Creep / Fungal Bloom).
 constexpr uint32 SPELL_SPORE_BUFF = 29232;
