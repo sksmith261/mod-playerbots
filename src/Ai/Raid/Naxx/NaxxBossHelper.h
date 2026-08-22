@@ -124,6 +124,46 @@ inline bool IsNothAdd(PlayerbotAI* botAI, Unit* unit)
            botAI->EqualLowercaseName(unit->GetName(), "plagued guardian");
 }
 
+// boss_gothik_40.cpp: IN_LIVE_SIDE(who) is (y < POS_Y_GATE). The inner
+// gate only opens at 30% boss health, so until then a bot cannot reach
+// anything on the far side — targeting across it just walks it into a
+// closed gate.
+constexpr float GOTHIK_GATE_Y = -3360.78f;
+
+inline bool GothikLiveSide(WorldObject const* who) { return who->GetPositionY() < GOTHIK_GATE_Y; }
+
+// Threat first, then a grid scan: Gothik holds no threat on most of the
+// raid during the wave phase, and the bots still need to know where he is.
+inline Unit* FindGothik(PlayerbotAI* botAI, Player* bot)
+{
+    if (Unit* boss = botAI->GetAiObjectContext()->GetValue<Unit*>("find target", "gothik the harvester")->Get())
+        return boss;
+
+    if (!bot->IsInCombat())
+        return nullptr;
+
+    for (auto const& guid : botAI->GetAiObjectContext()->GetValue<GuidVector>("possible targets no los")->Get())
+    {
+        Unit* unit = botAI->GetUnit(guid);
+        if (unit && botAI->EqualLowercaseName(unit->GetName(), "gothik the harvester"))
+            return unit;
+    }
+
+    return nullptr;
+}
+
+// Wave phase: the script keeps him REACT_PASSIVE on his balcony and only
+// flips him aggressive when the last wave has been sent. Reading his react
+// state beats guessing from altitude.
+inline bool GothikWavePhase(Unit* gothik)
+{
+    Creature* creature = gothik ? gothik->ToCreature() : nullptr;
+    return creature && creature->HasReactState(REACT_PASSIVE);
+}
+
+// Below 30% the script opens the inner gate and the two sides merge.
+inline bool GothikGateOpen(Unit* gothik) { return gothik && gothik->GetHealthPct() < 30.0f; }
+
 // Gothik wave adds; higher rank dies first. 0 = not a Gothik add.
 inline int32 GothikAddRank(PlayerbotAI* botAI, Unit* unit)
 {

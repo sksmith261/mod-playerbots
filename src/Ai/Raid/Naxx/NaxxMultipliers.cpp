@@ -28,14 +28,27 @@ float GothikBalconyMultiplier::GetValue(Action* action)
     if (!action)
         return 1.0f;
 
-    Unit* gothik = AI_VALUE2(Unit*, "find target", "gothik the harvester");
-    if (!gothik || !gothik->IsAlive() || gothik->GetPositionZ() < 280.0f)
+    Unit* gothik = NaxxHelpers::FindGothik(botAI, bot);
+    if (!gothik || !gothik->IsAlive())
         return 1.0f;
 
     if (action->GetTarget() != gothik)
         return 1.0f;
 
-    return 0.0f;
+    // Wave phase: he sits passive on his balcony while the raid is meant to
+    // be killing waves. Damage on him there is not free — it is DPS not
+    // spent on the adds that actually end the attempt.
+    if (NaxxHelpers::GothikWavePhase(gothik))
+        return 0.0f;
+
+    // Phase two: he teleports across the gate every 20s and wipes threat on
+    // the far side. Until the gate opens at 30%, the half of the raid he
+    // left cannot reach him — chasing means running at a shut gate.
+    if (!NaxxHelpers::GothikGateOpen(gothik) &&
+        NaxxHelpers::GothikLiveSide(gothik) != NaxxHelpers::GothikLiveSide(bot))
+        return 0.0f;
+
+    return 1.0f;
 }
 
 float FaerlinaDisciplineMultiplier::GetValue(Action* action)

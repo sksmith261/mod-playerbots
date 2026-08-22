@@ -3,76 +3,48 @@
 #include "NaxxBossHelper.h"
 #include "Playerbots.h"
 
-// Fight-time discipline only. The pre-pull live/dead side split is a raid
-// leader decision made with the ground-click tools (@group5-8 goto onto the
-// dead side); each side's bots then fight what engages them — threat-based
-// "attackers" never crosses the gate.
+// Side discipline is the whole fight. Each half of the raid holds its own
+// side of the gate and kills what spawns there; nothing may target across
+// the gate while it is shut, because it cannot be reached. The pre-pull
+// split itself stays a raid-leader call (@group... sweep onto the dead
+// side) — bots cannot position before anything has engaged.
 bool GothikChooseTargetAction::Execute(Event /*event*/)
 {
-    Unit* gothik = AI_VALUE2(Unit*, "find target", "gothik the harvester");
+    Unit* gothik = NaxxHelpers::FindGothik(botAI, bot);
+    bool const mySide = NaxxHelpers::GothikLiveSide(bot);
+    bool const gateOpen = NaxxHelpers::GothikGateOpen(gothik);
 
-    // Phase split by altitude: the balcony is z~285, the floor z~268, and
-    // the core leaves him ATTACKABLE up there (SetImmuneToPC(false)) — so
-    // an attackability check cannot distinguish the phases, and the raid
-    // was observed wasting the whole of phase one plinking him on the
-    // platform. He is only a real target once he has come down.
-    bool const onBalcony = gothik && gothik->GetPositionZ() > 280.0f;
-
-    // Phase two: he is down — burn the boss, adds die to cleave.
-    if (gothik && gothik->IsAlive() && !onBalcony)
-    {
-        if (AI_VALUE(Unit*, "current target") != gothik)
-            return Attack(gothik);
-        return false;
-    }
-
-    std::vector<Unit*> adds;
-    for (auto const& guid : AI_VALUE(GuidVector, "attackers"))
+    // Adds on MY side only, unless the gate has opened and the room is one
+    // space again. Grid-based so a bot with no threat yet still helps.
+    Unit* target = nullptr;
+    int32 bestRank = 0;
+    for (auto const& guid : AI_VALUE(GuidVector, "possible targets no los"))
     {
         Unit* unit = botAI->GetUnit(guid);
-        if (unit && unit->IsAlive() && NaxxHelpers::GothikAddRank(botAI, unit) > 0)
-            adds.push_back(unit);
-    }
+        if (!unit || !unit->IsAlive())
+            continue;
 
-    if (adds.empty())
-        return false;
+        int32 const rank = NaxxHelpers::GothikAddRank(botAI, unit);
+        if (rank <= 0)
+            continue;
 
-    Unit* target = nullptr;
-    if (botAI->IsAssistTank(bot))
-    {
-        std::sort(adds.begin(), adds.end(),
-                  [](Unit* a, Unit* b) { return a->GetGUID() < b->GetGUID(); });
-        for (Unit* add : adds)
+        if (!gateOpen && NaxxHelpers::GothikLiveSide(unit) != mySide)
+            continue;
+
+        // Riders before death knights before trainees; then lowest health.
+        if (!target || rank > bestRank ||
+            (rank == bestRank && unit->GetHealthPct() < target->GetHealthPct()))
         {
-            bool const tanked = add->GetVictim() && add->GetVictim()->ToPlayer() &&
-                                PlayerbotAI::IsTank(add->GetVictim()->ToPlayer());
-            if (!target)
-                target = add;
-            if (!tanked)
-            {
-                target = add;
-                break;
-            }
+            target = unit;
+            bestRank = rank;
         }
     }
-    else
-    {
-        // Riders first, then death knights, then trainees; ties by health.
-        for (Unit* add : adds)
-        {
-            if (!target)
-            {
-                target = add;
-                continue;
-            }
 
-            int32 const rankNew = NaxxHelpers::GothikAddRank(botAI, add);
-            int32 const rankCur = NaxxHelpers::GothikAddRank(botAI, target);
-            if (rankNew > rankCur ||
-                (rankNew == rankCur && add->GetHealthPct() < target->GetHealthPct()))
-                target = add;
-        }
-    }
+    // No adds left here: take the boss, but only once he is actually
+    // fightable — aggressive, and on this side of a gate we can cross.
+    if (!target && gothik && gothik->IsAlive() && !NaxxHelpers::GothikWavePhase(gothik) &&
+        (gateOpen || NaxxHelpers::GothikLiveSide(gothik) == mySide))
+        target = gothik;
 
     if (!target || AI_VALUE(Unit*, "current target") == target)
         return false;

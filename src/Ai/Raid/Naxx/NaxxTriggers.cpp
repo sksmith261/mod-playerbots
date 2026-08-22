@@ -141,8 +141,12 @@ bool GothikTrigger::IsActive()
     if (!bot->IsInCombat())
         return false;
 
-    if (Unit* boss = AI_VALUE2(Unit*, "find target", "gothik the harvester"))
-        return boss->IsAlive();
+    // Grid-backed: Gothik holds threat on almost nobody during the wave
+    // phase, so a threat-only lookup left most of the raid outside the
+    // encounter AI entirely.
+    if (Unit* boss = NaxxHelpers::FindGothik(botAI, bot))
+        if (boss->IsAlive())
+            return true;
 
     for (auto const& guid : AI_VALUE(GuidVector, "attackers"))
     {
