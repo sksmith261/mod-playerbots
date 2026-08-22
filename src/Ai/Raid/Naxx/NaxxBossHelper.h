@@ -659,16 +659,44 @@ protected:
 class ThaddiusBossHelper : public AiObject
 {
 public:
-    // Tesla tether: a pet more than 28y from its spawn breaks its coil link
-    // and the coil shocks random raiders for ~4.4k every 1.5s. The pet walks
-    // to whoever tanks it, so these sit close to the spawns (Stalagg
-    // 3450.45/-2931.42, Feugen 3508.14/-2988.65) — same direction as the old
-    // spots, ~7y out instead of ~19y, leaving the tether budget untouched.
-    const std::pair<float, float> tankPosFeugen = {3514.06f, -2994.23f};
-    const std::pair<float, float> tankPosStalagg = {3444.73f, -2926.84f};
-    const std::pair<float, float> rangedPosFeugen = {3500.45f, -2997.92f};
-    const std::pair<float, float> rangedPosStalagg = {3441.01f, -2942.04f};
-    const float tankPosZ = 312.61f;
+    // Stations are computed, not hardcoded, and always lie ON THE SEGMENT
+    // between a pet's spawn point and its platform's jump ledge — the only
+    // two points in this room known to sit on the platform at its height.
+    //
+    // The old fixed coordinates pointed the other way: from each pet the
+    // ledge lies at bearing ~+44 degrees, while the tank and ranged spots
+    // sat at -43, -130, +141 and -132. Those are over the platform edge,
+    // above the slime floor ~17y below, so ranged walked down into the pool
+    // and fought "from the middle", and Feugen's tank dragged him
+    // underneath the platform into the water.
+    const std::pair<float, float> ledgeStalagg = {3462.99f, -2918.90f};
+    const std::pair<float, float> ledgeFeugen = {3520.65f, -2976.51f};
+
+    // Set from the pet's own spawn height whenever a station is computed,
+    // so nothing depends on a hardcoded floor level either.
+    float tankPosZ = 312.09f;
+
+    std::pair<float, float> PetStation(Unit* pet, float outDistance)
+    {
+        Creature* creature = pet ? pet->ToCreature() : nullptr;
+        if (!creature)
+            return {bot->GetPositionX(), bot->GetPositionY()};  // no-op move
+
+        Position const& home = creature->GetHomePosition();
+        tankPosZ = home.GetPositionZ();
+
+        std::pair<float, float> const& ledge =
+            botAI->EqualLowercaseName(pet->GetName(), "stalagg") ? ledgeStalagg : ledgeFeugen;
+
+        float const dx = ledge.first - home.GetPositionX();
+        float const dy = ledge.second - home.GetPositionY();
+        float const len = std::sqrt(dx * dx + dy * dy);
+        if (len < 1.0f)
+            return {home.GetPositionX(), home.GetPositionY()};
+
+        return {home.GetPositionX() + dx / len * outDistance,
+                home.GetPositionY() + dy / len * outDistance};
+    }
     ThaddiusBossHelper(PlayerbotAI* botAI) : AiObject(botAI) {}
     bool UpdateBossAI()
     {
@@ -835,20 +863,10 @@ public:
         return GetAssignedPet(forBot);
     }
 
-    std::pair<float, float> PetPhaseGetPosForTank()
-    {
-        if (GetTankPet(bot) == feugen)
-            return tankPosFeugen;
-
-        return tankPosStalagg;
-    }
-    std::pair<float, float> PetPhaseGetPosForRanged()
-    {
-        if (GetAssignedPet(bot) == feugen)
-            return rangedPosFeugen;
-
-        return rangedPosStalagg;
-    }
+    // 3y keeps the pet within a couple of yards of its spawn; 12y puts
+    // ranged outside Feugen's Static Field but still short of the ledge.
+    std::pair<float, float> PetPhaseGetPosForTank() { return PetStation(GetTankPet(bot), 3.0f); }
+    std::pair<float, float> PetPhaseGetPosForRanged() { return PetStation(GetAssignedPet(bot), 12.0f); }
 
 protected:
     void Reset()
