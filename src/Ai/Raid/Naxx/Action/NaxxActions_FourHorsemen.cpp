@@ -250,28 +250,39 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
             ++rank;
         }
 
+    // Camp geometry, measured: Korth'azz-Mograine is 60y and Blaumeux-
+    // Zeliek 66y (the short sides), Korth'azz-Blaumeux and Mograine-Zeliek
+    // are 100y (the long sides), and Korth'azz-Zeliek / Mograine-Blaumeux
+    // are 117-119y (the diagonals). Perimeter order is therefore
+    // Korth'azz, Mograine, Zeliek, Blaumeux.
+    static uint32 const ring[4] = {0u, 1u, 3u, 2u};
+    static uint32 const diagonal[4] = {3u, 2u, 1u, 0u};
+
     uint32 slotA, slotB;
     if (isHealer)
     {
-        // Healers go round all four camps rather than following the damage
-        // split, so the melee camps are not left relying on range from
-        // across the room. Each healer pairs with the next camp round the
-        // circle, so a rotation moves it one camp over and every camp keeps
-        // cover while marks are being shed.
-        slotA = rank % 4;
-        slotB = (slotA + 1) % 4;
+        // Healers rotate clockwise — one camp round the perimeter. Stepping
+        // through raw slot indices instead sent half of them across a 117y
+        // diagonal, roughly seventeen seconds out of position and gathering
+        // marks the whole way, which is what was killing them.
+        uint32 const r = rank % 4;
+        slotA = ring[r];
+        slotB = ring[(r + 1) % 4];
+    }
+    else if (rangedSide)
+    {
+        // Ranged damage rotates diagonally: the long way, which drops a
+        // mark completely rather than trading it for a neighbour's.
+        slotA = (rank % 2) ? 3u : 2u;
+        slotB = diagonal[slotA];
     }
     else
     {
-        // Damage still splits by role: melee cannot stand in Zeliek's camp.
-        slotA = rangedSide ? 2u : 0u;
-        slotB = rangedSide ? 3u : 1u;
-        if (rank % 2)
-        {
-            uint32 const swap = slotA;
-            slotA = slotB;
-            slotB = swap;
-        }
+        // Melee cannot enter Zeliek's camp at all — Holy Wrath chains
+        // through anyone in melee — so they alternate between the only two
+        // camps that can hold them, which is also the shortest hop.
+        slotA = (rank % 2) ? 1u : 0u;
+        slotB = slotA == 0u ? 1u : 0u;
     }
 
     uint32 slot = slotA;
