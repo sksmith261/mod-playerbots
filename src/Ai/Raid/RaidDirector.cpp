@@ -160,11 +160,13 @@ std::string RaidDirector::Describe(Player* bot)
         if (!bot->IsInCombat())
             return "No raid plan: the raid is not in combat. Plans are built on the pull.";
 
-        if (!botAI->HasStrategy("naxx", BOT_STATE_COMBAT))
-            return "No raid plan: the naxx strategy is not active on me (say 'naxx' to enable).";
+        // Free function: no botAI member here, unlike an Action.
+        if (PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot))
+            if (!botAI->HasStrategy("naxx", BOT_STATE_COMBAT))
+                return "No raid plan: the naxx strategy is not active on me (say 'naxx' to enable).";
 
-        return "No raid plan: in combat on a raid map, but no encounter the director knows "
-               "was recognised here. It currently knows the Four Horsemen and Sapphiron.";
+        return "No raid plan: in combat on a raid map, but no encounter the director "
+               "recognised here.";
     }
 
     static char const* dutyName[] = {"idle", "tank", "reserve", "damage", "heal", "hide"};
