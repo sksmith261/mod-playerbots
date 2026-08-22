@@ -125,8 +125,24 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
             return false;
         }
 
-        // Rotated off. Wait in the middle — the one place outside all four
-        // Mark radii — until the stacks time out, then rejoin as damage.
+        // Rotated off — but the handoff has to COMPLETE before leaving.
+        // Walking to the middle while the boss is still on us drags it
+        // there and merges it with the other three, which wrecks the whole
+        // fight. Hold the camp, keep it pinned, and let the partner taunt
+        // it away first.
+        if (boss && boss->GetVictim() == bot)
+        {
+            if (moveTo2d(mine.x, mine.y, 6.0f))
+                return true;
+
+            if (AI_VALUE(Unit*, "current target") != boss)
+                return Attack(boss);
+
+            return false;
+        }
+
+        // Aggro is genuinely off us now: park in the middle until the
+        // stacks expire, then rejoin as damage.
         Aura* mark = bot->GetAura(mine.markId);
         if (mark && mark->GetStackAmount() > 0)
         {
