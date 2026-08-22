@@ -657,14 +657,16 @@ public:
             Reset();
 
         if (!_unit)
-        {
             _unit = AI_VALUE2(Unit*, "find target", "thaddius");
-            if (!_unit)
-                return false;
-        }
+
         feugen = AI_VALUE2(Unit*, "find target", "feugen");
         stalagg = AI_VALUE2(Unit*, "find target", "stalagg");
-        return true;
+
+        // The pets anchor the whole first phase: Thaddius holds no threat
+        // while Stalagg and Feugen live, so gating on resolving HIM made
+        // every trigger, tank split, and the death-sync multiplier inert
+        // until phase two — the fight fell apart before boss AI ever ran.
+        return _unit || feugen || stalagg;
     }
     bool IsPhasePet() { return (feugen && feugen->IsAlive()) || (stalagg && stalagg->IsAlive()); }
     bool IsPhaseTransition()
@@ -672,7 +674,13 @@ public:
         if (IsPhasePet())
             return false;
 
-        return _unit && _unit->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+        // Pets down but Thaddius not yet on our threat list (he has not
+        // engaged), or still flagged/immune (IP-40 uses PC-immunity rather
+        // than the wotlk non-attackable flag): jump-across time.
+        if (!_unit)
+            return true;
+
+        return _unit->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE) || _unit->IsImmuneToPC();
     }
     bool IsPhaseThaddius() { return !IsPhasePet() && !IsPhaseTransition(); }
     Unit* GetNearestPet()
