@@ -32,18 +32,23 @@ bool HeiganDanceAction::Execute(Event /*event*/)
     if (!boss || !boss->IsAlive())
         return false;
 
-    // Fast dance: Heigan teleports onto his platform and clouds it —
-    // everyone must be on the floor dancing.
-    bool const fastPhase = boss->IsWithinDist2d(platform.first, platform.second, 12.0f);
+    // Fast dance is marked by Plague Cloud (29350), which he casts on
+    // himself for that phase. The previous check — "is Heigan near his
+    // platform" — was measured against his own SPAWN point, so it read
+    // true whenever the tank held him where he stands, which is the
+    // correct phase-one position. Phase detection cannot depend on where
+    // the raid chose to hold the boss.
+    bool const fastPhase = boss->HasAura(29350) || botAI->HasAura("plague cloud", boss);
 
-    if (!fastPhase && botAI->IsRanged(bot))
+    if (!fastPhase)
     {
-        // Slow phase: casters and healers camp the platform; there are no
-        // eruption gameobjects up there, so it is safe the entire phase.
-        if (bot->GetDistance2d(platform.first, platform.second) < 5.0f)
+        // Phase one: eruptions only fire on the floor below, so the whole
+        // raid — melee included — fights from the platform. Sending melee
+        // down to dance here left them unable to reach the boss at all.
+        if (bot->GetDistance2d(platform.first, platform.second) < 12.0f)
             return false;
 
-        return MoveInside(bot->GetMapId(), platform.first, platform.second, platformZ, 2.0f,
+        return MoveInside(bot->GetMapId(), platform.first, platform.second, platformZ, 6.0f,
                           MovementPriority::MOVEMENT_COMBAT);
     }
 
@@ -54,10 +59,10 @@ bool HeiganDanceAction::Execute(Event /*event*/)
     if (safe > 3)
         safe = 0;
 
-    // Slow phase: tank and melee dance the near ring so Heigan barely
-    // moves and stays in reach. Fast dance: everyone uses the far ring,
-    // deeper inside each wedge for margin at 4s wave cadence.
-    auto const& points = fastPhase ? farPoints : nearPoints;
+    // Fast dance, everyone on the floor: melee take the near ring and
+    // ranged the far one, so forty bots spread across the safe wedge
+    // instead of stacking on one point.
+    auto const& points = (PlayerbotAI::IsRanged(bot) || PlayerbotAI::IsHeal(bot)) ? farPoints : nearPoints;
     float const x = points[safe].first;
     float const y = points[safe].second;
     if (bot->GetDistance2d(x, y) < 6.0f)
