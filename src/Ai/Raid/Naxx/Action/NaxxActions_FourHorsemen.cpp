@@ -69,11 +69,31 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
     using namespace NaxxHelpers;
     HorsemanSpec const* specs = FourHorsemenSpecs();
 
+    // A promoted damage spec cannot simply taunt: a warrior's Taunt needs
+    // Defensive Stance and a druid's Growl needs Bear Form. Without the
+    // shift the cast silently fails, the horseman is never pulled, and it
+    // sits at its spawn for the whole fight — which is precisely what
+    // happened to Zeliek, whose tank is the first promoted damage bot.
     auto taunt = [&](Unit* target)
     {
         switch (bot->getClass())
         {
-            case CLASS_DRUID:        botAI->CastSpell("growl", target); break;
+            case CLASS_DRUID:
+                if (!bot->HasAura(5487) && !bot->HasAura(9634))
+                {
+                    botAI->CastSpell("bear form", bot);
+                    return;
+                }
+                botAI->CastSpell("growl", target);
+                break;
+            case CLASS_WARRIOR:
+                if (!bot->HasAura(71))
+                {
+                    botAI->CastSpell("defensive stance", bot);
+                    return;
+                }
+                botAI->CastSpell("taunt", target);
+                break;
             case CLASS_PALADIN:      botAI->CastSpell("hand of reckoning", target); break;
             case CLASS_DEATH_KNIGHT: botAI->CastSpell("dark command", target); break;
             default:                 botAI->CastSpell("taunt", target); break;

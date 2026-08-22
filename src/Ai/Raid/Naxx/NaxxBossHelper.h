@@ -167,7 +167,11 @@ inline bool CanHoldHorseman(Player* p)
 
 inline std::vector<Player*> FourHorsemenTankPool(Player* bot)
 {
-    std::vector<Player*> real, promoted;
+    // Order matters: real tanks, then damage specs that taunt as they
+    // stand (paladin, death knight), then those that must shift form or
+    // stance first (druid, warrior). The horsemen without a real tank get
+    // the most reliable substitutes.
+    std::vector<Player*> real, readyPromote, shiftPromote;
     if (Group* group = bot->GetGroup())
         for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
         {
@@ -175,10 +179,16 @@ inline std::vector<Player*> FourHorsemenTankPool(Player* bot)
             if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member) || !CanHoldHorseman(member))
                 continue;
 
-            (PlayerbotAI::IsTank(member) ? real : promoted).push_back(member);
+            if (PlayerbotAI::IsTank(member))
+                real.push_back(member);
+            else if (member->getClass() == CLASS_PALADIN || member->getClass() == CLASS_DEATH_KNIGHT)
+                readyPromote.push_back(member);
+            else
+                shiftPromote.push_back(member);
         }
 
-    real.insert(real.end(), promoted.begin(), promoted.end());
+    real.insert(real.end(), readyPromote.begin(), readyPromote.end());
+    real.insert(real.end(), shiftPromote.begin(), shiftPromote.end());
     if (real.size() > 8)
         real.resize(8);
 
