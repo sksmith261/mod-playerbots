@@ -258,9 +258,12 @@ bool NaxxRaidPlans::BuildSapphiron(Player* bot, Group* group, RaidPlan& plan)
         return false;
 
     // One resolution for the whole group: threat first, grid otherwise.
-    Unit* sapphiron = AI_VALUE2(Unit*, "find target", "sapphiron");
+    // Free function: the AI_VALUE macros resolve through a `context` member
+    // that only AiObject subclasses have, so go through botAI directly.
+    Unit* sapphiron = botAI->GetAiObjectContext()->GetValue<Unit*>("find target", "sapphiron")->Get();
     if (!sapphiron)
-        for (auto const& guid : AI_VALUE(GuidVector, "possible targets no los"))
+        for (auto const& guid :
+             botAI->GetAiObjectContext()->GetValue<GuidVector>("possible targets no los")->Get())
         {
             Unit* unit = botAI->GetUnit(guid);
             if (unit && botAI->EqualLowercaseName(unit->GetName(), "sapphiron"))
