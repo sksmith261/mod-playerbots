@@ -189,6 +189,23 @@ inline bool IsSporeSoaker(PlayerbotAI* botAI, Player* bot)
 
     return false;
 }
+// Thaddius polarity: 0 = negative, 1 = positive, -1 = uncharged (the strip
+// gap inside every shift). Works on any member, so bots can compute each
+// other's cluster membership.
+inline int32 ThaddiusCharge(PlayerbotAI* botAI, Player* player)
+{
+    if (NaxxSpellIds::HasAnyAura(player, {NaxxSpellIds::NegativeCharge10, NaxxSpellIds::NegativeCharge25,
+                                          NaxxSpellIds::NegativeChargeStack}) ||
+        botAI->HasAura("negative charge", player, false, false, -1, true))
+        return 0;
+
+    if (NaxxSpellIds::HasAnyAura(player, {NaxxSpellIds::PositiveCharge10, NaxxSpellIds::PositiveCharge25,
+                                          NaxxSpellIds::PositiveChargeStack}) ||
+        botAI->HasAura("positive charge", player, false, false, -1, true))
+        return 1;
+
+    return -1;
+}
 }  // namespace NaxxHelpers
 
 template <class BossAiType>

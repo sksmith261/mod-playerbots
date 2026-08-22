@@ -122,28 +122,72 @@ bool ThaddiusMovePolarityAction::Execute(Event /*event*/)
         // right ranged (positive)
         {3524.90f, -2941.30f},
     };
-    uint32 idx;
-    if (NaxxSpellIds::HasAnyAura(bot,
-            {NaxxSpellIds::NegativeCharge10, NaxxSpellIds::NegativeCharge25, NaxxSpellIds::NegativeChargeStack}) ||
-        botAI->HasAura("negative charge", bot, false, false, -1, true))
+    int32 const myCharge = NaxxHelpers::ThaddiusCharge(botAI, bot);
+    if (myCharge < 0)
     {
-        idx = 0;
-    }
-    else if (NaxxSpellIds::HasAnyAura(bot,
-                 {NaxxSpellIds::PositiveCharge10, NaxxSpellIds::PositiveCharge25, NaxxSpellIds::PositiveChargeStack}) ||
-             botAI->HasAura("positive charge", bot, false, false, -1, true))
-    {
-        idx = 1;
-    }
-    else
-    {
-        // Chargeless = the strip-gap inside each Polarity Shift (old charges
-        // removed an instant before new ones land) or the pre-shift opener.
-        // Upstream dashed everyone to a CENTER spot here, collapsing both
-        // clusters through each other every 30 seconds — hold instead; the
-        // new charge arrives within the second and sorts us properly.
+        // Chargeless = the strip gap inside every Polarity Shift (old
+        // charges removed an instant before new ones land). Upstream sent
+        // everyone sprinting to a CENTER spot here, collapsing both
+        // clusters through each other every 30s. Hold instead.
         return false;
     }
-    idx = idx * 2 + botAI->IsRanged(bot);
-    return MoveTo(bot->GetMapId(), position[idx].first, position[idx].second, bot->GetPositionZ(), false, false, false, false, MovementPriority::MOVEMENT_COMBAT);
+
+    bool const rangedSide = PlayerbotAI::IsRanged(bot) || PlayerbotAI::IsHeal(bot);
+    uint32 const mine = uint32(myCharge) * 2 + (rangedSide ? 1u : 0u);
+    uint32 const opposite = (myCharge ? 0u : 2u) + (rangedSide ? 1u : 0u);
+
+    // Rank among the bots sharing this cluster, in shared group order, so
+    // every bot lands on its own seat instead of all forty being sent to
+    // one identical point and shoving each other for it.
+    uint32 rank = 0;
+    if (Group* group = bot->GetGroup())
+        for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+        {
+            Player* member = itr->GetSource();
+            if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
+                continue;
+
+            if (member == bot)
+                break;
+
+            if (NaxxHelpers::ThaddiusCharge(GET_PLAYERBOT_AI(member), member) != myCharge)
+                continue;
+
+            if ((PlayerbotAI::IsRanged(member) || PlayerbotAI::IsHeal(member)) != rangedSide)
+                continue;
+
+            ++rank;
+        }
+
+    float x = position[mine].first;
+    float y = position[mine].second;
+
+    // Tanks hold the cluster anchor so the boss stays between the two melee
+    // camps. Everyone else fans out on an arc facing AWAY from the opposite
+    // charge: seats never grow toward the other cluster (10y is both the
+    // damage radius and the same-charge stack radius), and melee stay inside
+    // Thaddius's 10y reach.
+    if (!PlayerbotAI::IsTank(bot))
+    {
+        float const away = std::atan2(position[mine].second - position[opposite].second,
+                                      position[mine].first - position[opposite].first);
+
+        float const base = rangedSide ? 2.4f : 1.6f;
+        float const step = rangedSide ? 1.5f : 0.9f;
+        float const cap = rangedSide ? 5.0f : 3.0f;
+        float const radius = std::min(base + step * float(rank / 6), cap);
+        float const angle = away + (float(rank % 6) - 2.5f) * (float(M_PI) / 7.0f);
+
+        x += radius * std::cos(angle);
+        y += radius * std::sin(angle);
+    }
+
+    float z = bot->GetPositionZ();
+    bot->UpdateAllowedPositionZ(x, y, z);
+
+    // Settled: stop re-issuing the move every tick.
+    if (bot->GetExactDist2d(x, y) < 2.0f)
+        return false;
+
+    return MoveTo(bot->GetMapId(), x, y, z, false, false, false, false, MovementPriority::MOVEMENT_COMBAT);
 }
