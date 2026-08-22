@@ -98,6 +98,7 @@ bool RaidPlanAction::Execute(Event /*event*/)
             break;
         }
 
+    RaidDirector::Tick(bot);
     std::string const text = RaidDirector::Describe(bot);
 
     // One whisper per line: the client truncates long single messages.
@@ -126,7 +127,26 @@ std::string RaidDirector::Describe(Player* bot)
 {
     RaidPlan const* plan = RaidDirector::Get(bot);
     if (!plan)
-        return "No raid plan is running for this group.";
+    {
+        // "No plan" has several very different causes, and guessing between
+        // them from outside the server is exactly the round trip this
+        // command exists to avoid.
+        if (!bot->GetGroup())
+            return "No raid plan: I am not in a group.";
+
+        Map* map = bot->GetMap();
+        if (!map || !map->IsRaid())
+            return "No raid plan: this is not a raid map.";
+
+        if (!bot->IsInCombat())
+            return "No raid plan: the raid is not in combat. Plans are built on the pull.";
+
+        if (!botAI->HasStrategy("naxx", BOT_STATE_COMBAT))
+            return "No raid plan: the naxx strategy is not active on me (say 'naxx' to enable).";
+
+        return "No raid plan: in combat on a raid map, but no encounter the director knows "
+               "was recognised here. It currently knows the Four Horsemen and Sapphiron.";
+    }
 
     static char const* dutyName[] = {"idle", "tank", "reserve", "damage", "heal", "hide"};
 
