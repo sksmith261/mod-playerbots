@@ -12,8 +12,8 @@ bool ThaddiusAttackNearestPetAction::isUseful()
     if (!helper.IsPhasePet())
         return false;
 
-    Unit* target = helper.GetNearestPet();
-    if (!target || !bot->IsWithinDistInMap(target, 50.0f))
+    Unit* target = helper.GetAssignedPet(bot);
+    if (!target)
         return false;
 
     return true;
@@ -21,8 +21,11 @@ bool ThaddiusAttackNearestPetAction::isUseful()
 
 bool ThaddiusAttackNearestPetAction::Execute(Event /*event*/)
 {
-    Unit* target = helper.GetNearestPet();
-    if (!target || !bot->IsWithinLOSInMap(target))
+    Unit* target = helper.GetAssignedPet(bot);
+    if (!target)
+        return false;
+
+    if (!bot->IsWithinLOSInMap(target))
         return MoveTo(target, 0, MovementPriority::MOVEMENT_COMBAT);
 
     if (AI_VALUE(Unit*, "current target") != target)

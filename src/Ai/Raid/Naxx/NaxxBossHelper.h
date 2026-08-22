@@ -695,16 +695,52 @@ public:
 
         return unit;
     }
+
+    // Assigned split — 'nearest pet' breaks at the pull, when the whole
+    // raid stands in one clump and everyone's nearest pet is the same pet.
+    // Main tank and even ranks take Stalagg, first assist tank and odd
+    // ranks take Feugen; a dead pet folds its team onto the survivor.
+    Unit* GetAssignedPet(Player* forBot)
+    {
+        bool const stalaggAlive = stalagg && stalagg->IsAlive();
+        bool const feugenAlive = feugen && feugen->IsAlive();
+        if (!stalaggAlive)
+            return feugenAlive ? feugen : nullptr;
+        if (!feugenAlive)
+            return stalagg;
+
+        if (botAI->IsMainTank(forBot))
+            return stalagg;
+        if (PlayerbotAI::IsAssistTankOfIndex(forBot, 0))
+            return feugen;
+
+        uint32 rank = 0;
+        if (Group* group = forBot->GetGroup())
+            for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+            {
+                Player* member = itr->GetSource();
+                if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
+                    continue;
+
+                if (member == forBot)
+                    break;
+
+                ++rank;
+            }
+
+        return (rank % 2 == 0) ? stalagg : feugen;
+    }
+
     std::pair<float, float> PetPhaseGetPosForTank()
     {
-        if (GetNearestPet() == feugen)
+        if (GetAssignedPet(bot) == feugen)
             return tankPosFeugen;
 
         return tankPosStalagg;
     }
     std::pair<float, float> PetPhaseGetPosForRanged()
     {
-        if (GetNearestPet() == feugen)
+        if (GetAssignedPet(bot) == feugen)
             return rangedPosFeugen;
 
         return rangedPosStalagg;
