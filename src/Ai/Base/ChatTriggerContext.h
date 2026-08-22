@@ -104,6 +104,7 @@ public:
         creators["warning"] = &ChatTriggerContext::warning;
         creators["position"] = &ChatTriggerContext::position;
         creators["summon"] = &ChatTriggerContext::summon;
+        creators["engage"] = &ChatTriggerContext::engage;
         creators["who"] = &ChatTriggerContext::who;
         creators["save mana"] = &ChatTriggerContext::save_mana;
         creators["max dps"] = &ChatTriggerContext::max_dps;
@@ -195,6 +196,7 @@ private:
     static Trigger* save_mana(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "save mana"); }
     static Trigger* who(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "who"); }
     static Trigger* summon(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "summon"); }
+    static Trigger* engage(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "engage"); }
     static Trigger* position(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "position"); }
     static Trigger* runaway(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "runaway"); }
     static Trigger* warning(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "warning"); }
