@@ -180,6 +180,12 @@ float ThaddiusGenericMultiplier::GetValue(Action* action)
     if (dynamic_cast<CombatFormationMoveAction*>(action))
         return 0.0f;
     // pet phase
+    // A bot holding a pet must never flee with it — that is the one way to
+    // drag it past its coil tether. The leash action (ACTION_RAID+3) always
+    // leaves it a legal move, so nothing can freeze here.
+    if (helper.IsPhasePet() && helper.GetHeldPet(bot) && dynamic_cast<FleeAction*>(action))
+        return 0.0f;
+
     // ReachPartyMemberToHeal deliberately NOT zeroed here (upstream did):
     // with the raid split across two platforms, a healer whose lowest-health
     // target stands on the far side was blocked from ever closing to heal
