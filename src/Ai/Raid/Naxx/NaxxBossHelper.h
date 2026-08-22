@@ -201,11 +201,14 @@ inline bool CanHoldHorseman(Player* p)
 
 inline std::vector<Player*> FourHorsemenTankPool(Player* bot)
 {
-    // Order matters: real tanks, then damage specs that taunt as they
-    // stand (paladin, death knight), then those that must shift form or
-    // stance first (druid, warrior). The horsemen without a real tank get
-    // the most reliable substitutes.
-    std::vector<Player*> real, readyPromote, shiftPromote;
+    // Order matters. Real tanks first, then death knights — they are the
+    // best off-tanks available here: plate, Dark Command works in any
+    // spec or presence, and a damage-spec DK still has the mitigation to
+    // survive holding a horseman. Paladins come next (Hand of Reckoning
+    // also needs no stance), and warriors and druids last, since they must
+    // shift into Defensive Stance or Bear Form before they can taunt at
+    // all.
+    std::vector<Player*> real, deathKnights, paladins, shiftPromote;
     if (Group* group = bot->GetGroup())
         for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
         {
@@ -215,13 +218,16 @@ inline std::vector<Player*> FourHorsemenTankPool(Player* bot)
 
             if (PlayerbotAI::IsTank(member))
                 real.push_back(member);
-            else if (member->getClass() == CLASS_PALADIN || member->getClass() == CLASS_DEATH_KNIGHT)
-                readyPromote.push_back(member);
+            else if (member->getClass() == CLASS_DEATH_KNIGHT)
+                deathKnights.push_back(member);
+            else if (member->getClass() == CLASS_PALADIN)
+                paladins.push_back(member);
             else
                 shiftPromote.push_back(member);
         }
 
-    real.insert(real.end(), readyPromote.begin(), readyPromote.end());
+    real.insert(real.end(), deathKnights.begin(), deathKnights.end());
+    real.insert(real.end(), paladins.begin(), paladins.end());
     real.insert(real.end(), shiftPromote.begin(), shiftPromote.end());
     if (real.size() > 8)
         real.resize(8);
