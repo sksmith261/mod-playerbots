@@ -688,7 +688,16 @@ public:
         // while Stalagg and Feugen live, so gating on resolving HIM made
         // every trigger, tank split, and the death-sync multiplier inert
         // until phase two — the fight fell apart before boss AI ever ran.
-        return _unit || feugen || stalagg;
+        //
+        // Sticky once engaged: between the pets dying and Thaddius picking
+        // up threat, ALL THREE resolve to nothing, and a plain check would
+        // switch the encounter AI off during exactly the window the raid
+        // needs it — the jump to his platform. Cleared by Reset() when
+        // combat ends.
+        if (_unit || feugen || stalagg)
+            _engaged = true;
+
+        return _engaged && bot->IsInCombat();
     }
     bool IsPhasePet() { return (feugen && feugen->IsAlive()) || (stalagg && stalagg->IsAlive()); }
     bool IsPhaseTransition()
@@ -797,11 +806,13 @@ protected:
         _unit = nullptr;
         feugen = nullptr;
         stalagg = nullptr;
+        _engaged = false;
     }
 
     Unit* _unit = nullptr;
     Unit* feugen = nullptr;
     Unit* stalagg = nullptr;
+    bool _engaged = false;
 };
 
 #endif
