@@ -173,11 +173,21 @@ float LoathebGenericMultiplier::GetValue(Action* action)
     if (!dynamic_cast<CastHealingSpellAction*>(action))
         return 1.0f;
 
-    Aura* aura = NaxxSpellIds::GetAnyAura(bot, {NaxxSpellIds::NecroticAura10});
+    // Naxx-40 has no Necrotic Aura: Loatheb casts Corrupted Mind (29201),
+    // which triggers one of four class-specific healing blocks. Keying on
+    // the wotlk aura alone left this permanently disabled on that version.
+    Aura* aura = NaxxSpellIds::GetAnyAura(
+        bot, {NaxxSpellIds::NecroticAura10, NaxxSpellIds::CorruptedMindBlockA,
+              NaxxSpellIds::CorruptedMindBlockB, NaxxSpellIds::CorruptedMindBlockC,
+              NaxxSpellIds::CorruptedMindBlockD});
     if (!aura)
     {
         // Fallback to name for custom spell data.
         aura = botAI->GetAura("necrotic aura", bot);
+    }
+    if (!aura)
+    {
+        aura = botAI->GetAura("corrupted mind", bot);
     }
     if (!aura || aura->GetDuration() <= 1500)
         return 1.0f;

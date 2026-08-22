@@ -118,7 +118,12 @@ bool RazuviousUseObedienceCrystalAction::Execute(Event /*event*/)
                 Unit* unit = botAI->GetUnit(*i);
                 if (!unit || !unit->IsAlive() || unit->GetCharmerGUID())
                     continue;
-                if (botAI->EqualLowercaseName(unit->GetName(), "death knight understudy"))
+                // IP's naxx-40 clone is "Deathknight Understudy" (one word);
+                // the wotlk creature is "Death Knight Understudy". Matching
+                // only the wotlk spelling meant priests never found one and
+                // the mind-control half of the fight never happened.
+                if (botAI->EqualLowercaseName(unit->GetName(), "deathknight understudy") ||
+                    botAI->EqualLowercaseName(unit->GetName(), "death knight understudy"))
                     understudies.push_back(unit);
             }
             // Deterministic one-per-priest assignment (GUID-sorted roster,
@@ -152,7 +157,9 @@ bool RazuviousTargetAction::Execute(Event /*event*/)
         return false;
 
     Unit* razuvious = AI_VALUE2(Unit*, "find target", "instructor razuvious");
-    Unit* understudy = AI_VALUE2(Unit*, "find target", "death knight understudy");
+    Unit* understudy = AI_VALUE2(Unit*, "find target", "deathknight understudy");
+    if (!understudy)
+        understudy = AI_VALUE2(Unit*, "find target", "death knight understudy");
     Unit* target = nullptr;
     if (botAI->IsTank(bot))
         target = understudy;

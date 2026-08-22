@@ -116,6 +116,15 @@ namespace NaxxSpellIds
 */
     // Loatheb
     static constexpr uint32 NecroticAura10 = 55593;
+
+    // Naxx-40 Loatheb has no Necrotic Aura at all: he casts Corrupted Mind
+    // (29201), which triggers one of these class-specific healing blocks on
+    // each target. Checking only the wotlk aura left the healing logic
+    // permanently disabled on this fight.
+    static constexpr uint32 CorruptedMindBlockA = 29185;
+    static constexpr uint32 CorruptedMindBlockB = 29194;
+    static constexpr uint32 CorruptedMindBlockC = 29196;
+    static constexpr uint32 CorruptedMindBlockD = 29198;
 /*
     SPELL_NECROTIC_AURA                         = 55593,
     SPELL_SUMMON_SPORE                          = 29234,

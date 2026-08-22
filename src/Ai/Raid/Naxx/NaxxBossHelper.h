@@ -173,7 +173,10 @@ inline int32 GothikAddRank(PlayerbotAI* botAI, Unit* unit)
         return 3;
     if (name == "spectral rider")
         return 3;
-    if (name.find("death knight") != std::string::npos &&
+    // IP names these "Unrelenting Deathknight" / "Spectral Deathknight" —
+    // one word. Matching only the wotlk "death knight" spelling meant the
+    // whole middle tier of the waves was invisible to the kill order.
+    if ((name.find("deathknight") != std::string::npos || name.find("death knight") != std::string::npos) &&
         (name.find("unrelenting") == 0 || name.find("spectral") == 0))
         return 2;
     if (name == "unrelenting trainee" || name == "spectral trainee" || name == "spectral horse")
