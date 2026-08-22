@@ -64,48 +64,51 @@ bool ThaddiusMoveToPlatformAction::isUseful() { return true; }
 
 bool ThaddiusMoveToPlatformAction::Execute(Event /*event*/)
 {
+    // Ledge (jump-off) and landing points per side, then the platform centre.
     std::vector<std::pair<float, float>> position = {
-        // high left
+        // high left (Stalagg-side ledge)
         {3462.99f, -2918.90f},
-        // high right
+        // high right (Feugen-side ledge)
         {3520.65f, -2976.51f},
-        // low left
+        // low left (landing)
         {3471.36f, -2910.65f},
-        // low right
+        // low right (landing)
         {3528.80f, -2967.04f},
-        // center
+        // centre of Thaddius's platform
         {3512.19f, -2928.58f},
     };
-    float high_z = 312.00f, low_z = 304.02f;
-    bool is_left = bot->GetDistance2d(position[0].first, position[0].second) <
-                   bot->GetDistance2d(position[1].first, position[1].second);
+    float const high_z = 312.00f, low_z = 304.02f;
+
+    bool const is_left = bot->GetDistance2d(position[0].first, position[0].second) <
+                         bot->GetDistance2d(position[1].first, position[1].second);
+
+    // Still up on a pet platform: walk to this side's ledge, then leap.
     if (bot->GetPositionZ() >= (high_z - 3.0f))
     {
-        if (is_left)
-        {
-            if (!MoveTo(bot->GetMapId(), position[0].first, position[0].second, high_z, false, false, false, false, MovementPriority::MOVEMENT_COMBAT))
-            {
-                float distance = bot->GetExactDist2d(position[0].first, position[0].second);
-                if (distance < sPlayerbotAIConfig.contactDistance)
-                    JumpTo(bot->GetMapId(), position[2].first, position[2].second, low_z, MovementPriority::MOVEMENT_COMBAT);
-                    // bot->TeleportTo(bot->GetMapId(), position[2].first, position[2].second, low_z, bot->GetOrientation());
-            }
-        }
-        else
-        {
-            if (!MoveTo(bot->GetMapId(), position[1].first, position[1].second, high_z, false, false, false, false, MovementPriority::MOVEMENT_COMBAT))
-            {
-                float distance = bot->GetExactDist2d(position[1].first, position[1].second);
-                if (distance < sPlayerbotAIConfig.contactDistance)
-                    JumpTo(bot->GetMapId(), position[3].first, position[3].second, low_z, MovementPriority::MOVEMENT_COMBAT);
-                    // bot->TeleportTo(bot->GetMapId(), position[3].first, position[3].second, low_z, bot->GetOrientation());
-            }
-        }
-    }
-    else
-        return MoveTo(bot->GetMapId(), position[4].first, position[4].second, low_z, false, false, false, false, MovementPriority::MOVEMENT_COMBAT);
+        std::pair<float, float> const& ledge = is_left ? position[0] : position[1];
+        std::pair<float, float> const& landing = is_left ? position[2] : position[3];
 
-    return true;
+        // Upstream only jumped when a MoveTo had FAILED and the bot was
+        // within contactDistance (0.45y) of the exact ledge coordinate —
+        // a tolerance pathfinding essentially never lands on, so bots
+        // walked to the ledge and stood there for the rest of the fight.
+        // Distance decides now, and 4y is a tolerance walking can hit.
+        if (bot->GetExactDist2d(ledge.first, ledge.second) < 4.0f)
+        {
+            if (JumpTo(bot->GetMapId(), landing.first, landing.second, low_z,
+                       MovementPriority::MOVEMENT_COMBAT))
+                return true;
+
+            return false;  // jump refused this tick (spline busy) — retry
+        }
+
+        return MoveTo(bot->GetMapId(), ledge.first, ledge.second, high_z, false, false, false,
+                      /*exact_waypoint*/ true, MovementPriority::MOVEMENT_COMBAT);
+    }
+
+    // Landed: regroup at the centre; polarity takes over from there.
+    return MoveTo(bot->GetMapId(), position[4].first, position[4].second, low_z, false, false, false, false,
+                  MovementPriority::MOVEMENT_COMBAT);
 }
 
 bool ThaddiusMovePolarityAction::isUseful()
