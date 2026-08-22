@@ -220,10 +220,11 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
     // ---- Everyone else: one camp per role ------------------------------
     // Melee take Korth'azz and Mograine; ranged and healers take Blaumeux
     // and Zeliek, because Holy Wrath chains through anyone in melee of him.
-    bool const rangedSide = PlayerbotAI::IsRanged(bot) || PlayerbotAI::IsHeal(bot);
-    uint32 const slotA = rangedSide ? 2u : 0u;
-    uint32 const slotB = rangedSide ? 3u : 1u;
+    bool const isHealer = PlayerbotAI::IsHeal(bot);
+    bool const rangedSide = PlayerbotAI::IsRanged(bot) || isHealer;
 
+    // Rank among bots of the same kind. Healers are counted as their own
+    // group so they can be spread independently of the damage split.
     uint32 rank = 0;
     if (Group* group = bot->GetGroup())
         for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
@@ -232,9 +233,16 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
             if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
                 continue;
 
-            bool const memberRanged = PlayerbotAI::IsRanged(member) || PlayerbotAI::IsHeal(member);
-            if (memberRanged != rangedSide)
+            bool const memberHealer = PlayerbotAI::IsHeal(member);
+            if (memberHealer != isHealer)
                 continue;
+
+            if (!isHealer)
+            {
+                bool const memberRanged = PlayerbotAI::IsRanged(member) || memberHealer;
+                if (memberRanged != rangedSide)
+                    continue;
+            }
 
             if (member == bot)
                 break;
@@ -242,7 +250,31 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
             ++rank;
         }
 
-    uint32 slot = (rank % 2) ? slotB : slotA;
+    uint32 slotA, slotB;
+    if (isHealer)
+    {
+        // Healers go round all four camps rather than following the damage
+        // split, so the melee camps are not left relying on range from
+        // across the room. Each healer pairs with the next camp round the
+        // circle, so a rotation moves it one camp over and every camp keeps
+        // cover while marks are being shed.
+        slotA = rank % 4;
+        slotB = (slotA + 1) % 4;
+    }
+    else
+    {
+        // Damage still splits by role: melee cannot stand in Zeliek's camp.
+        slotA = rangedSide ? 2u : 0u;
+        slotB = rangedSide ? 3u : 1u;
+        if (rank % 2)
+        {
+            uint32 const swap = slotA;
+            slotA = slotB;
+            slotB = swap;
+        }
+    }
+
+    uint32 slot = slotA;
 
     // The Mark is the rotation clock: three stacks and cross to the pair
     // partner, where the other mark builds while this one decays.
