@@ -343,6 +343,14 @@ float FourHorsemenGenericMultiplier::GetValue(Action* action)
     if ((dynamic_cast<DpsAssistAction*>(action) || dynamic_cast<TankAssistAction*>(action)))
         return 0.0f;
 
+    // Healers must not chase a heal target out of their quadrant. The camps
+    // are 55-100y apart, so crossing means collecting a second horseman's
+    // Mark, abandoning your own camp, and usually arriving too late anyway.
+    // Each camp keeps its own healers; anything out of range is another
+    // quadrant's problem.
+    if (dynamic_cast<ReachPartyMemberToHealAction*>(action))
+        return 0.0f;
+
     return 1.0f;
 }
 

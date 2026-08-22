@@ -116,7 +116,11 @@ inline HorsemanSpec const* FourHorsemenSpecs()
 // its horseman waits for its stacks to fall away.
 constexpr float FH_SAFE_X = 2528.5f;
 constexpr float FH_SAFE_Y = -2957.7f;
-constexpr uint32 FH_SWAP_STACKS = 4;
+// Mark damage lands on each application, scaled to the stacks at that
+// moment: 0, 250, 1000, then 3000 at the fourth. Swapping AT four means
+// the tank has already taken the 3000 — so the handover starts at three,
+// capping a tank's whole rotation at about 1250 instead.
+constexpr uint32 FH_SWAP_STACKS = 3;
 
 inline bool IsHorseman(PlayerbotAI* botAI, Unit* unit)
 {
