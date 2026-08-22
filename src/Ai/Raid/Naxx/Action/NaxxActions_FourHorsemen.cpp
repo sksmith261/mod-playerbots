@@ -172,7 +172,7 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
         // actually been assigned here, so every tank concluded it was the
         // reserve and walked to the safe spot, leaving all four horsemen
         // unheld.
-        Player* active = FourHorsemenActiveTank(pool, poolGroup, mine.markId);
+        Player* active = FourHorsemenActiveTank(pool, poolGroup, mine.markId, boss);
 
         if (boss && active == bot)
         {
@@ -300,12 +300,19 @@ bool FourHorsemenDutyAction::Execute(Event /*event*/)
         slotB = slotA == 0u ? 1u : 0u;
     }
 
-    uint32 slot = slotA;
+    // Which camp am I actually standing in? Anchoring this to slotA meant
+    // only slotA's mark was ever examined: a bot parked at its partner camp
+    // accumulated that mark unchecked — five, six stacks — and snapped back
+    // the instant the slotA mark lapsed, regardless of what it was carrying.
+    uint32 slot = bot->GetExactDist2d(specs[slotA].x, specs[slotA].y) <=
+                          bot->GetExactDist2d(specs[slotB].x, specs[slotB].y)
+                      ? slotA
+                      : slotB;
 
-    // The Mark is the rotation clock: three stacks and cross to the pair
+    // The Mark is the rotation clock: at the threshold, cross to the pair
     // partner, where the other mark builds while this one decays.
     if (Aura* mark = bot->GetAura(specs[slot].markId))
-        if (mark->GetStackAmount() >= 3)
+        if (mark->GetStackAmount() >= NaxxHelpers::FH_SWAP_STACKS)
             slot = (slot == slotA) ? slotB : slotA;
 
     Unit* boss = ResolveHorseman(botAI, specs[slot]);

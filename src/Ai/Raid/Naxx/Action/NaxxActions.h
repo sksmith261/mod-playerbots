@@ -79,7 +79,6 @@ public:
 
 private:
     FourHorsemenBossHelper helper;
-    bool flipped = false;
 };
 
 class MaexxnaFreeWrappedAction : public AttackAction

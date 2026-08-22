@@ -145,6 +145,28 @@ inline Unit* ResolveHorseman(PlayerbotAI* botAI, HorsemanSpec const& spec)
     if (!unit && spec.altName)
         unit = botAI->GetAiObjectContext()->GetValue<Unit*>("find target", spec.altName)->Get();
 
+    // Threat shows only what this bot personally fights, and at the pull
+    // nobody holds any of the four — so every camp assignment resolved to
+    // nothing and the raid simply stood still. Grid fallback, in combat
+    // only, so camps can be taken before a blow is struck.
+    Player* bot = botAI->GetBot();
+    if (!unit && bot && bot->IsInCombat())
+    {
+        for (auto const& guid : botAI->GetAiObjectContext()->GetValue<GuidVector>("possible targets no los")->Get())
+        {
+            Unit* candidate = botAI->GetUnit(guid);
+            if (!candidate)
+                continue;
+
+            if (botAI->EqualLowercaseName(candidate->GetName(), spec.name) ||
+                (spec.altName && botAI->EqualLowercaseName(candidate->GetName(), spec.altName)))
+            {
+                unit = candidate;
+                break;
+            }
+        }
+    }
+
     return (unit && unit->IsAlive()) ? unit : nullptr;
 }
 
@@ -201,23 +223,35 @@ inline std::vector<Player*> FourHorsemenTankPool(Player* bot)
 
 // Pool slots k and k+4 share horseman k. Whichever of the two is under the
 // swap threshold holds it; if both are over, the lighter one does.
-inline Player* FourHorsemenActiveTank(std::vector<Player*> const& pool, uint32 slot, uint32 markId)
+inline Player* FourHorsemenActiveTank(std::vector<Player*> const& pool, uint32 group, uint32 markId, Unit* boss)
 {
+    auto stacksOf = [&](Player* p) -> uint32
+    {
+        Aura* mark = p->GetAura(markId);
+        return mark ? mark->GetStackAmount() : 0u;
+    };
+
+    // Whoever holds it keeps it until they reach the threshold. Without
+    // this the election simply returns the lowest-numbered candidate under
+    // the limit, so the boss is handed straight back the moment the rested
+    // partner's stacks lapse and the pair trade it every few seconds.
+    if (boss)
+        for (uint32 i = group; i < pool.size(); i += 4)
+            if (boss->GetVictim() == pool[i] && stacksOf(pool[i]) < FH_SWAP_STACKS)
+                return pool[i];
+
     Player* best = nullptr;
     uint32 bestStacks = 0;
 
-    for (uint32 i = slot; i < pool.size(); i += 4)
+    for (uint32 i = group; i < pool.size(); i += 4)
     {
-        Player* candidate = pool[i];
-        Aura* mark = candidate->GetAura(markId);
-        uint32 const stacks = mark ? mark->GetStackAmount() : 0;
-
+        uint32 const stacks = stacksOf(pool[i]);
         if (stacks < FH_SWAP_STACKS)
-            return candidate;
+            return pool[i];
 
         if (!best || stacks < bestStacks)
         {
-            best = candidate;
+            best = pool[i];
             bestStacks = stacks;
         }
     }
