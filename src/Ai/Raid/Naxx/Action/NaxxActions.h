@@ -28,40 +28,30 @@ class GrobbulusRotateAction : public RotateAroundTheCenterPointAction
 {
 public:
     GrobbulusRotateAction(PlayerbotAI* botAI)
-        : RotateAroundTheCenterPointAction(botAI, "rotate grobbulus", 3281.23f, -3310.38f, 28.0f, 8, true, M_PI) {}
+        // 35y put waypoints outside the room — that is what walked Grobbulus
+        // through the wall. Measured against the map's own navmesh: from this
+        // centre all eight waypoints are on walkable floor out to 19y and the
+        // ring leaves the room at 20y. 18y for margin.
+        : RotateAroundTheCenterPointAction(botAI, "rotate grobbulus", 3281.23f, -3310.38f, 18.0f, 8, true, M_PI) {}
     virtual bool isUseful() override
     {
         return RotateAroundTheCenterPointAction::isUseful() && botAI->IsMainTank(bot) &&
                AI_VALUE2(bool, "has aggro", "boss target");
     }
-    bool Execute(Event event) override;
     uint32 GetCurrWaypoint() override;
 };
 
 class GrobbulusMoveCenterAction : public MoveInsideAction
 {
 public:
-    // 5y packed everyone who had just shed an injection into a ball on the
-    // boss, which is the one place the trailing slime is guaranteed to be.
-    // Rejoining the raid does not require standing on top of it.
-    GrobbulusMoveCenterAction(PlayerbotAI* ai) : MoveInsideAction(ai, 3281.23f, -3310.38f, 15.0f) {}
-
-    // Same bad anchor as the kite ring: re-target the boss's own spawn.
+    GrobbulusMoveCenterAction(PlayerbotAI* ai) : MoveInsideAction(ai, 3281.23f, -3310.38f, 5.0f) {}
 
     // Base MoveInsideAction moves at MOVEMENT_NORMAL, which loses to
     // in-flight moves and the body-pull guard's veto. Walking back to the
     // raid after Mutating Injection is a mechanic move: COMBAT priority.
     bool Execute(Event event) override
     {
-        float cx = x, cy = y;
-        if (Unit* boss = AI_VALUE(Unit*, "boss target"))
-            if (Creature* creature = boss->ToCreature())
-            {
-                cx = creature->GetHomePosition().GetPositionX();
-                cy = creature->GetHomePosition().GetPositionY();
-            }
-
-        return MoveInside(bot->GetMapId(), cx, cy, bot->GetPositionZ(), distance,
+        return MoveInside(bot->GetMapId(), x, y, bot->GetPositionZ(), distance,
                           MovementPriority::MOVEMENT_COMBAT);
     }
 };
@@ -391,7 +381,7 @@ class AnubrekhanPositionAction : public RotateAroundTheCenterPointAction
 {
 public:
     AnubrekhanPositionAction(PlayerbotAI* ai)
-        : RotateAroundTheCenterPointAction(ai, "anub'rekhan position", 3272.49f, -3476.27f, 22.0f, 16) {}
+        : RotateAroundTheCenterPointAction(ai, "anub'rekhan position", 3272.49f, -3476.27f, 45.0f, 16) {}
     bool Execute(Event event) override;
 };
 

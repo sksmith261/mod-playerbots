@@ -1,7 +1,5 @@
 #include "ObjectGuid.h"
 #include "Playerbots.h"
-
-#include <cmath>
 #include "NaxxActions.h"
 #include "NaxxSpellIds.h"
 #include "Spell.h"
@@ -83,41 +81,19 @@ bool AnubrekhanPositionAction::Execute(Event /*event*/)
 
     // The old check treated ANY generic cast (Impale included) as the swarm.
     bool const inPhase = NaxxHelpers::AnubrekhanSwarmActive(botAI, boss);
-    if (!inPhase)
-        return false;
-
-    // Anchor the kite ring on Anub'Rekhan's own spawn. It was hardcoded
-    // around a point 36-44y away with a 45y radius, which put waypoints up
-    // to 89y out — well through the walls of a room about 50y across, the
-    // same defect that was walking Grobbulus out of his room. Radius drops
-    // to 22y so the kite stays on the floor.
-    Creature* creature = boss->ToCreature();
-    if (creature)
+    if (inPhase)
     {
-        Position const& home = creature->GetHomePosition();
-        if (std::fabs(home.GetPositionX() - center_x) > 1.0f ||
-            std::fabs(home.GetPositionY() - center_y) > 1.0f)
+        if (botAI->IsMainTank(bot))
         {
-            center_x = home.GetPositionX();
-            center_y = home.GetPositionY();
+            uint32 nearest = FindNearestWaypoint();
+            uint32 next_point;
+            next_point = (nearest + 1) % intervals;
 
-            waypoints.clear();
-            for (uint32 i = 0; i < intervals; ++i)
-            {
-                float const angle = 2.0f * float(M_PI) * i / intervals;
-                waypoints.push_back(std::make_pair(center_x + std::cos(angle) * radius,
-                                                   center_y + std::sin(angle) * radius));
-            }
+            return MoveTo(bot->GetMapId(), waypoints[next_point].first, waypoints[next_point].second,
+                          bot->GetPositionZ(), false, false, false, false, MovementPriority::MOVEMENT_COMBAT);
         }
+        else
+            return MoveInside(533, 3272.49f, -3476.27f, bot->GetPositionZ(), 3.0f, MovementPriority::MOVEMENT_COMBAT);
     }
-
-    if (botAI->IsMainTank(bot))
-    {
-        uint32 const next_point = (FindNearestWaypoint() + 1) % intervals;
-        return MoveTo(bot->GetMapId(), waypoints[next_point].first, waypoints[next_point].second,
-                      bot->GetPositionZ(), false, false, false, false, MovementPriority::MOVEMENT_COMBAT);
-    }
-
-    // Everyone else clears the swarm: away from him, not to a fixed point.
-    return MoveAway(boss, 25.0f);
+    return false;
 }
