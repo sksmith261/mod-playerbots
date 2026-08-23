@@ -23,12 +23,17 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     triggers.push_back(new TriggerNode("have area debuff", { NextAction("avoid aoe", ACTION_RAID + 2) }));
 
     // Grobbulus
+    // Above generic AoE escape, like Heigan's dance: a bot carrying
+    // Mutating Injection has to reach a specific drop spot, and that IS its
+    // answer to the poison. Left level with avoid-aoe (both at +2) the two
+    // competed, and "run out of the cloud" could send it back through the
+    // raid it was supposed to be moving away from.
     triggers.push_back(new TriggerNode("mutating injection melee",
-        { NextAction("grobbulus move away", ACTION_RAID + 2) }
+        { NextAction("grobbulus move away", ACTION_RAID + 3) }
     ));
 
     triggers.push_back(new TriggerNode("mutating injection ranged",
-        { NextAction("grobbulus go behind the boss", ACTION_RAID + 2) }
+        { NextAction("grobbulus go behind the boss", ACTION_RAID + 3) }
     ));
 
     triggers.push_back(new TriggerNode("mutating injection removed",
@@ -162,11 +167,14 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     // that per bot, which meant a bot holding no threat on her (most of
     // them, most of the time) simply did nothing.
     triggers.push_back(new TriggerNode("sapphiron ground",
-        { NextAction("sapphiron plan", ACTION_RAID + 2) }
+        { NextAction("sapphiron plan", ACTION_RAID + 3) }
     ));
 
+    // Also above avoid-aoe: breaking line of sight behind an ice block
+    // beats stepping out of a chill patch, and a tie between them during
+    // the breath is fatal.
     triggers.push_back(new TriggerNode("sapphiron flight",
-        { NextAction("sapphiron plan", ACTION_RAID + 2) }
+        { NextAction("sapphiron plan", ACTION_RAID + 3) }
     ));
 
     // Gluth
