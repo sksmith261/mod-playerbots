@@ -24,16 +24,24 @@ constexpr uint32 NPC_TREMOR_TOTEM = 5913;
 constexpr uint32 SPELL_TREMOR_TOTEM = 8143;
 constexpr uint32 SPELL_FEAR_WARD = 6346;
 
+// The main tank, resolved once from the asking bot's own vantage point. Asking
+// every member "are you the main tank" instead answers from each of *their*
+// vantage points, which stops being the same question the moment the group is
+// spread over two maps and only some of it is in the instance.
 Player* FindMainTank(Player* bot)
 {
     Group* group = bot->GetGroup();
     if (!group)
         return nullptr;
 
+    ObjectGuid const mainTankGuid = PlayerbotAI::GetMainTankGuid(group, bot);
+    if (mainTankGuid.IsEmpty())
+        return nullptr;
+
     for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
     {
         Player* member = itr->GetSource();
-        if (member && member->IsAlive() && PlayerbotAI::IsMainTank(member))
+        if (member && member->IsAlive() && member->GetGUID() == mainTankGuid)
             return member;
     }
 
@@ -438,35 +446,42 @@ float RaidCommandOverrideMultiplier::GetValue(Action* action)
 
 float RaidTankTauntGuardMultiplier::GetValue(Action* action)
 {
-    if (!action)
+    // Cheapest tests first, and in this order. The engine runs every multiplier
+    // over every action it pops, and this one is attached to the combat,
+    // non-combat and dead engines alike, so nearly every call has to fall out
+    // before it touches a string or walks the group.
+    if (!action || !bot->IsInCombat() || !bot->GetGroup())
         return 1.0f;
 
-    static std::set<std::string> const taunts = {"taunt",             "growl",
-                                                 "hand of reckoning", "dark command",
-                                                 "challenging shout", "challenging roar"};
-    if (taunts.find(action->getName()) == taunts.end())
+    // Every taunt, not just the ones a tank strategy fires directly. Zeroing an
+    // action's relevance does not end the matter: the engine reads a zeroed
+    // action as impossible and pushes that node's alternatives at
+    // relevance + 0.003 instead, and the alternatives of "hand of reckoning"
+    // and "dark command" are themselves taunts. Leave one out and the guard
+    // does not block a taunt, it trades it for a different one.
+    static std::set<std::string> const singleTargetTaunts = {
+        "taunt", "growl", "hand of reckoning", "righteous defense",
+        "dark command", "death grip", "mocking blow"};
+
+    // Untargeted: these taunt everything within ten yards, so there is no "is
+    // this the mob the player has" to ask. Fired next to a player who is
+    // tanking, they take the boss off them whatever the bot was aiming at.
+    static std::set<std::string> const areaTaunts = {"challenging shout", "challenging roar"};
+
+    std::string const name = action->getName();
+    bool const area = areaTaunts.find(name) != areaTaunts.end();
+    if (!area && singleTargetTaunts.find(name) == singleTargetTaunts.end())
         return 1.0f;
 
-    // Deliberately not routed through the raid plan: "lose aggro" is just
-    // "I do not have aggro on my target", it fires for every tank-specced bot
-    // in the raid, and it does not care whether the director is running or
-    // whether this is even a recognised encounter. Guarding only inside a plan
-    // would leave the player being taunted off everywhere else.
-    Group* group = bot->GetGroup();
-    if (!group)
+    Player* mainTank = FindMainTank(bot);
+    if (!mainTank || mainTank == bot)
         return 1.0f;
 
-    ObjectGuid const mainTankGuid = PlayerbotAI::GetMainTankGuid(group);
-    if (mainTankGuid.IsEmpty() || mainTankGuid == bot->GetGUID())
-        return 1.0f;
+    if (GET_PLAYERBOT_AI(mainTank))
+        return 1.0f;  // an AI-driven main tank is what the existing threat logic assumes
 
-    Player* mainTank = ObjectAccessor::FindPlayer(mainTankGuid);
-    if (!mainTank)
-        return 1.0f;
-
-    PlayerbotAI* tankAI = GET_PLAYERBOT_AI(mainTank);
-    if (tankAI && !tankAI->IsRealPlayer())
-        return 1.0f;  // a bot main tank is what the existing threat logic assumes
+    if (area)
+        return 0.0f;
 
     // Scoped to what the player is actually holding right now. Adds, loose
     // mobs and anything that has slipped the player are still ours to grab.

@@ -9,6 +9,7 @@
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 
 #include "AiFactory.h"
 #include "BudgetValues.h"
@@ -2378,7 +2379,117 @@ bool PlayerbotAI::IsDps(Player* player, bool bySpec)
     return false;
 }
 
-ObjectGuid PlayerbotAI::GetMainTankGuid(Group* group)
+namespace
+{
+// Who the group settled on, remembered per group rather than worked out from
+// scratch every time. Two of the four tank classes have no durable "I am the
+// tank" signal to read - a druid's is the bear form, a death knight's is Frost
+// Presence - and both drop for a few seconds in the middle of a fight. Asked
+// fresh on every one of forty bots' ticks, a bear leaving form to battle rez
+// would hand the title to a bot, lift the taunt guard, and pull the boss off
+// the player before he had finished shifting back.
+struct MainTankElection
+{
+    ObjectGuid guid;
+    uint32 qualifiedMs = 0;  // last time the incumbent still read as a tank
+    uint32 askedMs = 0;      // last time anyone asked, for pruning
+};
+
+// Keyed on the group and on where the question is being asked from. A member
+// who stayed behind in the city is in the same group as the raid but sees a
+// different set of eligible tanks, and keying on the group alone would let the
+// two of them overwrite each other's answer every tick - which is the churn
+// this whole structure exists to stop.
+struct MainTankElectionKey
+{
+    ObjectGuid group;
+    uint64 place = 0;  // map and instance, folded together
+
+    bool operator==(MainTankElectionKey const& other) const
+    {
+        return group == other.group && place == other.place;
+    }
+};
+
+struct MainTankElectionKeyHash
+{
+    std::size_t operator()(MainTankElectionKey const& key) const
+    {
+        return std::hash<ObjectGuid>()(key.group) ^ std::hash<uint64>()(key.place);
+    }
+};
+
+uint64 PlaceOf(WorldObject const* anchor)
+{
+    return anchor ? ((static_cast<uint64>(anchor->GetMapId()) << 32) | anchor->GetInstanceId()) : 0;
+}
+
+std::mutex s_mainTankMutex;
+std::unordered_map<MainTankElectionKey, MainTankElection, MainTankElectionKeyHash> s_mainTanks;
+uint32 s_mainTankPrunedMs = 0;
+
+// How long the incumbent keeps the title once his role signal lapses. Long
+// enough to ride out a shapeshift or a presence swap, short enough that a tank
+// who has actually stopped tanking is replaced inside one pull.
+constexpr uint32 MAIN_TANK_GRACE_MS = 10000;
+
+// Elections for groups that stopped asking are dropped after this.
+constexpr uint32 MAIN_TANK_STALE_MS = 60000;
+
+// Whether this member is in a position to be tanking at all. Nothing here gets
+// a grace period: a tank who died, logged out, or is still standing in the city
+// is gone now, and holding the title for him leaves the boss with nobody
+// allowed to taunt it. The map test is what makes "in the raid" mean the
+// instance the asker is standing in rather than anywhere in the world.
+bool IsPresentToTank(Player* member, WorldObject const* anchor)
+{
+    if (!member || !member->IsInWorld() || member->IsDuringRemoveFromWorld() || !member->IsAlive())
+        return false;
+
+    return !anchor || member->GetMap() == anchor->GetMap();
+}
+
+// IsTank() answers "could this character tank", which is the wrong question
+// here. With no bot AI to ask it falls back to the spec, and the spec accepts a
+// blood death knight - the damage spec - along with any feral druid holding
+// Thick Hide, which a cat keeps out of bear form. Crowning one of those hands
+// the raid's tank mechanics to somebody who is not tanking and forbids every
+// bot from taunting the boss off him, so a player has to show something he
+// chose on purpose before the raid defers to him.
+bool ReadsAsPlayerTank(Player* player)
+{
+    switch (player->getClass())
+    {
+        case CLASS_WARRIOR:
+            return AiFactory::GetPlayerSpecTab(player) == WARRIOR_TAB_PROTECTION;
+        case CLASS_PALADIN:
+            return AiFactory::GetPlayerSpecTab(player) == PALADIN_TAB_PROTECTION;
+        case CLASS_DRUID:
+            // One tree, two roles: the form is all that separates the bear from
+            // the cat, and the grace period covers the gaps in it.
+            return AiFactory::GetPlayerSpecTab(player) == DRUID_TAB_FERAL &&
+                   (player->GetShapeshiftForm() == FORM_BEAR || player->GetShapeshiftForm() == FORM_DIREBEAR);
+        case CLASS_DEATH_KNIGHT:
+            // Every tree can tank, so the presence is the choice. Blood on its
+            // own is not one.
+            return player->HasAura(SPELL_DK_FROST_PRESENCE);
+        default:
+            return false;
+    }
+}
+
+void PruneMainTankElections(uint32 now)
+{
+    if (now - s_mainTankPrunedMs < MAIN_TANK_STALE_MS)
+        return;
+
+    s_mainTankPrunedMs = now;
+    for (auto it = s_mainTanks.begin(); it != s_mainTanks.end();)
+        it = (now - it->second.askedMs > MAIN_TANK_STALE_MS) ? s_mainTanks.erase(it) : ++it;
+}
+}  // namespace
+
+ObjectGuid PlayerbotAI::GetMainTankGuid(Group* group, WorldObject const* anchor)
 {
     if (!group)
         return ObjectGuid::Empty;
@@ -2390,29 +2501,78 @@ ObjectGuid PlayerbotAI::GetMainTankGuid(Group* group)
             return itr->guid;
     }
 
-    // A human tank outranks a bot tank. Bots are handed the tank strategy in
+    uint32 const now = getMSTime();
+    std::lock_guard<std::mutex> lock(s_mainTankMutex);
+    PruneMainTankElections(now);
+
+    MainTankElection& election = s_mainTanks[MainTankElectionKey{group->GetGUID(), PlaceOf(anchor)}];
+    election.askedMs = now;
+
+    // A player tank outranks a bot tank. Bots are handed the tank strategy in
     // bulk, so "first tank in group order" was effectively arbitrary and would
     // routinely name a bot while a player was the one actually holding the
     // boss. Both halves of that are bad: the bot runs the encounter's tank
     // mechanics for a boss it is not tanking, and it fights the player for
-    // aggro. A player who specced tank and is standing in the raid states
-    // their intent in a way a bot never does.
+    // aggro.
+    Player* playerTank = nullptr;
     Player* botTank = nullptr;
+    Player* incumbent = nullptr;
+    bool incumbentQualifies = false;
+    bool incumbentIsPlayer = false;
+
     for (GroupReference* ref = group->GetFirstMember(); ref; ref = ref->next())
     {
         Player* member = ref->GetSource();
-        if (!member || !member->IsAlive() || !IsTank(member))
+        if (!IsPresentToTank(member, anchor))
             continue;
 
-        PlayerbotAI* memberAI = GET_PLAYERBOT_AI(member);
-        if (!memberAI || memberAI->IsRealPlayer())
-            return member->GetGUID();
+        // Anything the bot AI drives runs the encounter's mechanics itself, a
+        // player who typed "bot self" included. Only a character nobody is
+        // scripting needs the rest of the raid to work around it, so only that
+        // character gets the preference - and it is held to the stricter test.
+        bool const scripted = GET_PLAYERBOT_AI(member) != nullptr;
+        bool const qualifies = scripted ? IsTank(member) : ReadsAsPlayerTank(member);
 
-        if (!botTank)
-            botTank = member;
+        if (member->GetGUID() == election.guid)
+        {
+            incumbent = member;
+            incumbentQualifies = qualifies;
+            incumbentIsPlayer = !scripted;
+        }
+
+        if (!qualifies)
+            continue;
+
+        if (scripted)
+        {
+            if (!botTank)
+                botTank = member;
+        }
+        else if (!playerTank)
+            playerTank = member;
     }
 
-    return botTank ? botTank->GetGUID() : ObjectGuid::Empty;
+    // The incumbent keeps the title unless a player has appeared to take it.
+    // Passing it around mid-fight re-indexes every off-tank behind it, since an
+    // assist tank is only ever "a tank that is not the main tank", so an answer
+    // that keeps changing is worse than a slightly staler one.
+    if (incumbent && incumbentQualifies && (incumbentIsPlayer || !playerTank))
+    {
+        election.qualifiedMs = now;
+        return election.guid;
+    }
+
+    // A lapsed signal is not a resignation: the bear is mid-battle-rez, the
+    // death knight swapped presence for a burn phase. Wait it out before
+    // handing the raid to somebody else - but only for a player, because a bot
+    // that has stopped reporting as a tank really has stopped being one.
+    if (incumbent && incumbentIsPlayer && !playerTank && now - election.qualifiedMs < MAIN_TANK_GRACE_MS)
+        return election.guid;
+
+    Player* const elected = playerTank ? playerTank : botTank;
+    election.guid = elected ? elected->GetGUID() : ObjectGuid::Empty;
+    election.qualifiedMs = now;
+    return election.guid;
 }
 
 bool PlayerbotAI::IsMainTank(Player* player)
@@ -2421,7 +2581,7 @@ bool PlayerbotAI::IsMainTank(Player* player)
     if (!group)
         return IsTank(player);
 
-    ObjectGuid const mainTankGuid = GetMainTankGuid(group);
+    ObjectGuid const mainTankGuid = GetMainTankGuid(group, player);
     return !mainTankGuid.IsEmpty() && player->GetGUID() == mainTankGuid;
 }
 
@@ -2512,7 +2672,7 @@ bool PlayerbotAI::IsAssistTank(Player* player)
     if (!group)
         return false;
 
-    return player->GetGUID() != GetMainTankGuid(group);
+    return player->GetGUID() != GetMainTankGuid(group, player);
 }
 
 bool PlayerbotAI::IsAssistTankOfIndex(Player* player, uint8 index, bool ignoreDeadPlayers)
@@ -2524,7 +2684,7 @@ bool PlayerbotAI::IsAssistTankOfIndex(Player* player, uint8 index, bool ignoreDe
     if (!group)
         return false;
 
-    ObjectGuid const mainTankGuid = GetMainTankGuid(group);
+    ObjectGuid const mainTankGuid = GetMainTankGuid(group, player);
 
     if (player->GetGUID() == mainTankGuid)
         return false;
@@ -2545,6 +2705,15 @@ bool PlayerbotAI::IsAssistTankOfIndex(Player* player, uint8 index, bool ignoreDe
         {
             continue;
         }
+
+        // An assist tank index is a duty - "assist 0 takes the adds" - so the
+        // rota can only contain characters something is able to carry it out
+        // for. Giving a slot to a player nobody is scripting does not get the
+        // adds taken; it benches the bot that would have taken them, one place
+        // further down. Players still count as tanks wherever the question is
+        // whether the role is covered at all.
+        if (!GET_PLAYERBOT_AI(member))
+            continue;
 
         bool isAssistant = group->IsAssistant(member->GetGUID());
 

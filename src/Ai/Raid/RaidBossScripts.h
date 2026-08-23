@@ -296,11 +296,19 @@ public:
     float GetValue(Action* action) override;
 };
 
-// Stops a bot ripping the boss off a human main tank. Bots are handed the tank
+// Stops a bot ripping the boss off a player main tank. Bots are handed the tank
 // strategy in bulk and "lose aggro" fires for every one of them the moment a
 // player is holding the boss instead, so without this the raid simply taunts
-// the fight away from the person tanking it. Scoped to the plan's own boss —
-// pulling adds off the raid is still the offtanks' job.
+// the fight away from the person tanking it.
+//
+// Deliberately not routed through the raid plan: "lose aggro" is just "I do not
+// have aggro on my target". It fires for every tank-specced bot whether or not
+// the director is running and whether or not this is a recognised encounter, so
+// guarding only inside a plan would leave the player being taunted off
+// everywhere else. The scope is instead whatever the player is holding at this
+// moment: a single-target taunt is blocked only on that mob, so adds and
+// anything that has slipped the player are still the offtanks' to grab, while
+// an area taunt has no target to reason about and is blocked outright.
 class RaidTankTauntGuardMultiplier : public Multiplier
 {
 public:

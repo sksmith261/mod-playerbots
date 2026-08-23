@@ -118,7 +118,7 @@ Player* GetGroupMainTank(PlayerbotAI* botAI, Player* bot)
     if (!group)
         return nullptr;
 
-    ObjectGuid const mainTankGuid = botAI->GetMainTankGuid(group);
+    ObjectGuid const mainTankGuid = botAI->GetMainTankGuid(group, bot);
     if (mainTankGuid.IsEmpty())
         return nullptr;
 
@@ -140,7 +140,7 @@ Player* GetGroupAssistTank(PlayerbotAI* botAI, Player* bot, uint8 index)
     if (!group)
         return nullptr;
 
-    ObjectGuid const mainTankGuid = botAI->GetMainTankGuid(group);
+    ObjectGuid const mainTankGuid = botAI->GetMainTankGuid(group, bot);
     if (mainTankGuid.IsEmpty())
         return nullptr;
 
@@ -155,6 +155,12 @@ Player* GetGroupAssistTank(PlayerbotAI* botAI, Player* bot, uint8 index)
         {
             continue;
         }
+
+        // Same rota as PlayerbotAI::IsAssistTankOfIndex, and it has to stay the
+        // same one: only characters the AI drives take a slot, or the two
+        // disagree about who assist 1 is.
+        if (!GET_PLAYERBOT_AI(member))
+            continue;
 
         if (group->IsAssistant(member->GetGUID()))
         {

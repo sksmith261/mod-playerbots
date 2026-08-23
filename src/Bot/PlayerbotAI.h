@@ -426,7 +426,7 @@ public:
     static bool IsCaster(Player* player, bool bySpec = false);
     static bool IsRangedDps(Player* player, bool bySpec = false);
     static bool IsCombo(Player* player);
-    static ObjectGuid GetMainTankGuid(Group* group);
+    static ObjectGuid GetMainTankGuid(Group* group, WorldObject const* anchor = nullptr);
     static bool IsMainTank(Player* player);
     static bool IsExplicitMainTank(Player* player);
     static bool IsBotMainTank(Player* player);

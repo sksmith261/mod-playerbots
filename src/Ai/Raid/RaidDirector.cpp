@@ -23,6 +23,56 @@ void PruneStale(uint32 now)
     for (auto it = s_plans.begin(); it != s_plans.end();)
         it = (now - it->second.updatedMs > STALE_AFTER_MS) ? s_plans.erase(it) : ++it;
 }
+
+// Who the raid actually has. Taken once per rebuild, for every encounter,
+// because it belongs to the plan rather than to any one builder: while this
+// lived inside the generic builder, the two encounters with builders of their
+// own - the Horsemen and Sapphiron - left whatever the last generic fight had
+// worked out sitting in the struct, and `raidplan` reported the previous
+// boss's main tank on both of them.
+void Census(Player* bot, Group* group, RaidPlan& plan)
+{
+    plan.mainTank = PlayerbotAI::GetMainTankGuid(group, bot);
+    plan.mainTankIsHuman = false;
+    plan.humanTanks = 0;
+    plan.humanHealers = 0;
+    plan.humanDamage = 0;
+
+    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        Player* member = itr->GetSource();
+        if (!member || member->GetMap() != bot->GetMap())
+            continue;
+
+        // Anything the AI drives carries out its own assignments, a player who
+        // typed "bot self" included. Only a character nobody is scripting has
+        // to be planned around, so only those are counted here.
+        if (GET_PLAYERBOT_AI(member))
+            continue;
+
+        // Deliberately not gated on being alive: a main tank who is taking a
+        // rez is still the person this raid is built around, and counting him
+        // as absent flips every bot tank back onto the boss mid-fight.
+        if (member->GetGUID() == plan.mainTank)
+            plan.mainTankIsHuman = true;
+
+        if (PlayerbotAI::IsTank(member))
+            ++plan.humanTanks;
+        else if (PlayerbotAI::IsHeal(member))
+            ++plan.humanHealers;
+        else
+            ++plan.humanDamage;
+    }
+}
+
+void ClearCensus(RaidPlan& plan)
+{
+    plan.mainTank = ObjectGuid::Empty;
+    plan.mainTankIsHuman = false;
+    plan.humanTanks = 0;
+    plan.humanHealers = 0;
+    plan.humanDamage = 0;
+}
 }  // namespace
 
 void RaidDirector::Tick(Player* bot)
@@ -47,6 +97,7 @@ void RaidDirector::Tick(Player* bot)
         plan.engagedMs = 0;
         plan.label.clear();
         plan.assignments.clear();
+        ClearCensus(plan);
         plan.updatedMs = now;
         return;
     }
@@ -56,6 +107,10 @@ void RaidDirector::Tick(Player* bot)
         return;
 
     plan.updatedMs = now;
+
+    // Before the builders, because they read it: whether the raid already has
+    // somebody holding the boss decides what the bot tanks are told to do.
+    Census(bot, group, plan);
 
     // Encounter builders own everything below the plan: which fight this is,
     // who holds what, and when that changes. They receive the plan carrying
@@ -70,6 +125,7 @@ void RaidDirector::Tick(Player* bot)
         plan.engagedMs = 0;
         plan.label.clear();
         plan.assignments.clear();
+        ClearCensus(plan);
     }
 
     PruneStale(now);

@@ -103,6 +103,24 @@ bool NaxxRaidPlans::BuildFourHorsemen(Player* bot, Group* group, RaidPlan& plan)
     std::stable_sort(pool.begin(), pool.end(),
                      [](Player* a, Player* b) { return PromotionRank(a) < PromotionRank(b); });
 
+    // ---- Corners a player already has ------------------------------------
+    // The plan cannot drive a player, so the one useful thing it can do about
+    // one is not send a bot to fight him for the same horseman. Without this
+    // the roster above simply skipped every player in the raid and promoted
+    // four bots onto four corners regardless, so two of them piled onto the
+    // corner the player was already holding and the raid ran a five-tank
+    // rotation on a four-corner fight.
+    bool playerHeld[4] = {};
+    for (uint32 camp = 0; camp < 4; ++camp)
+    {
+        if (!horsemen[camp])
+            continue;
+
+        Unit* victim = horsemen[camp]->GetVictim();
+        Player* holder = victim ? victim->ToPlayer() : nullptr;
+        playerHeld[camp] = holder && holder->GetGroup() == group && !GET_PLAYERBOT_AI(holder);
+    }
+
     // ---- Tanks: one per camp, with hysteresis ----------------------------
     // Real tanks cover Korth'azz, Mograine and Zeliek; the promoted spec
     // gets Blaumeux, who only casts and is the least punishing to hold.
@@ -113,7 +131,7 @@ bool NaxxRaidPlans::BuildFourHorsemen(Player* bot, Group* group, RaidPlan& plan)
     for (uint32 slot = 0; slot < 4; ++slot)
     {
         uint32 const camp = campForPoolSlot[slot];
-        if (!horsemen[camp])
+        if (!horsemen[camp] || playerHeld[camp])
             continue;
 
         uint32 const markId = specs[camp].markId;
@@ -332,7 +350,11 @@ bool NaxxRaidPlans::BuildSapphiron(Player* bot, Group* group, RaidPlan& plan)
         // the next air phase will build out of them.
         if (PlayerbotAI::IsTank(member))
         {
-            plan.assignments[member->GetGUID()] = {RAID_DUTY_TANK, 0, sapphiron->GetGUID()};
+            // As on the generic bosses: with a player tanking her, a bot tank
+            // is not allowed to take her off him, so it is not told to hold
+            // her either.
+            uint8 const tankDuty = plan.mainTankIsHuman ? RAID_DUTY_DAMAGE : RAID_DUTY_TANK;
+            plan.assignments[member->GetGUID()] = {tankDuty, 0, sapphiron->GetGUID()};
             continue;
         }
 
@@ -455,13 +477,8 @@ bool NaxxRaidPlans::BuildGeneric(Player* bot, Group* group, RaidPlan& plan)
 
     plan.phase = 1;
 
-    // Census the whole raid, hand assignments only to the bots.
-    plan.mainTank = PlayerbotAI::GetMainTankGuid(group);
-    plan.mainTankIsHuman = false;
-    plan.humanTanks = 0;
-    plan.humanHealers = 0;
-    plan.humanDamage = 0;
-
+    // The director has already censused the raid; this hands out assignments to
+    // everything it can actually drive.
     uint32 ringSlot = 0;
     for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
     {
@@ -469,25 +486,23 @@ bool NaxxRaidPlans::BuildGeneric(Player* bot, Group* group, RaidPlan& plan)
         if (!member || !member->IsAlive())
             continue;
 
-        PlayerbotAI* memberAI = GET_PLAYERBOT_AI(member);
-        if (!memberAI || memberAI->IsRealPlayer())
-        {
-            if (PlayerbotAI::IsTank(member))
-                ++plan.humanTanks;
-            else if (PlayerbotAI::IsHeal(member))
-                ++plan.humanHealers;
-            else
-                ++plan.humanDamage;
-
-            if (member->GetGUID() == plan.mainTank)
-                plan.mainTankIsHuman = true;
-
+        // Anything with an AI takes an assignment, a player who typed "bot
+        // self" included - the AI is what carries it out, and testing for a
+        // real player instead dropped those characters out of every mechanic
+        // the plan drives.
+        if (!GET_PLAYERBOT_AI(member))
             continue;
-        }
 
         if (PlayerbotAI::IsTank(member))
         {
-            plan.assignments[member->GetGUID()] = {RAID_DUTY_TANK, 0, boss->GetGUID()};
+            // A player holding the boss changes what a bot tank is for. The
+            // taunt guard forbids it to take the boss off him, so ordering it
+            // to hold the boss anyway just parks it in the boss's face
+            // building threat it is not allowed to convert - two halves of the
+            // same feature issuing opposite orders. It fights as melee
+            // instead, on hand for whatever the player has not got.
+            uint8 const tankDuty = plan.mainTankIsHuman ? RAID_DUTY_DAMAGE : RAID_DUTY_TANK;
+            plan.assignments[member->GetGUID()] = {tankDuty, 0, boss->GetGUID()};
             continue;
         }
 
