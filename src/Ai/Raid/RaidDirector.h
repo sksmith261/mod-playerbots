@@ -71,6 +71,16 @@ struct RaidPlan
     std::string label;       // boss name, for the readout
     std::unordered_map<ObjectGuid, RaidAssignment> assignments;
 
+    // Roles are the raid's, not the bots'. A human fills a job exactly as much
+    // as a bot does; the only difference is that nothing here can drive them.
+    // Counting them is what lets the bots fill in around whoever is already
+    // covering something instead of assuming they are the whole raid.
+    ObjectGuid mainTank;            // whoever holds it, bot or human
+    bool mainTankIsHuman = false;
+    uint32 humanTanks = 0;
+    uint32 humanHealers = 0;
+    uint32 humanDamage = 0;
+
     RaidAssignment const* For(ObjectGuid guid) const
     {
         auto it = assignments.find(guid);

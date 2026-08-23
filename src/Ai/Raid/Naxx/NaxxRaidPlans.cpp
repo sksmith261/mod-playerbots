@@ -455,12 +455,35 @@ bool NaxxRaidPlans::BuildGeneric(Player* bot, Group* group, RaidPlan& plan)
 
     plan.phase = 1;
 
+    // Census the whole raid, hand assignments only to the bots.
+    plan.mainTank = PlayerbotAI::GetMainTankGuid(group);
+    plan.mainTankIsHuman = false;
+    plan.humanTanks = 0;
+    plan.humanHealers = 0;
+    plan.humanDamage = 0;
+
     uint32 ringSlot = 0;
     for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
     {
         Player* member = itr->GetSource();
-        if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
+        if (!member || !member->IsAlive())
             continue;
+
+        PlayerbotAI* memberAI = GET_PLAYERBOT_AI(member);
+        if (!memberAI || memberAI->IsRealPlayer())
+        {
+            if (PlayerbotAI::IsTank(member))
+                ++plan.humanTanks;
+            else if (PlayerbotAI::IsHeal(member))
+                ++plan.humanHealers;
+            else
+                ++plan.humanDamage;
+
+            if (member->GetGUID() == plan.mainTank)
+                plan.mainTankIsHuman = true;
+
+            continue;
+        }
 
         if (PlayerbotAI::IsTank(member))
         {

@@ -212,7 +212,17 @@ inline std::vector<Player*> FourHorsemenTankPool(Player* bot)
         for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
         {
             Player* member = itr->GetSource();
-            if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member) || !CanHoldHorseman(member))
+            if (!member || !member->IsAlive() || !CanHoldHorseman(member))
+                continue;
+
+            // Humans count toward the pool, so a player tanking this fight
+            // holds a corner and the bots fill the other three rather than all
+            // four. They are only ever counted as real tanks though: promoting
+            // a player's dps into a corner it does not know it was given is
+            // how you lose a horseman.
+            PlayerbotAI* memberAI = GET_PLAYERBOT_AI(member);
+            bool const memberIsBot = memberAI && !memberAI->IsRealPlayer();
+            if (!memberIsBot && !PlayerbotAI::IsTank(member))
                 continue;
 
             if (PlayerbotAI::IsTank(member))

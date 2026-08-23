@@ -189,11 +189,22 @@ std::string RaidDirector::Describe(Player* bot)
                  dutyName[assignment.duty] + " camp " + std::to_string(assignment.camp) + "\n";
     }
 
+    std::string tankLine = "  main tank: ";
+    if (Player* mt = ObjectAccessor::FindPlayer(plan->mainTank))
+        tankLine += mt->GetName() + (plan->mainTankIsHuman ? " (player)" : " (bot)");
+    else
+        tankLine += "none";
+
+    if (plan->humanTanks || plan->humanHealers || plan->humanDamage)
+        tankLine += "\n  players in raid: " + std::to_string(plan->humanTanks) + " tank, " +
+                    std::to_string(plan->humanHealers) + " heal, " +
+                    std::to_string(plan->humanDamage) + " damage";
+
     return (plan->label.empty() ? std::string("Encounter") : plan->label) +
            ", phase " + std::to_string(plan->phase) +
            " — " + std::to_string(counts[RAID_DUTY_TANK]) + " tank, " +
            std::to_string(counts[RAID_DUTY_RESERVE]) + " reserve, " +
            std::to_string(counts[RAID_DUTY_DAMAGE]) + " damage, " +
            std::to_string(counts[RAID_DUTY_HEAL]) + " heal, " +
-           std::to_string(counts[RAID_DUTY_HIDE]) + " hiding\n" + lines;
+           std::to_string(counts[RAID_DUTY_HIDE]) + " hiding\n" + tankLine + "\n" + lines;
 }

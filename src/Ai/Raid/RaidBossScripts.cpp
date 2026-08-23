@@ -6,6 +6,8 @@
 
 #include "RaidBossScripts.h"
 
+#include <set>
+
 #include "Event.h"
 #include "GameObject.h"
 #include "GenericSpellActions.h"
@@ -432,6 +434,44 @@ float RaidCommandOverrideMultiplier::GetValue(Action* action)
         return 0.0f;
 
     return 1.0f;
+}
+
+float RaidTankTauntGuardMultiplier::GetValue(Action* action)
+{
+    if (!action)
+        return 1.0f;
+
+    static std::set<std::string> const taunts = {"taunt",             "growl",
+                                                 "hand of reckoning", "dark command",
+                                                 "challenging shout", "challenging roar"};
+    if (taunts.find(action->getName()) == taunts.end())
+        return 1.0f;
+
+    // Deliberately not routed through the raid plan: "lose aggro" is just
+    // "I do not have aggro on my target", it fires for every tank-specced bot
+    // in the raid, and it does not care whether the director is running or
+    // whether this is even a recognised encounter. Guarding only inside a plan
+    // would leave the player being taunted off everywhere else.
+    Group* group = bot->GetGroup();
+    if (!group)
+        return 1.0f;
+
+    ObjectGuid const mainTankGuid = PlayerbotAI::GetMainTankGuid(group);
+    if (mainTankGuid.IsEmpty() || mainTankGuid == bot->GetGUID())
+        return 1.0f;
+
+    Player* mainTank = ObjectAccessor::FindPlayer(mainTankGuid);
+    if (!mainTank)
+        return 1.0f;
+
+    PlayerbotAI* tankAI = GET_PLAYERBOT_AI(mainTank);
+    if (tankAI && !tankAI->IsRealPlayer())
+        return 1.0f;  // a bot main tank is what the existing threat logic assumes
+
+    // Scoped to what the player is actually holding right now. Adds, loose
+    // mobs and anything that has slipped the player are still ours to grab.
+    Unit* current = AI_VALUE(Unit*, "current target");
+    return current && current->GetVictim() == mainTank ? 0.0f : 1.0f;
 }
 
 float RaidDispelUrgencyMultiplier::GetValue(Action* action)

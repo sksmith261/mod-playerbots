@@ -198,4 +198,5 @@ void ChatCommandHandlerStrategy::InitMultipliers(std::vector<Multiplier*>& multi
 
     // Encounter AI outranks manual holds once a raid fight is under way.
     multipliers.push_back(new RaidCommandOverrideMultiplier(botAI));
+    multipliers.push_back(new RaidTankTauntGuardMultiplier(botAI));
 }

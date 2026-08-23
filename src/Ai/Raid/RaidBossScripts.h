@@ -296,6 +296,18 @@ public:
     float GetValue(Action* action) override;
 };
 
+// Stops a bot ripping the boss off a human main tank. Bots are handed the tank
+// strategy in bulk and "lose aggro" fires for every one of them the moment a
+// player is holding the boss instead, so without this the raid simply taunts
+// the fight away from the person tanking it. Scoped to the plan's own boss —
+// pulling adds off the raid is still the offtanks' job.
+class RaidTankTauntGuardMultiplier : public Multiplier
+{
+public:
+    RaidTankTauntGuardMultiplier(PlayerbotAI* botAI) : Multiplier(botAI, "raid taunt guard") {}
+    float GetValue(Action* action) override;
+};
+
 class RaidDispelUrgencyMultiplier : public Multiplier
 {
 public:

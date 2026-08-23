@@ -2390,14 +2390,29 @@ ObjectGuid PlayerbotAI::GetMainTankGuid(Group* group)
             return itr->guid;
     }
 
+    // A human tank outranks a bot tank. Bots are handed the tank strategy in
+    // bulk, so "first tank in group order" was effectively arbitrary and would
+    // routinely name a bot while a player was the one actually holding the
+    // boss. Both halves of that are bad: the bot runs the encounter's tank
+    // mechanics for a boss it is not tanking, and it fights the player for
+    // aggro. A player who specced tank and is standing in the raid states
+    // their intent in a way a bot never does.
+    Player* botTank = nullptr;
     for (GroupReference* ref = group->GetFirstMember(); ref; ref = ref->next())
     {
         Player* member = ref->GetSource();
-        if (member && IsTank(member) && member->IsAlive())
+        if (!member || !member->IsAlive() || !IsTank(member))
+            continue;
+
+        PlayerbotAI* memberAI = GET_PLAYERBOT_AI(member);
+        if (!memberAI || memberAI->IsRealPlayer())
             return member->GetGUID();
+
+        if (!botTank)
+            botTank = member;
     }
 
-    return ObjectGuid::Empty;
+    return botTank ? botTank->GetGUID() : ObjectGuid::Empty;
 }
 
 bool PlayerbotAI::IsMainTank(Player* player)
