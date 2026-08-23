@@ -267,7 +267,8 @@ bool NaxxRaidPlans::BuildSapphiron(Player* bot, Group* group, RaidPlan& plan)
              botAI->GetAiObjectContext()->GetValue<GuidVector>("possible targets no los")->Get())
         {
             Unit* unit = botAI->GetUnit(guid);
-            if (unit && botAI->EqualLowercaseName(unit->GetName(), "sapphiron"))
+            // Engaged only — same through-the-wall reach as the generic sweep.
+            if (unit && unit->IsInCombat() && botAI->EqualLowercaseName(unit->GetName(), "sapphiron"))
             {
                 sapphiron = unit;
                 break;
@@ -415,7 +416,14 @@ bool NaxxRaidPlans::BuildGeneric(Player* bot, Group* group, RaidPlan& plan)
              botAI->GetAiObjectContext()->GetValue<GuidVector>("possible targets no los")->Get())
         {
             Unit* unit = botAI->GetUnit(guid);
-            if (!unit || !unit->IsAlive())
+            // Must already be fighting. This sweep deliberately ignores line
+            // of sight so a bot that has not struck anything still knows which
+            // fight it is in, but that also reaches 100y through walls and
+            // floors. Grobbulus patrols across three levels and comes within
+            // 86y of the room next door, so trash pulls there were resolving
+            // as "the Grobbulus encounter" and sending the raid at him through
+            // the wall. A boss walking its patrol is not an encounter.
+            if (!unit || !unit->IsAlive() || !unit->IsInCombat())
                 continue;
 
             for (NaxxEncounterSpec const& candidate : NAXX_ENCOUNTERS)
