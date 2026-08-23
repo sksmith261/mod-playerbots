@@ -28,12 +28,13 @@ class GrobbulusRotateAction : public RotateAroundTheCenterPointAction
 {
 public:
     GrobbulusRotateAction(PlayerbotAI* botAI)
-        : RotateAroundTheCenterPointAction(botAI, "rotate grobbulus", 3281.23f, -3310.38f, 35.0f, 8, true, M_PI) {}
+        : RotateAroundTheCenterPointAction(botAI, "rotate grobbulus", 3281.23f, -3310.38f, 18.0f, 8, true, M_PI) {}
     virtual bool isUseful() override
     {
         return RotateAroundTheCenterPointAction::isUseful() && botAI->IsMainTank(bot) &&
                AI_VALUE2(bool, "has aggro", "boss target");
     }
+    bool Execute(Event event) override;
     uint32 GetCurrWaypoint() override;
 };
 
@@ -42,12 +43,22 @@ class GrobbulusMoveCenterAction : public MoveInsideAction
 public:
     GrobbulusMoveCenterAction(PlayerbotAI* ai) : MoveInsideAction(ai, 3281.23f, -3310.38f, 5.0f) {}
 
+    // Same bad anchor as the kite ring: re-target the boss's own spawn.
+
     // Base MoveInsideAction moves at MOVEMENT_NORMAL, which loses to
     // in-flight moves and the body-pull guard's veto. Walking back to the
     // raid after Mutating Injection is a mechanic move: COMBAT priority.
     bool Execute(Event event) override
     {
-        return MoveInside(bot->GetMapId(), x, y, bot->GetPositionZ(), distance,
+        float cx = x, cy = y;
+        if (Unit* boss = AI_VALUE(Unit*, "boss target"))
+            if (Creature* creature = boss->ToCreature())
+            {
+                cx = creature->GetHomePosition().GetPositionX();
+                cy = creature->GetHomePosition().GetPositionY();
+            }
+
+        return MoveInside(bot->GetMapId(), cx, cy, bot->GetPositionZ(), distance,
                           MovementPriority::MOVEMENT_COMBAT);
     }
 };
