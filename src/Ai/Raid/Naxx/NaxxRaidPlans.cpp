@@ -379,9 +379,14 @@ NaxxEncounterSpec const NAXX_ENCOUNTERS[] = {
     // Military wing — Gothik's side discipline owns positioning
     {"instructor razuvious",  "Razuvious",      25.0f, false},
     {"gothik the harvester",  "Gothik",          0.0f, false},
-    // Construct wing — Gluth kiting and Thaddius platforms own theirs
+    // Construct wing — Gluth kiting, Grobbulus kiting and Thaddius platforms
+    // own theirs. Grobbulus has to be 0: the generic ring is anchored on the
+    // boss's live position, and he is walked in a circle all fight, so every
+    // ranged and healer slot orbited along with him and the raid was dragged
+    // through the clouds the tank had just moved him out of. Avoid-aoe pulled
+    // them out and the ring hauled them straight back in.
     {"patchwerk",             "Patchwerk",      15.0f, true},
-    {"grobbulus",             "Grobbulus",      30.0f, false},
+    {"grobbulus",             "Grobbulus",       0.0f, false},
     {"gluth",                 "Gluth",           0.0f, false},
     {"thaddius",              "Thaddius",        0.0f, false},
     // Frostwyrm
