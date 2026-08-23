@@ -760,9 +760,25 @@ private:
 class LoathebBossHelper : public AiObject
 {
 public:
-    const std::pair<float, float> mainTankPos = {2877.57f, -3967.00f};
+    // Loatheb does not move and has no positional mechanic — he is a
+    // healing-throughput fight. The old tank spot sat 43.7y from his spawn,
+    // which meant dragging him most of the way across the room to start.
+    // Tank him where he stands; ranged keep their spot, which is a
+    // reasonable 20y out.
+    std::pair<float, float> mainTankPos = {2909.00f, -3997.41f};
     const std::pair<float, float> rangePos = {2896.96f, -3980.61f};
     LoathebBossHelper(PlayerbotAI* botAI) : AiObject(botAI) {}
+
+    // Prefer his live spawn if we can see him, so this cannot drift.
+    void AnchorPositions()
+    {
+        if (_unit)
+            if (Creature* creature = _unit->ToCreature())
+            {
+                mainTankPos.first = creature->GetHomePosition().GetPositionX();
+                mainTankPos.second = creature->GetHomePosition().GetPositionY();
+            }
+    }
     bool UpdateBossAI()
     {
         if (!bot->IsInCombat())
@@ -774,6 +790,7 @@ public:
         if (!_unit)
             _unit = AI_VALUE2(Unit*, "find target", "loatheb");
 
+        AnchorPositions();
         return _unit != nullptr;
     }
 

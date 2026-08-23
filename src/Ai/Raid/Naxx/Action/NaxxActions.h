@@ -388,7 +388,7 @@ class AnubrekhanPositionAction : public RotateAroundTheCenterPointAction
 {
 public:
     AnubrekhanPositionAction(PlayerbotAI* ai)
-        : RotateAroundTheCenterPointAction(ai, "anub'rekhan position", 3272.49f, -3476.27f, 45.0f, 16) {}
+        : RotateAroundTheCenterPointAction(ai, "anub'rekhan position", 3272.49f, -3476.27f, 22.0f, 16) {}
     bool Execute(Event event) override;
 };
 
