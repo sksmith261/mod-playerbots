@@ -28,7 +28,7 @@ class GrobbulusRotateAction : public RotateAroundTheCenterPointAction
 {
 public:
     GrobbulusRotateAction(PlayerbotAI* botAI)
-        : RotateAroundTheCenterPointAction(botAI, "rotate grobbulus", 3281.23f, -3310.38f, 18.0f, 8, true, M_PI) {}
+        : RotateAroundTheCenterPointAction(botAI, "rotate grobbulus", 3281.23f, -3310.38f, 28.0f, 8, true, M_PI) {}
     virtual bool isUseful() override
     {
         return RotateAroundTheCenterPointAction::isUseful() && botAI->IsMainTank(bot) &&
@@ -41,7 +41,10 @@ public:
 class GrobbulusMoveCenterAction : public MoveInsideAction
 {
 public:
-    GrobbulusMoveCenterAction(PlayerbotAI* ai) : MoveInsideAction(ai, 3281.23f, -3310.38f, 5.0f) {}
+    // 5y packed everyone who had just shed an injection into a ball on the
+    // boss, which is the one place the trailing slime is guaranteed to be.
+    // Rejoining the raid does not require standing on top of it.
+    GrobbulusMoveCenterAction(PlayerbotAI* ai) : MoveInsideAction(ai, 3281.23f, -3310.38f, 15.0f) {}
 
     // Same bad anchor as the kite ring: re-target the boss's own spawn.
 
