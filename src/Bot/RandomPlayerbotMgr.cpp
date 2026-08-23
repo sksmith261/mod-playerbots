@@ -2667,18 +2667,42 @@ void RandomPlayerbotMgr::OnPlayerLogin(Player* player)
         {
             Player* member = gref->GetSource();
             PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot);
-            if (botAI && member == player && (!botAI->GetMaster() || GET_PLAYERBOT_AI(botAI->GetMaster())))
-            {
-                if (!bot->InBattleground())
-                {
-                    botAI->SetMaster(player);
-                    botAI->ResetStrategies();
-                    botAI->TellMaster(PlayerbotTextMgr::instance().GetBotTextOrDefault(
-                        "hello", "Hello", {}));
-                }
+            if (!botAI || member != player)
+                continue;
 
+            // Who commands these bots is runtime-only state, but the group
+            // itself is persisted — so after a restart every bot in a saved
+            // raid reloads masterless. The old rule was "first group member
+            // to log in claims them", and because a human master was never
+            // revisited afterwards, that claim was permanent. Whoever
+            // happened to connect first owned the whole raid for the session:
+            // bots resolved follow, stay, formations and RTS ground-clicks
+            // against that player and quietly ignored the leader's, which
+            // reads in game as the bots ignoring orders they clearly heard.
+            //
+            // Prefer the group leader, who is who everyone already expects to
+            // be giving orders. Fall back to the logging-in player only when
+            // the leader is not a human in world, and let the leader reclaim
+            // the bots when they arrive later.
+            Player* const leader = botAI->GetGroupLeader();
+            Player* const current = botAI->GetMaster();
+            auto human = [](Player* p)
+            { return p && (!GET_PLAYERBOT_AI(p) || GET_PLAYERBOT_AI(p)->IsRealPlayer()); };
+
+            bool const claim = (player == leader) ? (current != player)
+                                                  : (!human(leader) && !human(current));
+            if (!claim)
                 break;
+
+            if (!bot->InBattleground())
+            {
+                botAI->SetMaster(player);
+                botAI->ResetStrategies();
+                botAI->TellMaster(PlayerbotTextMgr::instance().GetBotTextOrDefault(
+                    "hello", "Hello", {}));
             }
+
+            break;
         }
     }
 

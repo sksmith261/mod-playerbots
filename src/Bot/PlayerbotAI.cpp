@@ -4430,10 +4430,16 @@ Player* PlayerbotAI::FindNewMaster()
     if (!group)
         return nullptr;
 
-    Player* groupLeader = GetGroupLeader();
-    PlayerbotAI* leaderBotAI = GET_PLAYERBOT_AI(groupLeader);
-    if (!leaderBotAI || leaderBotAI->IsRealPlayer())
-        return groupLeader;
+    // Only consider the leader when there actually is one in world: this
+    // used to return the null leader as the answer, so a group whose leader
+    // had logged out never reached the search for another human below and
+    // sat masterless until someone reconnected.
+    if (Player* groupLeader = GetGroupLeader())
+    {
+        PlayerbotAI* leaderBotAI = GET_PLAYERBOT_AI(groupLeader);
+        if (!leaderBotAI || leaderBotAI->IsRealPlayer())
+            return groupLeader;
+    }
 
     // Find the real player in group
     for (GroupReference* gref = group->GetFirstMember(); gref; gref = gref->next())
