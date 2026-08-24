@@ -381,38 +381,61 @@ bool NaxxRaidPlans::BuildSapphiron(Player* bot, Group* group, RaidPlan& plan)
 // ---------------------------------------------------------------------------
 namespace
 {
+// One owner per decision. Every encounter has exactly one system that owns
+// each bot's position and one that owns its target; the plan takes a column
+// only where no bespoke action exists for it. This is load-bearing because of
+// how the engine falls through: an action that returns false — which every
+// bespoke choose-target does on the tick its target is already right, and
+// every bespoke position does once in place — hands that same tick to
+// whatever is queued below it. When the plan also claimed the column, the two
+// systems alternated ticks: targets flapped between the boss and the assigned
+// add, and bots played tug-of-war between two "correct" spots. The mess was
+// worst exactly on the fights with the most bespoke logic, because each extra
+// action was another false-return for the plan to fall through.
+//
+//   ring        > 0 only where NOTHING else moves ranged/healers. Bespoke
+//               movement disqualifies: Anub (swarm kite + spread slots),
+//               Patchwerk (12-15y radial back-off), Maexxna (rear flank +
+//               wrap rescuers), Noth (blink/balcony), Heigan (dance), Loatheb
+//               (fixed range spot + spore soakers), Gothik (sides), Gluth
+//               (per-role spots), Grobbulus (injection drops, kited boss),
+//               Thaddius (platforms/polarity), Kel'Thuzad (center + p2 ring).
+//               Razuvious is 0 for one specific reason: the priests channel
+//               Mind Control, their crystal action returns false mid-channel,
+//               and a ring move issued on that tick BREAKS THE CHANNEL.
+//   planTargets true only where no bespoke choose-target exists and the whole
+//               raid genuinely wants the boss: Patchwerk, Thaddius. Everyone
+//               else has add priority (crypt guards, worshippers for the
+//               frenzy, skeletons, wave sides, zombies, spores, wraps,
+//               guardians) that the plan must not fight.
 struct NaxxEncounterSpec
 {
     char const* name;
     char const* label;
-    float ring;        // ranged/healer ring radius; 0 leaves positioning alone
+    float ring;        // ranged/healer ring radius; 0 = bespoke owns movement
     bool meleeStack;   // melee pile onto the boss rather than flanking
+    bool planTargets;  // plan may retarget bots onto the boss
 };
 
 NaxxEncounterSpec const NAXX_ENCOUNTERS[] = {
     // Spider wing
-    {"anub'rekhan",           "Anub'Rekhan",    25.0f, false},
-    {"grand widow faerlina",  "Faerlina",       20.0f, false},
-    {"maexxna",               "Maexxna",        20.0f, false},
-    // Plague wing — Heigan's dance owns every position in that room
-    {"noth the plaguebringer","Noth",           25.0f, false},
-    {"heigan the unclean",    "Heigan",          0.0f, false},
-    {"loatheb",               "Loatheb",        20.0f, false},
-    // Military wing — Gothik's side discipline owns positioning
-    {"instructor razuvious",  "Razuvious",      25.0f, false},
-    {"gothik the harvester",  "Gothik",          0.0f, false},
-    // Construct wing — Gluth kiting, Grobbulus kiting and Thaddius platforms
-    // own theirs. Grobbulus has to be 0: the generic ring is anchored on the
-    // boss's live position, and he is walked in a circle all fight, so every
-    // ranged and healer slot orbited along with him and the raid was dragged
-    // through the clouds the tank had just moved him out of. Avoid-aoe pulled
-    // them out and the ring hauled them straight back in.
-    {"patchwerk",             "Patchwerk",      15.0f, true},
-    {"grobbulus",             "Grobbulus",       0.0f, false},
-    {"gluth",                 "Gluth",           0.0f, false},
-    {"thaddius",              "Thaddius",        0.0f, false},
+    {"anub'rekhan",           "Anub'Rekhan",     0.0f, false, false},
+    {"grand widow faerlina",  "Faerlina",       20.0f, false, false},
+    {"maexxna",               "Maexxna",         0.0f, false, false},
+    // Plague wing
+    {"noth the plaguebringer","Noth",            0.0f, false, false},
+    {"heigan the unclean",    "Heigan",          0.0f, false, false},
+    {"loatheb",               "Loatheb",         0.0f, false, false},
+    // Military wing
+    {"instructor razuvious",  "Razuvious",       0.0f, false, false},
+    {"gothik the harvester",  "Gothik",          0.0f, false, false},
+    // Construct wing
+    {"patchwerk",             "Patchwerk",       0.0f, true,  true},
+    {"grobbulus",             "Grobbulus",       0.0f, false, false},
+    {"gluth",                 "Gluth",           0.0f, false, false},
+    {"thaddius",              "Thaddius",        0.0f, false, true},
     // Frostwyrm
-    {"kel'thuzad",            "Kel'Thuzad",     30.0f, false},
+    {"kel'thuzad",            "Kel'Thuzad",      0.0f, false, false},
 };
 }  // namespace
 
@@ -515,6 +538,8 @@ bool NaxxRaidPlans::BuildGeneric(Player* bot, Group* group, RaidPlan& plan)
         plan.assignments[member->GetGUID()] = {duty, camp, boss->GetGUID()};
     }
 
+    plan.ringSlots = ringSlot;
+
     return true;
 }
 
@@ -525,4 +550,13 @@ float NaxxRaidPlans::GenericRing(std::string const& label)
             return spec.ring;
 
     return 0.0f;
+}
+
+bool NaxxRaidPlans::GenericPlanTargets(std::string const& label)
+{
+    for (NaxxEncounterSpec const& spec : NAXX_ENCOUNTERS)
+        if (label == spec.label)
+            return spec.planTargets;
+
+    return false;
 }

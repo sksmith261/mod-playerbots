@@ -97,6 +97,7 @@ void RaidDirector::Tick(Player* bot)
         plan.engagedMs = 0;
         plan.label.clear();
         plan.assignments.clear();
+        plan.ringSlots = 0;
         ClearCensus(plan);
         plan.updatedMs = now;
         return;
@@ -125,6 +126,7 @@ void RaidDirector::Tick(Player* bot)
         plan.engagedMs = 0;
         plan.label.clear();
         plan.assignments.clear();
+        plan.ringSlots = 0;
         ClearCensus(plan);
     }
 

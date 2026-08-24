@@ -27,6 +27,12 @@ namespace NaxxRaidPlans
     // Ring radius the generic builder chose for this encounter, so the
     // executing action does not need its own copy of the table.
     float GenericRing(std::string const& label);
+
+    // Whether the plan may retarget bots onto this encounter's boss. False
+    // wherever a bespoke choose-target action owns targeting: those all
+    // return false once the target is right, which would otherwise hand the
+    // very same tick to the plan to undo their choice.
+    bool GenericPlanTargets(std::string const& label);
 }
 
 #endif

@@ -1,4 +1,7 @@
 #include "NaxxActions.h"
+
+#include <algorithm>
+
 #include "RaidDirector.h"
 #include "NaxxRaidPlans.h"
 #include "Playerbots.h"
@@ -43,7 +46,12 @@ bool NaxxPlanAction::Execute(Event /*event*/)
         float const ring = NaxxRaidPlans::GenericRing(plan->label);
         if (ring > 0.0f)
         {
-            float const angle = float(mine->camp) * 0.45f;
+            // Spread over however many slots were actually dealt. The old
+            // fixed 0.45 rad step wrapped past a full circle at slot
+            // fourteen, so larger raids stacked two bots on every slot from
+            // there on.
+            float const angle =
+                2.0f * float(M_PI) * float(mine->camp) / float(std::max(plan->ringSlots, 1u));
             float x = boss->GetPositionX() + ring * std::cos(angle);
             float y = boss->GetPositionY() + ring * std::sin(angle);
             float z = bot->GetPositionZ();
@@ -56,6 +64,15 @@ bool NaxxPlanAction::Execute(Event /*event*/)
 
     if (mine->duty == RAID_DUTY_HEAL)
         return false;  // positioned; the heal engine owns the rest
+
+    // Targeting is opt-in per encounter. Every bespoke choose-target action
+    // ends with "already on the right target -> return false", and that
+    // false hands this very tick to us. Issuing Attack(boss) here yanked
+    // bots off their crypt guard, wave add, web wrap or spore every other
+    // tick, and the bespoke action yanked them straight back. The plan only
+    // targets where nothing bespoke does.
+    if (!NaxxRaidPlans::GenericPlanTargets(plan->label))
+        return false;
 
     if (AI_VALUE(Unit*, "current target") == boss)
         return false;

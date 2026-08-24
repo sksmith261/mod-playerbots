@@ -81,6 +81,10 @@ struct RaidPlan
     uint32 humanHealers = 0;
     uint32 humanDamage = 0;
 
+    // How many ring slots the generic builder dealt this rebuild, so the
+    // executing action can space them evenly instead of guessing.
+    uint32 ringSlots = 0;
+
     RaidAssignment const* For(ObjectGuid guid) const
     {
         auto it = assignments.find(guid);
