@@ -107,6 +107,15 @@ public:
     virtual float GetValue(Action* action);
 };
 
+class NothGenericMultiplier : public Multiplier
+{
+public:
+    NothGenericMultiplier(PlayerbotAI* ai) : Multiplier(ai, "noth generic") {}
+
+public:
+    virtual float GetValue(Action* action);
+};
+
 class FourHorsemenGenericMultiplier : public Multiplier
 {
 public:

@@ -311,6 +311,22 @@ float AnubrekhanGenericMultiplier::GetValue(Action* action)
     if (!boss)
         return 1.0f;
 
+    // The bespoke choose-target owns targeting for every role here (main tank
+    // -> boss, assist tanks -> first untanked guard, dps -> lowest guard, boss
+    // fallback), and it returns false on the ticks its pick is already right —
+    // handing exactly those ticks to the generic assists, whose smart-strategy
+    // pick routinely differs. The result was targets flapping every other tick
+    // and melee ping-ponging between two mobs. Same suppression Loatheb, Gluth,
+    // Razuvious and Kel'Thuzad already apply, which is why they do not flap.
+    if (dynamic_cast<DpsAssistAction*>(action) || dynamic_cast<TankAssistAction*>(action))
+        return 0.0f;
+
+    // The spread slots ARE this fight's formation; the generic formation nudge
+    // kept pushing ranged past the spread trigger's 5y hysteresis, re-arming
+    // it, and the two dragged bots back and forth on their slots.
+    if (dynamic_cast<CombatFormationMoveAction*>(action))
+        return 0.0f;
+
     if (NaxxSpellIds::HasAnyAura(
             boss, {NaxxSpellIds::LocustSwarm10, NaxxSpellIds::LocustSwarm10Alt, NaxxSpellIds::LocustSwarm25}) ||
         botAI->HasAura("locust swarm", boss))
@@ -318,6 +334,44 @@ float AnubrekhanGenericMultiplier::GetValue(Action* action)
         if (dynamic_cast<FleeAction*>(action))
             return 0.0f;
     }
+    return 1.0f;
+}
+
+float NothGenericMultiplier::GetValue(Action* action)
+{
+    // Same gap as Anub'Rekhan and structurally certain even without a field
+    // report: Noth has a bespoke choose-target covering every role (assist
+    // tanks -> first untanked skeleton, everyone else -> lowest add, boss
+    // fallback) and had no multiplier at all, so the generic assists revoted
+    // its choice on every satisfied tick. Formation is deliberately NOT
+    // suppressed: Noth has no bespoke spread, so the generic formation is the
+    // only thing giving ranged any spacing on this fight.
+    if (!bot->IsInCombat())
+        return 1.0f;
+
+    Unit* boss = AI_VALUE2(Unit*, "find target", "noth the plaguebringer");
+    if (!boss)
+    {
+        // Balcony phase: he is untargetable and off threat lists; his
+        // skeletons are the fight. Recognise it the same way his trigger does.
+        bool adds = false;
+        for (auto const& guid : AI_VALUE(GuidVector, "attackers"))
+        {
+            Unit* unit = botAI->GetUnit(guid);
+            if (unit && unit->IsAlive() && NaxxHelpers::IsNothAdd(botAI, unit))
+            {
+                adds = true;
+                break;
+            }
+        }
+
+        if (!adds)
+            return 1.0f;
+    }
+
+    if (dynamic_cast<DpsAssistAction*>(action) || dynamic_cast<TankAssistAction*>(action))
+        return 0.0f;
+
     return 1.0f;
 }
 
