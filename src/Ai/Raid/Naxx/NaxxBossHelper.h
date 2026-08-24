@@ -210,6 +210,12 @@ inline bool IsNothAdd(PlayerbotAI* botAI, Unit* unit)
 // gate only opens at 30% boss health, so until then a bot cannot reach
 // anything on the far side — targeting across it just walks it into a
 // closed gate.
+// Heigan's choreography clock, published by the IP fork's boss_heigan_40
+// GetData (see its comment; keep ids in sync). 300 stays the instance
+// script's next-safe-section mirror.
+constexpr uint32 HEIGAN_DATA_NEXT_ERUPTION_MS = 301;
+constexpr uint32 HEIGAN_DATA_FAST_DANCE_MS = 302;
+
 constexpr float GOTHIK_GATE_Y = -3360.78f;
 
 inline bool GothikLiveSide(WorldObject const* who) { return who->GetPositionY() < GOTHIK_GATE_Y; }

@@ -2,6 +2,7 @@
 #include "NaxxActions.h"
 #include "InstanceScript.h"
 #include "NaxxSpellIds.h"
+#include "RaidDirector.h"
 #include "Spell.h"
 #include "Timer.h"
 
@@ -38,7 +39,19 @@ bool HeiganDanceAction::Execute(Event /*event*/)
     // true whenever the tank held him where he stands, which is the
     // correct phase-one position. Phase detection cannot depend on where
     // the raid chose to hold the boss.
-    bool const fastPhase = boss->HasAura(29350) || botAI->HasAura("plague cloud", boss);
+    // The plan carries the script's own schedule: the fast dance's start
+    // time is known 90 seconds in advance. Acting on the deadline instead
+    // of the aura moves the departure from ~1.2s after the transition to
+    // the transition itself — which is the difference between the far ring
+    // making the first 7s eruption and eating it. The aura remains as the
+    // fallback so an older IP build or a disabled director changes nothing.
+    RaidPlan const* plan = RaidDirector::Get(bot);
+    uint32 const now = getMSTime();
+    bool const fastByPlan = plan && plan->nextEventKind == RAID_EVENT_HEIGAN_FAST_DANCE &&
+                            plan->nextEventMs && now >= plan->nextEventMs;
+
+    bool const fastPhase =
+        fastByPlan || boss->HasAura(29350) || botAI->HasAura("plague cloud", boss);
 
     if (!fastPhase)
     {
@@ -58,6 +71,13 @@ bool HeiganDanceAction::Execute(Event /*event*/)
     uint32 safe = instance ? instance->GetData(300) : 0;
     if (safe > 3)
         safe = 0;
+
+    // Transition window: the script hard-resets to section 3 when the fast
+    // dance begins, but the instance mirror still holds phase one's last
+    // value until the first fast pulse fires. Anyone who trusted it would
+    // dance to a stale wedge, so the entry window overrides it.
+    if (fastByPlan && now < plan->nextEventMs + 7000)
+        safe = 3;
 
     // Fast dance, everyone on the floor: melee take the near ring and
     // ranged the far one, so forty bots spread across the safe wedge

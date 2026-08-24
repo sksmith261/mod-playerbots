@@ -47,6 +47,18 @@ enum RaidDuty : uint8
     RAID_DUTY_HIDE,      // break line of sight behind the assigned object
 };
 
+// A scheduled moment the raid can act on BEFORE it happens. Deadlines are
+// absolute getMSTime() values read from the boss script's own scheduler —
+// the same timer that will fire the ability — so bots never infer timing
+// from side effects. gap-3 of the synchronized-raid work: assignments say
+// who and where; this says when.
+enum RaidEventKind : uint32
+{
+    RAID_EVENT_NONE = 0,
+    RAID_EVENT_HEIGAN_FAST_DANCE,   // deadline = fast dance start
+    RAID_EVENT_HEIGAN_ERUPTION,     // deadline = next eruption pulse
+};
+
 enum RaidEncounterId : uint32
 {
     RAID_ENCOUNTER_NONE = 0,
@@ -84,6 +96,10 @@ struct RaidPlan
     // How many ring slots the generic builder dealt this rebuild, so the
     // executing action can space them evenly instead of guessing.
     uint32 ringSlots = 0;
+
+    // The next scheduled event, if this encounter published one.
+    uint32 nextEventKind = RAID_EVENT_NONE;
+    uint32 nextEventMs = 0;   // absolute, getMSTime clock
 
     RaidAssignment const* For(ObjectGuid guid) const
     {

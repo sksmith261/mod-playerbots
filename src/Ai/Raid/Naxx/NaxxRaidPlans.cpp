@@ -1,7 +1,9 @@
 #include "NaxxRaidPlans.h"
 
 #include <algorithm>
+#include <cstring>
 
+#include "CreatureAI.h"
 #include "NaxxBossHelper.h"
 #include "GameObject.h"
 #include "ObjectAccessor.h"
@@ -539,6 +541,32 @@ bool NaxxRaidPlans::BuildGeneric(Player* bot, Group* group, RaidPlan& plan)
     }
 
     plan.ringSlots = ringSlot;
+
+    // Heigan publishes his schedule (boss AI GetData 301/302, recorded at
+    // the script's own Schedule sites). The fast-dance start is the one that
+    // matters: its first eruption lands 7s after a transition bots could
+    // otherwise only detect ~1.2s in, via the Plague Cloud aura — too late
+    // for the far ring's ~6s walk off the platform. Publish the transition
+    // through its entry window, then fall back to the eruption cadence.
+    if (strcmp(spec->label, "Heigan") == 0)
+        if (Creature* creature = boss->ToCreature())
+            if (CreatureAI* ai = creature->AI())
+            {
+                uint32 const now = getMSTime();
+                uint32 const fastStart = ai->GetData(NaxxHelpers::HEIGAN_DATA_FAST_DANCE_MS);
+                uint32 const nextErupt = ai->GetData(NaxxHelpers::HEIGAN_DATA_NEXT_ERUPTION_MS);
+
+                if (fastStart && now < fastStart + 7000)
+                {
+                    plan.nextEventKind = RAID_EVENT_HEIGAN_FAST_DANCE;
+                    plan.nextEventMs = fastStart;
+                }
+                else if (nextErupt && now < nextErupt)
+                {
+                    plan.nextEventKind = RAID_EVENT_HEIGAN_ERUPTION;
+                    plan.nextEventMs = nextErupt;
+                }
+            }
 
     return true;
 }

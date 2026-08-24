@@ -98,6 +98,8 @@ void RaidDirector::Tick(Player* bot)
         plan.label.clear();
         plan.assignments.clear();
         plan.ringSlots = 0;
+        plan.nextEventKind = RAID_EVENT_NONE;
+        plan.nextEventMs = 0;
         ClearCensus(plan);
         plan.updatedMs = now;
         return;
@@ -108,6 +110,11 @@ void RaidDirector::Tick(Player* bot)
         return;
 
     plan.updatedMs = now;
+
+    // Deadlines are per-rebuild outputs: a builder that knows the schedule
+    // republishes it every pass, so anything left over here is stale.
+    plan.nextEventKind = RAID_EVENT_NONE;
+    plan.nextEventMs = 0;
 
     // Before the builders, because they read it: whether the raid already has
     // somebody holding the boss decides what the bot tanks are told to do.
@@ -127,6 +134,8 @@ void RaidDirector::Tick(Player* bot)
         plan.label.clear();
         plan.assignments.clear();
         plan.ringSlots = 0;
+        plan.nextEventKind = RAID_EVENT_NONE;
+        plan.nextEventMs = 0;
         ClearCensus(plan);
     }
 
