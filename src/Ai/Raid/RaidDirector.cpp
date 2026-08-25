@@ -65,6 +65,39 @@ void Census(Player* bot, Group* group, RaidPlan& plan)
     }
 }
 
+// Manual commands are sticky by design — "attack" biases target selection
+// via the prioritized-targets value, spread/stack/goto park bots in the stay
+// strategy on their click anchors — and the only thing that ever cleared any
+// of it was the master remembering to type "follow". Nothing reconciled that
+// state with the encounter lifecycle, so one pre-pull click or attack quietly
+// corrupted the whole next fight: target picks skewed toward a stale manual
+// choice, and every out-of-combat moment sent bots sprinting to click anchors
+// rooms away instead of regrouping. The director owns encounters, so the
+// moment it declares one, every assigned bot sheds its manual overrides.
+// Commands stay fully usable outside encounters and as one-shot corrections
+// during one; they just stop leaking into the next fight.
+void ShedManualOverrides(RaidPlan& plan)
+{
+    for (auto const& [guid, assignment] : plan.assignments)
+    {
+        Player* member = ObjectAccessor::FindPlayer(guid);
+        PlayerbotAI* memberAI = member ? GET_PLAYERBOT_AI(member) : nullptr;
+        if (!memberAI)
+            continue;
+
+        AiObjectContext* context = memberAI->GetAiObjectContext();
+        context->GetValue<GuidVector>("prioritized targets")->Reset();
+        context->GetValue<ObjectGuid>("pull target")->Set(ObjectGuid::Empty);
+
+        if (memberAI->HasStrategy("stay", BOT_STATE_COMBAT) ||
+            memberAI->HasStrategy("stay", BOT_STATE_NON_COMBAT))
+        {
+            memberAI->ChangeStrategy("-stay,+follow", BOT_STATE_NON_COMBAT);
+            memberAI->ChangeStrategy("-stay", BOT_STATE_COMBAT);
+        }
+    }
+}
+
 void ClearCensus(RaidPlan& plan)
 {
     plan.mainTank = ObjectGuid::Empty;
@@ -120,6 +153,8 @@ void RaidDirector::Tick(Player* bot)
     // somebody holding the boss decides what the bot tanks are told to do.
     Census(bot, group, plan);
 
+    uint32 const previousEncounter = plan.encounter;
+
     // Encounter builders own everything below the plan: which fight this is,
     // who holds what, and when that changes. They receive the plan carrying
     // its previous assignments so decisions can persist rather than being
@@ -138,6 +173,9 @@ void RaidDirector::Tick(Player* bot)
         plan.nextEventMs = 0;
         ClearCensus(plan);
     }
+
+    if (previousEncounter == RAID_ENCOUNTER_NONE && plan.encounter != RAID_ENCOUNTER_NONE)
+        ShedManualOverrides(plan);
 
     PruneStale(now);
 }
