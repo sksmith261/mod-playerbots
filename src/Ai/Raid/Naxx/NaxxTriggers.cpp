@@ -60,6 +60,34 @@ bool GrobbulusCloudTrigger::IsActive()
         return false;
 
     uint32 now = getMSTime();
+
+    // Deadline path. The 40-man script casts Poison Cloud as a TRIGGERED
+    // spell — instant, invisible to GetCurrentSpell — so the cast detection
+    // below has never once fired there, and the kite advanced on a blind 15s
+    // timer whose phase against the real drops was pure luck. In phase, the
+    // tank stepped right after each drop and the fight looked solved; out of
+    // phase he stood in every fresh cloud for up to 15 seconds. The plan now
+    // carries the script's own schedule: step the moment a drop lands (the
+    // cloud is born small, at the spot he is leaving). "Just re-armed" also
+    // counts as a drop, so a director rebuild slipping between our ticks
+    // cannot swallow the step — and it fires on the pull, which starts the
+    // rotation before the first cloud instead of after it.
+    if (RaidPlan const* plan = RaidDirector::Get(bot))
+        if (plan->nextEventKind == RAID_EVENT_GROBBULUS_CLOUD && plan->nextEventMs)
+        {
+            uint32 const deadline = plan->nextEventMs;
+            bool const dropped = now >= deadline || deadline - now > 12500;
+            if (dropped && (!last_cloud_ms || now - last_cloud_ms > 5000))
+            {
+                last_cloud_ms = now;
+                return true;
+            }
+
+            return false;
+        }
+
+    // Legacy fallback: no plan or an IP build that does not publish the
+    // clock. Kept byte-for-byte so behaviour without the data is unchanged.
     bool poison_cloud_casting = false;
     if (boss->HasUnitState(UNIT_STATE_CASTING))
     {
@@ -157,6 +185,15 @@ bool GothikTrigger::IsActive()
     }
 
     return false;
+}
+
+bool GrobbulusRangedPositionTrigger::IsActive()
+{
+    Unit* boss = AI_VALUE2(Unit*, "find target", "grobbulus");
+    if (!boss || !boss->IsAlive())
+        return false;
+
+    return PlayerbotAI::IsRanged(bot) || PlayerbotAI::IsHeal(bot);
 }
 
 bool AnubrekhanSpreadTrigger::IsActive()

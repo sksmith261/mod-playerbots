@@ -113,6 +113,13 @@ public:
     bool IsActive() override;
 };
 
+class GrobbulusRangedPositionTrigger : public Trigger
+{
+public:
+    GrobbulusRangedPositionTrigger(PlayerbotAI* ai) : Trigger(ai, "grobbulus ranged position") {}
+    bool IsActive() override;
+};
+
 class AnubrekhanSpreadTrigger : public Trigger
 {
 public:

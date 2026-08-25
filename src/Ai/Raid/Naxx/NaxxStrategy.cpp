@@ -36,8 +36,12 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         { NextAction("grobbulus go behind the boss", ACTION_RAID + 3) }
     ));
 
-    triggers.push_back(new TriggerNode("mutating injection removed",
-        { NextAction("grobbulus move center", ACTION_RAID + 1) }
+    // Continuous standing spot for ranged/heals — the far side of the kite
+    // circle from the boss, rotating with him. Supersedes the old one-shot
+    // "injection removed -> move to ring centre", which parked people 18y
+    // from the boss wherever he was, frequently inside the trail.
+    triggers.push_back(new TriggerNode("grobbulus ranged position",
+        { NextAction("grobbulus ranged position", ACTION_RAID + 1) }
     ));
 
     triggers.push_back(new TriggerNode("grobbulus cloud",

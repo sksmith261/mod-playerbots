@@ -20,6 +20,7 @@ public:
         creators["mutating injection ranged"] = &RaidNaxxTriggerContext::mutating_injection_ranged;
         creators["mutating injection removed"] = &RaidNaxxTriggerContext::mutating_injection_removed;
         creators["grobbulus cloud"] = &RaidNaxxTriggerContext::grobbulus_cloud;
+        creators["grobbulus ranged position"] = &RaidNaxxTriggerContext::grobbulus_ranged_position;
         creators["heigan dance"] = &RaidNaxxTriggerContext::heigan_dance;
         creators["anub'rekhan spread"] = &RaidNaxxTriggerContext::anubrekhan_spread;
         creators["maexxna web wrap"] = &RaidNaxxTriggerContext::maexxna_web_wrap;
@@ -69,6 +70,7 @@ private:
     static Trigger* mutating_injection_ranged(PlayerbotAI* ai) { return new MutatingInjectionRangedTrigger(ai); }
     static Trigger* mutating_injection_removed(PlayerbotAI* ai) { return new MutatingInjectionRemovedTrigger(ai); }
     static Trigger* grobbulus_cloud(PlayerbotAI* ai) { return new GrobbulusCloudTrigger(ai); }
+    static Trigger* grobbulus_ranged_position(PlayerbotAI* ai) { return new GrobbulusRangedPositionTrigger(ai); }
     static Trigger* heigan_dance(PlayerbotAI* ai) { return new HeiganDanceTrigger(ai); }
     static Trigger* anubrekhan_spread(PlayerbotAI* ai) { return new AnubrekhanSpreadTrigger(ai); }
     static Trigger* maexxna_web_wrap(PlayerbotAI* ai) { return new MaexxnaWebWrapTrigger(ai); }

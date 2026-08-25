@@ -573,6 +573,18 @@ bool NaxxRaidPlans::BuildGeneric(Player* bot, Group* group, RaidPlan& plan)
     // otherwise only detect ~1.2s in, via the Plague Cloud aura — too late
     // for the far ring's ~6s walk off the platform. Publish the transition
     // through its entry window, then fall back to the eruption cadence.
+    if (strcmp(spec->label, "Grobbulus") == 0)
+        if (Creature* creature = boss->ToCreature())
+            if (CreatureAI* ai = creature->AI())
+            {
+                uint32 const nextCloud = ai->GetData(NaxxHelpers::GROBBULUS_DATA_NEXT_CLOUD_MS);
+                if (nextCloud)
+                {
+                    plan.nextEventKind = RAID_EVENT_GROBBULUS_CLOUD;
+                    plan.nextEventMs = nextCloud;
+                }
+            }
+
     if (strcmp(spec->label, "Heigan") == 0)
         if (Creature* creature = boss->ToCreature())
             if (CreatureAI* ai = creature->AI())

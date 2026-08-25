@@ -216,6 +216,11 @@ inline bool IsNothAdd(PlayerbotAI* botAI, Unit* unit)
 constexpr uint32 HEIGAN_DATA_NEXT_ERUPTION_MS = 301;
 constexpr uint32 HEIGAN_DATA_FAST_DANCE_MS = 302;
 
+// Grobbulus publishes his Poison Cloud clock the same way (boss AI GetData,
+// IP fork boss_grobbulus_40). His cast is triggered-instant, so this is the
+// ONLY way to know when a cloud lands.
+constexpr uint32 GROBBULUS_DATA_NEXT_CLOUD_MS = 301;
+
 constexpr float GOTHIK_GATE_Y = -3360.78f;
 
 inline bool GothikLiveSide(WorldObject const* who) { return who->GetPositionY() < GOTHIK_GATE_Y; }

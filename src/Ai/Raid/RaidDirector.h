@@ -57,6 +57,7 @@ enum RaidEventKind : uint32
     RAID_EVENT_NONE = 0,
     RAID_EVENT_HEIGAN_FAST_DANCE,   // deadline = fast dance start
     RAID_EVENT_HEIGAN_ERUPTION,     // deadline = next eruption pulse
+    RAID_EVENT_GROBBULUS_CLOUD,     // deadline = next Poison Cloud drop
 };
 
 enum RaidEncounterId : uint32

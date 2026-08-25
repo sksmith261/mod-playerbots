@@ -21,6 +21,7 @@ public:
         creators["rotate grobbulus"] = &RaidNaxxActionContext::rotate_grobbulus;
         creators["grobbulus move center"] = &RaidNaxxActionContext::grobbulus_move_center;
         creators["grobbulus move away"] = &RaidNaxxActionContext::grobbulus_move_away;
+        creators["grobbulus ranged position"] = &RaidNaxxActionContext::grobbulus_ranged_position;
 
         creators["heigan dance"] = &RaidNaxxActionContext::heigan_dance;
         creators["anub'rekhan spread"] = &RaidNaxxActionContext::anubrekhan_spread;
@@ -73,6 +74,7 @@ private:
     static Action* rotate_grobbulus(PlayerbotAI* ai) { return new GrobbulusRotateAction(ai); }
     static Action* grobbulus_move_center(PlayerbotAI* ai) { return new GrobbulusMoveCenterAction(ai); }
     static Action* grobbulus_move_away(PlayerbotAI* ai) { return new GrobbulusMoveAwayAction(ai); }
+    static Action* grobbulus_ranged_position(PlayerbotAI* ai) { return new GrobbulusRangedPositionAction(ai); }
     static Action* heigan_dance(PlayerbotAI* ai) { return new HeiganDanceAction(ai); }
     static Action* anubrekhan_spread(PlayerbotAI* ai) { return new AnubrekhanSpreadAction(ai); }
     static Action* maexxna_free_wrapped(PlayerbotAI* ai) { return new MaexxnaFreeWrappedAction(ai); }

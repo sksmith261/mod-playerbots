@@ -56,6 +56,20 @@ public:
     }
 };
 
+// Standing spot for ranged and healers: a loose fan on the far side of the
+// kite circle from wherever the boss currently is. The trail of clouds is
+// always behind him ON the ring, so the point opposite him is by
+// construction the floor that has been clean longest, and it rotates with
+// the kite so range to the boss stays 24-30y. Nothing else owns ranged
+// placement on this fight — that gap is why the raid stood wherever it
+// happened to be, which was usually the trail.
+class GrobbulusRangedPositionAction : public MovementAction
+{
+public:
+    GrobbulusRangedPositionAction(PlayerbotAI* ai) : MovementAction(ai, "grobbulus ranged position") {}
+    bool Execute(Event event) override;
+};
+
 class GrobbulusMoveAwayAction : public MovementAction
 {
 public:
