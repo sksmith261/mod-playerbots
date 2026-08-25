@@ -74,7 +74,16 @@ bool NaxxPlanAction::Execute(Event /*event*/)
     if (!NaxxRaidPlans::GenericPlanTargets(plan->label))
         return false;
 
-    if (AI_VALUE(Unit*, "current target") == boss)
+    Unit* current = AI_VALUE(Unit*, "current target");
+    if (current == boss)
+        return false;
+
+    // A default, never an override: a bot already fighting something alive
+    // gets to finish it. Without this, the instant a boss was declared the
+    // whole raid was yanked off the surviving trash onto him — which read in
+    // game as the bots aggressively opening on a boss nobody had pulled.
+    // Dead, evaded or absent targets all fall through to the boss.
+    if (current && current->IsAlive() && current->IsInCombat())
         return false;
 
     return Attack(boss);

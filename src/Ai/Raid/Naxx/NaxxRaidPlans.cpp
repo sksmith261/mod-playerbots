@@ -16,6 +16,31 @@ using namespace NaxxHelpers;
 
 constexpr uint32 PULL_GRACE_MS = 10000;
 
+// A boss only counts as OUR encounter once somebody in the group has actually
+// generated threat on him. IsInCombat() alone was the seam: Patchwerk patrols
+// through his own trash, joins their fight by proximity assist the moment the
+// raid brawls within his assist range, and "in combat with anyone" then
+// declared him the encounter and committed every bot mid-trash-pack. Proximity
+// aggro and assists put group members on his threat list at zero; threat above
+// zero requires the raid to have fought back, which is the difference between
+// "he wandered in" and "we are fighting him". The generic self-defence layer
+// still responds if he starts hitting someone, and that response is exactly
+// what flips this gate.
+bool EngagedWithGroup(Unit* unit, Group* group)
+{
+    if (!unit->IsInCombat())
+        return false;
+
+    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        Player* member = itr->GetSource();
+        if (member && member->IsAlive() && unit->GetThreatMgr().GetThreat(member) > 0.1f)
+            return true;
+    }
+
+    return false;
+}
+
 // Perimeter order of the four camps and the diagonal opposite of each.
 // Measured: Korth'azz-Mograine 60y and Blaumeux-Zeliek 66y are the short
 // sides, Korth'azz-Blaumeux and Mograine-Zeliek 100y the long ones, and
@@ -287,8 +312,9 @@ bool NaxxRaidPlans::BuildSapphiron(Player* bot, Group* group, RaidPlan& plan)
              botAI->GetAiObjectContext()->GetValue<GuidVector>("possible targets no los")->Get())
         {
             Unit* unit = botAI->GetUnit(guid);
-            // Engaged only — same through-the-wall reach as the generic sweep.
-            if (unit && unit->IsInCombat() && botAI->EqualLowercaseName(unit->GetName(), "sapphiron"))
+            // Engaged with us only — same through-the-wall reach as the
+            // generic sweep.
+            if (unit && EngagedWithGroup(unit, group) && botAI->EqualLowercaseName(unit->GetName(), "sapphiron"))
             {
                 sapphiron = unit;
                 break;
@@ -468,14 +494,13 @@ bool NaxxRaidPlans::BuildGeneric(Player* bot, Group* group, RaidPlan& plan)
              botAI->GetAiObjectContext()->GetValue<GuidVector>("possible targets no los")->Get())
         {
             Unit* unit = botAI->GetUnit(guid);
-            // Must already be fighting. This sweep deliberately ignores line
+            // Must already be fighting US. The sweep deliberately ignores line
             // of sight so a bot that has not struck anything still knows which
-            // fight it is in, but that also reaches 100y through walls and
-            // floors. Grobbulus patrols across three levels and comes within
-            // 86y of the room next door, so trash pulls there were resolving
-            // as "the Grobbulus encounter" and sending the raid at him through
-            // the wall. A boss walking its patrol is not an encounter.
-            if (!unit || !unit->IsAlive() || !unit->IsInCombat())
+            // fight it is in, but it also reaches 100y through walls and
+            // floors, and a bare in-combat check let bosses who patrol into a
+            // trash brawl — Grobbulus through the wall, Patchwerk by proximity
+            // assist — get declared as the encounter nobody pulled.
+            if (!unit || !unit->IsAlive() || !EngagedWithGroup(unit, group))
                 continue;
 
             for (NaxxEncounterSpec const& candidate : NAXX_ENCOUNTERS)
