@@ -44,8 +44,10 @@ public:
         : RotateAroundTheCenterPointAction(botAI, "rotate grobbulus", 3305.2f, -3298.4f, 45.0f, 8, true, M_PI) {}
     virtual bool isUseful() override
     {
-        return RotateAroundTheCenterPointAction::isUseful() && botAI->IsMainTank(bot) &&
-               AI_VALUE2(bool, "has aggro", "boss target");
+        // Same ground truth as the trigger: whoever the boss is hitting
+        // kites. Elections have no say in this mechanic.
+        Unit* boss = AI_VALUE2(Unit*, "find target", "grobbulus");
+        return RotateAroundTheCenterPointAction::isUseful() && boss && boss->GetVictim() == bot;
     }
     uint32 GetCurrWaypoint() override;
 };

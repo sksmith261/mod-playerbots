@@ -84,8 +84,12 @@ float GrobbulusMultiplier::GetValue(Action* action)
     if (!boss)
         return 1.0f;
 
+    // The bot actually holding him trades the generic 8y cloud-dodge for
+    // the kite - keyed to the victim, not the elected MT, or the real
+    // holder keeps avoid-aoe and micro-shuffles inside the pile with the
+    // boss in tow while the elected tank has neither job.
     if (dynamic_cast<AvoidAoeAction*>(action))
-        return botAI->IsMainTank(bot) ? 0.0f : 1.0f;
+        return boss->GetVictim() == bot ? 0.0f : 1.0f;
 
     if (dynamic_cast<CombatFormationMoveAction*>(action))
         return 0.0f;

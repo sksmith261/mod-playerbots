@@ -51,12 +51,17 @@ bool GrobbulusCloudTrigger::IsActive()
     if (!boss)
         return false;
 
-    if (!botAI->IsMainTank(bot))
-        return false;
-
-    // bot->Yell("has aggro on " + boss->GetName() + " : " + to_string(AI_VALUE2(bool, "has aggro", "boss target")),
-    // LANG_UNIVERSAL);
-    if (!AI_VALUE2(bool, "has aggro", "boss target"))
+    // Ground truth only: the bot Grobbulus is actually hitting does the
+    // kiting, whoever that is. The old gates - elected main tank AND the
+    // has-aggro value - deadlocked whenever the election and the threat race
+    // disagreed, which with several tank bots is most pulls: the elected
+    // tank had no aggro and the holder was not elected, so nobody stepped.
+    // Worse, has-aggro is satisfied for a non-explicit MT while ANY tank
+    // holds the boss, so the elected tank could pass both gates and walk
+    // the ring alone while the real holder stood in the gas. The victim
+    // needs no election and hands the kite over automatically on a taunt.
+    // A human holder means no bot kites - the player owns the kiting.
+    if (boss->GetVictim() != bot)
         return false;
 
     uint32 now = getMSTime();
