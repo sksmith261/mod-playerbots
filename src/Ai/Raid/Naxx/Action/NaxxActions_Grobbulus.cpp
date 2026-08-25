@@ -27,15 +27,22 @@ bool GrobbulusRangedPositionAction::Execute(Event /*event*/)
         return false;
 
     // Kite ring centre (same constant as the rotation).
-    constexpr float cx = 3281.23f, cy = -3310.38f;
+    constexpr float cx = 3305.2f, cy = -3298.4f;
 
-    float dx = cx - boss->GetPositionX();
-    float dy = cy - boss->GetPositionY();
+    // On the 45y ring, "the far side from the boss" is 57y+ away — out of
+    // spell range. The clean floor near a kited boss is radially INWARD:
+    // the trail is laid tangentially behind him along the ring, so the
+    // inner ring on his own radial has been clear the longest while range
+    // to him stays ~28y. Fanned by group slot around the inner ring so
+    // Slime Spray never gets the whole camp in one cone; the camp orbits
+    // with him as the kite advances.
+    float dx = boss->GetPositionX() - cx;
+    float dy = boss->GetPositionY() - cy;
     float const len = std::sqrt(dx * dx + dy * dy);
     if (len < 3.0f)
     {
-        // Boss on the centre (pull, reset): fan out toward the room's open
-        // side instead of dividing by zero.
+        // Boss on the centre (pull, reset): fan toward the room's open side
+        // instead of dividing by zero.
         dx = 1.0f;
         dy = 0.0f;
     }
@@ -45,16 +52,14 @@ bool GrobbulusRangedPositionAction::Execute(Event /*event*/)
         dy /= len;
     }
 
-    // Continue through the centre to the far side, fanned by group slot so
-    // Slime Spray never gets the whole camp in one cone.
     float const baseAngle = std::atan2(dy, dx);
     int32 slot = botAI->GetGroupSlotIndex(bot);
     if (slot < 0)
         slot = 0;
 
-    float const angle = baseAngle + (float(slot % 7) - 3.0f) * 0.35f;
-    float x = cx + std::cos(angle) * 12.0f;
-    float y = cy + std::sin(angle) * 12.0f;
+    float const angle = baseAngle + (float(slot % 7) - 3.0f) * 0.22f;
+    float x = cx + std::cos(angle) * 17.0f;
+    float y = cy + std::sin(angle) * 17.0f;
     float z = bot->GetPositionZ();
     bot->UpdateAllowedPositionZ(x, y, z);
 

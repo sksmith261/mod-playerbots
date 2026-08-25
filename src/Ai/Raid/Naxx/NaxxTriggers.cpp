@@ -75,9 +75,15 @@ bool GrobbulusCloudTrigger::IsActive()
     if (RaidPlan const* plan = RaidDirector::Get(bot))
         if (plan->nextEventKind == RAID_EVENT_GROBBULUS_CLOUD && plan->nextEventMs)
         {
+            // A CHANGED deadline means the previous one elapsed — a drop just
+            // happened — regardless of the timer's period, and first sight
+            // starts the kite on the pull. now >= deadline covers the window
+            // before the director's next rebuild republishes.
             uint32 const deadline = plan->nextEventMs;
-            bool const dropped = now >= deadline || deadline - now > 12500;
-            if (dropped && (!last_cloud_ms || now - last_cloud_ms > 5000))
+            bool const dropped = deadline != last_deadline_ms || now >= deadline;
+            last_deadline_ms = deadline;
+
+            if (dropped && (!last_cloud_ms || now - last_cloud_ms > 4000))
             {
                 last_cloud_ms = now;
                 return true;

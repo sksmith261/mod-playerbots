@@ -57,6 +57,7 @@ public:
 
 private:
     uint32 last_cloud_ms;
+    uint32 last_deadline_ms = 0;
     static constexpr uint32 CloudRotationDelayMs = 15000;
 };
 

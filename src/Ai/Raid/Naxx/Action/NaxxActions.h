@@ -28,11 +28,20 @@ class GrobbulusRotateAction : public RotateAroundTheCenterPointAction
 {
 public:
     GrobbulusRotateAction(PlayerbotAI* botAI)
-        // 35y put waypoints outside the room — that is what walked Grobbulus
-        // through the wall. Measured against the map's own navmesh: from this
-        // centre all eight waypoints are on walkable floor out to 19y and the
-        // ring leaves the room at 20y. 18y for margin.
-        : RotateAroundTheCenterPointAction(botAI, "rotate grobbulus", 3281.23f, -3310.38f, 18.0f, 8, true, M_PI) {}
+        // The kite has to outrun the gas, and that is a geometry constraint:
+        // clouds grow past 14y radius before they expire, so any ring whose
+        // adjacent waypoints are closer than that walks the boss from one
+        // cloud into the next one's eventual footprint no matter how well
+        // timed the steps are. The old 18y ring (13.8y steps) failed exactly
+        // that way — perfectly stepped and still in the gas. Upstream's 35y
+        // ring had the spacing but its waypoints were through the west wall.
+        //
+        // This centre and radius are measured against the map's own navmesh:
+        // all eight waypoints AND all arc midpoints are on walkable floor,
+        // adjacent steps are 34.4y — over twice the cloud's final radius —
+        // and a full lap takes 120s against a ~75s cloud lifetime, so the
+        // trail has expired before he returns to it.
+        : RotateAroundTheCenterPointAction(botAI, "rotate grobbulus", 3305.2f, -3298.4f, 45.0f, 8, true, M_PI) {}
     virtual bool isUseful() override
     {
         return RotateAroundTheCenterPointAction::isUseful() && botAI->IsMainTank(bot) &&
