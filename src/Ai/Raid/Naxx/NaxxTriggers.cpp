@@ -332,8 +332,13 @@ bool GluthMainTankMortalWoundTrigger::IsActive()
     if (!botAI->IsAssistTankOfIndex(bot, 0))
         return false;
 
-    Unit* mt = AI_VALUE(Unit*, "main tank");
-    if (!mt)
+    // The stacks that matter are on whoever Gluth is actually hitting, not
+    // on the elected "main tank" value - those disagreed whenever the
+    // threat race picked another tank, and the swap read a clean aura off a
+    // bot that was not tanking while the real holder stacked to the sky.
+    Unit* boss = AI_VALUE2(Unit*, "find target", "gluth");
+    Unit* mt = boss ? boss->GetVictim() : nullptr;
+    if (!mt || mt == bot)
         return false;
 
     Aura* aura = NaxxSpellIds::GetAnyAura(mt, {NaxxSpellIds::MortalWound10, NaxxSpellIds::MortalWound25});

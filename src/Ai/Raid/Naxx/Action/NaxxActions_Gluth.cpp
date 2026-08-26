@@ -28,7 +28,8 @@ bool GluthChooseTargetAction::Execute(Event /*event*/)
         if (botAI->EqualLowercaseName(unit->GetName(), "gluth"))
             target_boss = unit;
     }
-    if (botAI->IsMainTank(bot) || botAI->IsAssistTankOfIndex(bot, 0))
+    if ((target_boss && target_boss->GetVictim() == bot) || botAI->IsMainTank(bot) ||
+        botAI->IsAssistTankOfIndex(bot, 0))
         target = target_boss;
     else if (botAI->IsAssistTankOfIndex(bot, 1))
     {
@@ -91,9 +92,21 @@ bool GluthPositionAction::Execute(Event /*event*/)
         return false;
 
     bool raid25 = bot->GetRaidDifficulty() == RAID_DIFFICULTY_25MAN_NORMAL;
-    if (botAI->IsMainTank(bot) || botAI->IsAssistTankOfIndex(bot, 0))
+
+    // Grobbulus' lesson applied here: the bot Gluth is actually hitting
+    // anchors him at the tank spot regardless of any election. The old gate
+    // (elected MT or assist-0, plus has-aggro) left the real holder with no
+    // position instruction whenever the threat race picked anyone else, so
+    // generic melee movement shuffled the holder and the boss wandered the
+    // room after him while the elected tanks stood at an anchor he was not
+    // at. Elected tanks still hold the spot too - the Mortal Wound swap
+    // target should already be standing where the boss is.
+    Unit* boss = AI_VALUE2(Unit*, "find target", "gluth");
+    bool const holder = boss && boss->GetVictim() == bot;
+
+    if (holder || botAI->IsMainTank(bot) || botAI->IsAssistTankOfIndex(bot, 0))
     {
-        if (AI_VALUE2(bool, "has aggro", "boss target"))
+        if (holder || AI_VALUE2(bool, "has aggro", "boss target"))
         {
             if (raid25)
             {

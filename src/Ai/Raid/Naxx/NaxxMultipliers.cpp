@@ -453,7 +453,9 @@ float GluthGenericMultiplier::GetValue(Action* action)
         return 0.0f;
     }
 
-    if (botAI->IsMainTank(bot))
+    // Any tank sitting on Mortal Wound stacks holds its taunt - keyed to the
+    // bot's own aura, not the elected-MT title, or a stacked ex-holder that
+    // was never elected taunted the boss straight back after the swap.
     {
         Aura* aura = NaxxSpellIds::GetAnyAura(bot, {NaxxSpellIds::MortalWound10, NaxxSpellIds::MortalWound25});
         if (!aura)
