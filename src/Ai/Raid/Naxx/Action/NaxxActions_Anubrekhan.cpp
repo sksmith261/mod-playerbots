@@ -93,7 +93,7 @@ bool AnubrekhanPositionAction::Execute(Event /*event*/)
                           bot->GetPositionZ(), false, false, false, false, MovementPriority::MOVEMENT_COMBAT);
         }
         else
-            return MoveInside(533, 3272.49f, -3476.27f, bot->GetPositionZ(), 3.0f, MovementPriority::MOVEMENT_COMBAT);
+            return MoveInside(533, 3272.49f, -3476.27f, bot->GetPositionZ(), 9.0f, MovementPriority::MOVEMENT_COMBAT);
     }
     return false;
 }

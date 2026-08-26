@@ -15,7 +15,7 @@ bool LoathebPositionAction::Execute(Event /*event*/)
                           MovementPriority::MOVEMENT_COMBAT);
     }
     else if (botAI->IsRanged(bot))
-        return MoveInside(533, helper.rangePos.first, helper.rangePos.second, bot->GetPositionZ(), 1.0f,
+        return MoveInside(533, helper.rangePos.first, helper.rangePos.second, bot->GetPositionZ(), 6.0f,
                           MovementPriority::MOVEMENT_COMBAT);
     return false;
 }

@@ -115,7 +115,7 @@ bool KelthuzadPositionAction::Execute(Event /*event*/)
     if (helper.IsPhaseOne())
     {
         if (AI_VALUE(Unit*, "current target") == nullptr)
-            return MoveInside(NAXX_MAP_ID, helper.center.first, helper.center.second, bot->GetPositionZ(), 3.0f,
+            return MoveInside(NAXX_MAP_ID, helper.center.first, helper.center.second, bot->GetPositionZ(), 6.0f,
                               MovementPriority::MOVEMENT_COMBAT);
     }
     else if (helper.IsPhaseTwo())
