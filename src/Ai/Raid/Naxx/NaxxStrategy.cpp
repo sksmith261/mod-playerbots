@@ -125,12 +125,11 @@ void RaidNaxxStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         { NextAction("rear flank", ACTION_RAID + 1) }
     ));
 
-    // The tether guard is deliberately unbound: it protected the Tesla
-    // chain-break, which the IP naxx-40 script does not schedule at all —
-    // and with the pets fighting on the floor it fired permanently (any
-    // descended pet is >12y from its platform home) and dragged tanks at
-    // top priority toward the meshless platforms. Rebind it only if the
-    // chain mechanic ever returns.
+    // Thaddius — leash guard outranks all other movement: a dragged pet
+    // snaps its coil tether and the coil shreds the raid.
+    triggers.push_back(new TriggerNode("thaddius tether",
+        { NextAction("thaddius tether", ACTION_RAID + 3) }
+    ));
 
     // Thaddius
     triggers.push_back(new TriggerNode("thaddius phase pet",

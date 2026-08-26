@@ -461,7 +461,18 @@ NaxxEncounterSpec const NAXX_ENCOUNTERS[] = {
     {"patchwerk",             "Patchwerk",       0.0f, true,  true},
     {"grobbulus",             "Grobbulus",       0.0f, false, false},
     {"gluth",                 "Gluth",           0.0f, false, false},
-    {"thaddius",              "Thaddius",        0.0f, false, true},
+    // planTargets MUST be false here, and the reason is in the boss script,
+    // not the bot code: boss_thaddius_40 calls SetInCombatWithZone() the
+    // moment the encounter starts, so Thaddius is resolvable as "the
+    // encounter" through the ENTIRE pet phase - healer threat lands on his
+    // list, the engaged-with-group gate passes, and with planTargets the
+    // plan issued Attack(Thaddius) to every bot between targets. Thaddius
+    // stands across the water: those bots marched into the slime toward
+    // him, the pet action yanked them back, and the raid "could not commit
+    // to a pet". Phase two needs no plan targeting either - the generic
+    // assists own it there (the multiplier only suppresses them during the
+    // pet phase).
+    {"thaddius",              "Thaddius",        0.0f, false, false},
     // Frostwyrm
     {"kel'thuzad",            "Kel'Thuzad",      0.0f, false, false},
 };
