@@ -206,6 +206,22 @@ float ThaddiusGenericMultiplier::GetValue(Action* action)
 
     if (dynamic_cast<CombatFormationMoveAction*>(action))
         return 0.0f;
+
+    // Feugen's Static Field is a hostile periodic AREA AURA — precisely
+    // what the generic avoid-aoe qualifier matches (AoeValues: negative +
+    // periodic + area-aura) — but it radiates from the pet himself.
+    // Fleeing 8y drops the aura, so the flee always "succeeds"; the attack
+    // action then walks the bot back in and the aura reapplies. Melee on
+    // Feugen paced that loop off the platform into the water indefinitely,
+    // while Stalagg's side was fine — his Power Surge is a positive
+    // self-buff and can never qualify, which is why exactly one side
+    // broke. The 40-man design is that melee stand in the field and are
+    // healed through it, and nothing else in the pet phase produces a
+    // qualifying aura, so avoid-aoe has no legitimate work here for
+    // anyone but ranged (who out-range it at their stations anyway).
+    if (helper.IsPhasePet() && !PlayerbotAI::IsRanged(bot) && dynamic_cast<AvoidAoeAction*>(action))
+        return 0.0f;
+
     // pet phase
     // A bot holding a pet must never flee with it — that is the one way to
     // drag it past its coil tether. The leash action (ACTION_RAID+3) always
