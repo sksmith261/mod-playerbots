@@ -963,6 +963,27 @@ public:
         if (!feugenAlive)
             return stalagg;
 
+        // A side is decided once per pull and kept. The camps-populated
+        // branch below re-derived it from live positions every call, and
+        // "assign the nearest pet" is a feedback loop through the bot's own
+        // movement: anyone near the midline - and the midline between the
+        // platforms is the slime channel - was assigned the pet it drifted
+        // toward, crossed the midpoint, was reassigned the other one, and
+        // oscillated in the water indefinitely. UpdateBossAI calls Reset()
+        // whenever the bot leaves combat, so the lock takes at the first
+        // in-combat evaluation - the pull, with everyone still standing
+        // where the raid leader put them - and clears itself between pulls.
+        if (_assignedPetGuid)
+        {
+            if (stalagg->GetGUID() == _assignedPetGuid)
+                return stalagg;
+
+            if (feugen->GetGUID() == _assignedPetGuid)
+                return feugen;
+
+            _assignedPetGuid.Clear();  // a different spawn: re-decide
+        }
+
         // Has the raid already taken sides? Count living bots parked near
         // each pet. If BOTH camps are meaningfully populated, the leader
         // pre-positioned (or the fight is already running), so honour where
@@ -987,12 +1008,29 @@ public:
             }
 
         if (total >= 4 && nearStalagg * 4 >= total && nearFeugen * 4 >= total)
-            return forBot->GetDistance(stalagg) < forBot->GetDistance(feugen) ? stalagg : feugen;
+        {
+            Unit* chosen =
+                forBot->GetDistance(stalagg) < forBot->GetDistance(feugen) ? stalagg : feugen;
+            if (forBot == bot)
+                _assignedPetGuid = chosen->GetGUID();
+
+            return chosen;
+        }
 
         if (botAI->IsMainTank(forBot))
+        {
+            if (forBot == bot)
+                _assignedPetGuid = stalagg->GetGUID();
+
             return stalagg;
+        }
         if (PlayerbotAI::IsAssistTankOfIndex(forBot, 0))
+        {
+            if (forBot == bot)
+                _assignedPetGuid = feugen->GetGUID();
+
             return feugen;
+        }
 
         uint32 rank = 0;
         if (Group* group = forBot->GetGroup())
@@ -1008,7 +1046,11 @@ public:
                 ++rank;
             }
 
-        return (rank % 2 == 0) ? stalagg : feugen;
+        Unit* chosen = (rank % 2 == 0) ? stalagg : feugen;
+        if (forBot == bot)
+            _assignedPetGuid = chosen->GetGUID();
+
+        return chosen;
     }
 
     // The pet this bot is actually tanking right now. Stalagg's Magnetic
@@ -1046,12 +1088,14 @@ protected:
         feugen = nullptr;
         stalagg = nullptr;
         _engaged = false;
+        _assignedPetGuid.Clear();
     }
 
     Unit* _unit = nullptr;
     Unit* feugen = nullptr;
     Unit* stalagg = nullptr;
     bool _engaged = false;
+    ObjectGuid _assignedPetGuid;
 };
 
 #endif
