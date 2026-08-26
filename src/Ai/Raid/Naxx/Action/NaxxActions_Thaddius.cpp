@@ -41,6 +41,18 @@ bool ThaddiusAttackNearestPetAction::Execute(Event /*event*/)
                       MovementPriority::MOVEMENT_COMBAT);
     }
 
+    // Until the pet has walked down off its platform, every path to it
+    // fails (no mesh at platform height) and chasing it thrashes at the
+    // base. Hold the verified floor camp; the pet aggros and comes to us —
+    // which is also how the fight was tanked before any automation.
+    if (target->GetPositionZ() > 306.0f)
+    {
+        std::pair<float, float> camp =
+            botAI->IsRanged(bot) ? helper.PetPhaseGetPosForRanged() : helper.PetPhaseGetPosForTank();
+        return MoveInside(533, camp.first, camp.second, helper.tankPosZ, 5.0f,
+                          MovementPriority::MOVEMENT_COMBAT);
+    }
+
     if (!bot->IsWithinLOSInMap(target))
         return MoveTo(target, 0, MovementPriority::MOVEMENT_COMBAT);
 

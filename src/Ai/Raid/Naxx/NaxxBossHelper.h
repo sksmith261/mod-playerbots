@@ -849,24 +849,28 @@ public:
 
     std::pair<float, float> PetStation(Unit* pet, float outDistance)
     {
-        Creature* creature = pet ? pet->ToCreature() : nullptr;
-        if (!creature)
+        if (!pet)
             return {bot->GetPositionX(), bot->GetPositionY()};  // no-op move
 
-        Position const& home = creature->GetHomePosition();
-        tankPosZ = home.GetPositionZ();
+        // Navmesh-verified floor anchors at each platform's base. The old
+        // stations sat on the spawn-to-ledge segment at z~312 — and the
+        // platforms have NO MESH at that height (probed; the nearest polys
+        // at those coordinates are ~170y below, in another wing), so every
+        // station was an unreachable destination and pathing thrashed at
+        // the platform base: the pacing in the slime. The pets are mobile
+        // and descend to their victims; the raid's whole phase belongs on
+        // this floor. Direction away from the platform, so ranged stations
+        // sit farther out than tank camps — every point out to 12y+ was
+        // probed walkable.
+        bool const isStalagg = botAI->EqualLowercaseName(pet->GetName(), "stalagg");
+        float const ax = isStalagg ? 3450.4f : 3492.6f;
+        float const ay = isStalagg ? -2949.4f : -3004.2f;
+        float const dx = isStalagg ? 0.0f : -0.707f;
+        float const dy = isStalagg ? -1.0f : -0.707f;
+        tankPosZ = isStalagg ? 298.3f : 299.7f;
 
-        std::pair<float, float> const& ledge =
-            botAI->EqualLowercaseName(pet->GetName(), "stalagg") ? ledgeStalagg : ledgeFeugen;
-
-        float const dx = ledge.first - home.GetPositionX();
-        float const dy = ledge.second - home.GetPositionY();
-        float const len = std::sqrt(dx * dx + dy * dy);
-        if (len < 1.0f)
-            return {home.GetPositionX(), home.GetPositionY()};
-
-        return {home.GetPositionX() + dx / len * outDistance,
-                home.GetPositionY() + dy / len * outDistance};
+        float const push = std::max(0.0f, outDistance - 3.0f);
+        return {ax + dx * push, ay + dy * push};
     }
     ThaddiusBossHelper(PlayerbotAI* botAI) : AiObject(botAI) {}
     bool UpdateBossAI()
