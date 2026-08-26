@@ -219,7 +219,12 @@ float ThaddiusGenericMultiplier::GetValue(Action* action)
     // healed through it, and nothing else in the pet phase produces a
     // qualifying aura, so avoid-aoe has no legitimate work here for
     // anyone but ranged (who out-range it at their stations anyway).
-    if (helper.IsPhasePet() && !PlayerbotAI::IsRanged(bot) && dynamic_cast<AvoidAoeAction*>(action))
+    // Phase-wide, not melee-only as first shipped: Feugen's healers count
+    // as ranged but must stand inside the 30y field to keep heal range on
+    // his camp — the classic answer is to heal through it, and excluding
+    // them left the healers running the flee loop the melee had just been
+    // cured of. Nothing else in the pet phase produces a qualifying aura.
+    if (helper.IsPhasePet() && dynamic_cast<AvoidAoeAction*>(action))
         return 0.0f;
 
     // pet phase

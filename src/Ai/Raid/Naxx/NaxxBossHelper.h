@@ -1032,12 +1032,30 @@ public:
             return feugen;
         }
 
+        // The classic split is by ROLE, not by roster parity: melee take
+        // Feugen, because his Static Field is a 30y mana burn that low-mana
+        // melee shrug off, and casters take Stalagg, out of the field
+        // entirely. The old even/odd split marched half the casters into
+        // the burn every pull. Healers stay parity-split so both camps keep
+        // coverage — theirs is the one job that must eat the field, and
+        // they heal through it exactly as the fight intends.
+        bool const melee = !PlayerbotAI::IsRanged(forBot) && !PlayerbotAI::IsHeal(forBot);
+        if (!PlayerbotAI::IsHeal(forBot))
+        {
+            Unit* roleChosen = melee ? feugen : stalagg;
+            if (forBot == bot)
+                _assignedPetGuid = roleChosen->GetGUID();
+
+            return roleChosen;
+        }
+
         uint32 rank = 0;
         if (Group* group = forBot->GetGroup())
             for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
             {
                 Player* member = itr->GetSource();
-                if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member))
+                if (!member || !member->IsAlive() || !GET_PLAYERBOT_AI(member) ||
+                    !PlayerbotAI::IsHeal(member))
                     continue;
 
                 if (member == forBot)
